@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://flix-base.vercel.app/sitemap.xml
+Sitemap: https://agezweho.com/sitemap.xml

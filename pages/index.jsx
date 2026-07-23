@@ -6,7 +6,7 @@ import { getMovies } from '../lib/supabase';
 import CinematicBackground from '../components/CinematicBackground';
 import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
-import { Film, Inbox, ChevronLeft, ChevronRight, Download, Send } from 'lucide-react';
+import { Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart } from 'lucide-react';
 
 
 function NoticeBoard() {
@@ -192,6 +192,13 @@ export default function Home({ movies: initial }) {
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                   className="btn-ghost flex items-center gap-2 px-5 py-2 rounded-xl text-xs">
                   <Inbox size={13} /> Request a Movie
+                </motion.div>
+              </Link>
+              <Link href="/support">
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-medium"
+                  style={{ background: 'rgba(255,204,0,0.1)', border: '1px solid rgba(255,204,0,0.3)', color: '#FFCC00' }}>
+                  <Heart size={13} fill="currentColor" /> Donate via MoMo
                 </motion.div>
               </Link>
             </motion.div>

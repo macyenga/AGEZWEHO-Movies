@@ -48,11 +48,13 @@ const SHARE_PLATFORMS = [
 const SITE_URL = 'https://agezweho.com';
 const SHARE_TEXT = '🎬 Agezweho Movies — Rwanda\'s home for Agasobanuye movies, series & anime! Free forever.';
 
+const MOMO_NUMBER = '0789690247';
 const USSD_CODE = '*182*8*1*156833#';
 const CONTACT_EMAIL = 'macyenga@gmail.com';
 
 export default function Support() {
   const [copiedUssd, setCopiedUssd] = useState(false);
+  const [copiedNumber, setCopiedNumber] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const handleShare = (p) => {
@@ -66,7 +68,10 @@ export default function Support() {
 
   const copyToClipboard = (text, type) => {
     navigator.clipboard?.writeText(text);
-    if (type === 'ussd') {
+    if (type === 'number') {
+      setCopiedNumber(true);
+      setTimeout(() => setCopiedNumber(false), 2000);
+    } else if (type === 'ussd') {
       setCopiedUssd(true);
       setTimeout(() => setCopiedUssd(false), 2000);
     } else {
@@ -145,7 +150,24 @@ export default function Support() {
 
             <div className="p-4 rounded-xl mb-4 text-center"
               style={{ background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,204,0,0.2)' }}>
-              <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Dial this USSD code:</p>
+              <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Send Mobile Money to:</p>
+              <p className="text-3xl font-bold tracking-wider mb-3" style={{ color:'#FFCC00', fontFamily:'monospace' }}>
+                {MOMO_NUMBER}
+              </p>
+              <motion.button
+                whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
+                onClick={() => copyToClipboard(MOMO_NUMBER, 'number')}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium mb-4"
+                style={{ 
+                  background: copiedNumber ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
+                  border: `1px solid ${copiedNumber ? 'rgba(34,197,94,0.4)' : 'rgba(255,204,0,0.3)'}`,
+                  color: copiedNumber ? '#22c55e' : '#FFCC00'
+                }}>
+                {copiedNumber ? <Check size={16} /> : <Copy size={16} />}
+                {copiedNumber ? 'Copied!' : 'Copy MoMo Number'}
+              </motion.button>
+
+              <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Or dial this USSD code:</p>
               <p className="text-2xl font-bold tracking-wider" style={{ color:'#FFCC00', fontFamily:'monospace' }}>
                 {USSD_CODE}
               </p>
@@ -165,7 +187,7 @@ export default function Support() {
             </motion.button>
 
             <p className="text-center text-[10px] mt-3" style={{ color:'#6a6a5a' }}>
-              Tap to copy, then paste in your phone dialer
+              Copy the number or dial the direct MoMo Pay code.
             </p>
           </div>
         </motion.div>

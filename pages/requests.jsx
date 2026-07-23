@@ -1,15 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getRequests, addRequest, voteRequest } from '../lib/supabase';
+import { getRequests, addRequest, boostRequestVotes, addDonation } from '../lib/supabase';
 import CinematicBackground from '../components/CinematicBackground';
 import SearchBar from '../components/SearchBar';
-import { Star, ChevronUp, Send, Sparkles, CheckCircle2, Heart, Copy, Check, Smartphone } from 'lucide-react';
+import { Star, ChevronUp, Send, Sparkles, CheckCircle2, Heart, Copy, Check, Smartphone, Flame } from 'lucide-react';
 
+const MOMO_NUMBER = '0789690247';
 const USSD_CODE = '*182*8*1*156833#';
-const DONATION_AMOUNTS = [100, 500, 1000, 2000];
+const VOTE_PRICE = 50;
+const DONATION_AMOUNTS = [50, 100, 500, 1000, 2000];
+const DONATION_VOTE_BOOST = { 50: 1, 100: 1, 500: 3, 1000: 6, 2000: 12 };
+const DONATION_STORAGE_KEY = 'agezweho_anonymous_donation_boosts';
+
+const sortRequests = (items) => [...items].sort((a, b) => (
+  (b.votes || 0) - (a.votes || 0)
+  || (b.donation_total || 0) - (a.donation_total || 0)
+  || new Date(b.created_at || 0) - new Date(a.created_at || 0)
+));
 
 export default function Requests({ requests: initial }) {
-  const [requests, setRequests] = useState(initial || []);
+  const [requests, setRequests] = useState(sortRequests(initial || []));
   const [query, setQuery] = useState('');
   const [form, setForm] = useState({ title: '', year: '', language: '', source: '' });
   const [loading, setLoading] = useState(false);
@@ -19,46 +29,84 @@ export default function Requests({ requests: initial }) {
   const [donateModal, setDonateModal] = useState(null);
   const [donateAmount, setDonateAmount] = useState(1000);
   const [copiedUssd, setCopiedUssd] = useState(false);
+  const [copiedNumber, setCopiedNumber] = useState(false);
   const [donateStep, setDonateStep] = useState('select');
   const [processing, setProcessing] = useState(false);
+  const [anonymousBoosts, setAnonymousBoosts] = useState({});
+  const [donationPurpose, setDonationPurpose] = useState('boost');
 
   useEffect(() => {
-    if (!initial) getRequests().then(setRequests);
+    if (!initial) getRequests().then(d => setRequests(sortRequests(d)));
   }, []);
 
-  const filtered = requests.filter(r =>
+  useEffect(() => {
+    try {
+      setAnonymousBoosts(JSON.parse(localStorage.getItem(DONATION_STORAGE_KEY) || '{}'));
+    } catch {
+      setAnonymousBoosts({});
+    }
+  }, []);
+
+  const filtered = useMemo(() => sortRequests(requests.filter(r =>
     !query || r.title.toLowerCase().includes(query.toLowerCase())
-  );
+  )), [requests, query]);
   const pending = filtered.filter(r => !r.fulfilled);
   const fulfilled = filtered.filter(r => r.fulfilled);
 
-  const handleVote = async (req) => {
+  const handleVote = (req) => {
     if (voted[req.id]) return;
-    setVoted(v => ({ ...v, [req.id]: true }));
-    try {
-      const updated = await voteRequest(req.id, req.votes);
-      setRequests(prev => prev.map(r => r.id === updated.id ? updated : r));
-    } catch { setVoted(v => ({ ...v, [req.id]: false })); }
+    openDonate(req, { amount: VOTE_PRICE, step: 'pay', purpose: 'vote' });
   };
 
-  const handleDonate = () => {
+  const handleDonate = async () => {
     setProcessing(true);
     try {
+      const boost = DONATION_VOTE_BOOST[donateAmount] || 1;
+      try {
+        await addDonation({
+          request_id: donateModal.id,
+          donor_name: 'Anonymous',
+          amount: donateAmount,
+          phone_last4: null,
+          confirmed: false,
+        });
+      } catch {
+        // Keep the no-login boost working even if donation logging is unavailable.
+      }
+      const updated = await boostRequestVotes(donateModal.id, donateModal.votes || 0, boost);
+      if (donationPurpose === 'vote') {
+        setVoted(v => ({ ...v, [updated.id]: true }));
+      }
+      setRequests(prev => sortRequests(prev.map(r => r.id === updated.id ? updated : r)));
+      setDonateModal(updated);
+      const nextBoosts = {
+        ...anonymousBoosts,
+        [updated.id]: (anonymousBoosts[updated.id] || 0) + boost,
+      };
+      setAnonymousBoosts(nextBoosts);
+      localStorage.setItem(DONATION_STORAGE_KEY, JSON.stringify(nextBoosts));
       setDonateStep('success');
     } finally {
       setProcessing(false);
     }
   };
 
-  const openDonate = (req) => {
+  const openDonate = (req, options = {}) => {
     setDonateModal(req);
-    setDonateAmount(1000);
-    setDonateStep('select');
+    setDonateAmount(options.amount || 1000);
+    setDonateStep(options.step || 'select');
+    setDonationPurpose(options.purpose || 'boost');
     setCopiedUssd(false);
+    setCopiedNumber(false);
   };
 
-  const copyUssd = () => {
-    navigator.clipboard?.writeText(USSD_CODE);
+  const copyPayment = (text, type) => {
+    navigator.clipboard?.writeText(text);
+    if (type === 'number') {
+      setCopiedNumber(true);
+      setTimeout(() => setCopiedNumber(false), 2000);
+      return;
+    }
     setCopiedUssd(true);
     setTimeout(() => setCopiedUssd(false), 2000);
   };
@@ -83,7 +131,7 @@ export default function Requests({ requests: initial }) {
         votes: 0,
         fulfilled: false
       });
-      setRequests(prev => [r, ...prev]);
+      setRequests(prev => sortRequests([r, ...prev]));
       setForm({ title: '', year: '', language: '', source: '' });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -114,7 +162,7 @@ export default function Requests({ requests: initial }) {
           </h1>
           <div className="hero-line w-32 mx-auto mb-4" />
           <p className="text-[#6b6b8a] text-sm leading-relaxed max-w-md mx-auto">
-            Can&apos;t find your favourite movie? Request it and let others upvote it to get it added faster.
+            Can&apos;t find your favourite movie? Request it, upvote it, or boost it anonymously so the highest demand titles move first.
           </p>
         </motion.div>
 
@@ -133,7 +181,7 @@ export default function Requests({ requests: initial }) {
             title, release year, and language. Incomplete, incorrect, or random
             information can make it difficult to find and process your request. The more
             accurate the details, the faster your request can be fulfilled.
-            <span style={{ color: '#FFCC00' }}> You can also donate MB to prioritize your request!</span> Thank you! 😊
+            <span style={{ color: '#FFCC00' }}> Upvote is now a 50 RWF anonymous MoMo vote; bigger support adds more vote power.</span> Thank you!
           </p>
         </motion.div>
 
@@ -286,11 +334,25 @@ export default function Requests({ requests: initial }) {
                     style={{ fontFamily: 'Orbitron, monospace' }}>
                     {r.votes}
                   </span>
+                  <span className="text-[9px]" style={{ color: voted[r.id] ? '#c9a84c' : '#6b6b8a' }}>
+                    50 RWF
+                  </span>
                 </motion.button>
 
                 <div className="flex-1 min-w-0">
+                  {i === 0 && (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold mb-2"
+                      style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                      <Flame size={11} /> Top upload priority
+                    </div>
+                  )}
                   <div className="font-medium text-[#e8e6f0] text-sm mb-0.5">{r.title}</div>
                   {r.note && <div className="text-[#8888a0] text-xs mt-1.5 leading-relaxed">{r.note}</div>}
+                  {anonymousBoosts[r.id] > 0 && (
+                    <div className="mt-2 text-[10px]" style={{ color: '#FFCC00' }}>
+                      Anonymous boost added: +{anonymousBoosts[r.id]} votes
+                    </div>
+                  )}
                 </div>
 
                 {/* Donate button */}
@@ -307,7 +369,7 @@ export default function Requests({ requests: initial }) {
                 >
                   <Heart size={14} style={{ color: '#FFCC00' }} fill="#FFCC00" />
                   <span className="text-[10px] font-medium" style={{ color: '#FFCC00' }}>
-                    Donate MB
+                    Boost
                   </span>
                 </motion.button>
               </motion.div>
@@ -370,7 +432,7 @@ export default function Requests({ requests: initial }) {
                       <div className="flex items-center gap-2">
                         <Heart size={18} style={{ color: '#c9a84c' }} fill="#c9a84c" />
                         <h3 className="font-semibold text-lg" style={{ fontFamily: 'Cinzel,serif', color: '#e8c87a' }}>
-                          Support This Request
+                          Anonymous Boost
                         </h3>
                       </div>
                       <button onClick={() => setDonateModal(null)} className="text-[#6b6b8a] hover:text-white text-lg">✕</button>
@@ -378,7 +440,7 @@ export default function Requests({ requests: initial }) {
 
                     <p className="text-sm mb-1" style={{ color: '#e8e6f0' }}>{donateModal.title}</p>
                     <p className="text-xs mb-5" style={{ color: '#6b6b8a' }}>
-                      The more MB donated, the faster this movie gets uploaded
+                      No name, no phone capture. {donationPurpose === 'vote' ? 'This 50 RWF MoMo vote adds +1 vote.' : 'Your MoMo support adds vote power so this title rises faster.'}
                     </p>
 
                     {/* Amount Selection */}
@@ -401,6 +463,9 @@ export default function Requests({ requests: initial }) {
                             }}
                           >
                             {amount.toLocaleString()} RWF
+                            <span className="block text-[10px] mt-1 opacity-70">
+                              +{DONATION_VOTE_BOOST[amount]} votes
+                            </span>
                           </motion.button>
                         ))}
                       </div>
@@ -424,27 +489,46 @@ export default function Requests({ requests: initial }) {
                       <div className="flex items-center gap-2">
                         <Smartphone size={18} style={{ color: '#FFCC00' }} />
                         <h3 className="font-semibold text-lg" style={{ fontFamily: 'Cinzel,serif', color: '#FFCC00' }}>
-                          Momo Pay
+                          MoMo Pay
                         </h3>
                       </div>
                       <button onClick={() => setDonateModal(null)} className="text-[#6b6b8a] hover:text-white text-lg">✕</button>
                     </div>
 
                     <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>
-                      Donate <span style={{ color: '#FFCC00', fontWeight: 700 }}>{donateAmount.toLocaleString()} RWF</span> worth of MB to support:
+                      Send <span style={{ color: '#FFCC00', fontWeight: 700 }}>{donateAmount.toLocaleString()} RWF</span> anonymously {donationPurpose === 'vote' ? 'to upvote' : 'to support'}:
                     </p>
                     <p className="text-sm mb-5 font-medium" style={{ color: '#c9a84c' }}>{donateModal.title}</p>
 
-                    {/* USSD Code */}
+                    {/* Payment Details */}
                     <div className="p-4 rounded-xl mb-4 text-center" style={{ background: 'rgba(255,204,0,0.06)', border: '1px solid rgba(255,204,0,0.2)' }}>
-                      <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Step 1: Dial this USSD code</p>
+                      <p className="text-xs mb-2" style={{ color: '#8a8060' }}>MoMo number</p>
+                      <p className="text-2xl font-bold tracking-wider mb-3" style={{ color: '#FFCC00', fontFamily: 'monospace' }}>
+                        {MOMO_NUMBER}
+                      </p>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => copyPayment(MOMO_NUMBER, 'number')}
+                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-medium mx-auto mb-4"
+                        style={{
+                          background: copiedNumber ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
+                          border: `1px solid ${copiedNumber ? 'rgba(34,197,94,0.4)' : 'rgba(255,204,0,0.3)'}`,
+                          color: copiedNumber ? '#22c55e' : '#FFCC00'
+                        }}
+                      >
+                        {copiedNumber ? <Check size={14} /> : <Copy size={14} />}
+                        {copiedNumber ? 'Copied!' : 'Copy Number'}
+                      </motion.button>
+
+                      <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Or dial USSD</p>
                       <p className="text-xl font-bold tracking-wider mb-3" style={{ color: '#FFCC00', fontFamily: 'monospace' }}>
                         {USSD_CODE}
                       </p>
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={copyUssd}
+                        onClick={() => copyPayment(USSD_CODE, 'ussd')}
                         className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-medium mx-auto"
                         style={{
                           background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
@@ -461,9 +545,9 @@ export default function Requests({ requests: initial }) {
                     <div className="p-4 rounded-xl mb-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <p className="text-xs mb-2 font-semibold" style={{ color: '#c9a84c' }}>Step 2: Follow the prompts</p>
                       <ol className="text-xs space-y-1.5" style={{ color: '#8a8778' }}>
-                        <li>1. Enter your Momo PIN</li>
-                        <li>2. Confirm the amount: <span style={{ color: '#FFCC00' }}>{donateAmount.toLocaleString()} RWF</span></li>
-                        <li>3. Complete the payment</li>
+                        <li>1. Dial <span style={{ color: '#FFCC00' }}>{USSD_CODE}</span> or open MoMo</li>
+                        <li>2. Send to <span style={{ color: '#FFCC00' }}>{MOMO_NUMBER}</span></li>
+                        <li>3. Confirm <span style={{ color: '#FFCC00' }}>{donateAmount.toLocaleString()} RWF</span> with your PIN</li>
                       </ol>
                     </div>
 
@@ -480,11 +564,11 @@ export default function Requests({ requests: initial }) {
                           <Heart size={16} />
                         </motion.div>
                       ) : <Check size={16} />}
-                      {processing ? 'Processing...' : "I've Completed Payment"}
+                      {processing ? 'Boosting...' : "I've Completed Payment"}
                     </motion.button>
 
                     <p className="text-center text-[10px] mt-3" style={{ color: '#4a4a3a' }}>
-                      Your support helps us upload this movie sooner! 🙏
+                      {donationPurpose === 'vote' ? 'Your 50 RWF anonymous vote adds +1 vote after you tap completed.' : `Anonymous support adds +${DONATION_VOTE_BOOST[donateAmount]} votes after you tap completed.`}
                     </p>
                   </div>
                 )}
@@ -502,7 +586,8 @@ export default function Requests({ requests: initial }) {
                     </motion.div>
                     <h3 className="text-lg font-semibold mb-2" style={{ color: '#22c55e' }}>Thank You!</h3>
                     <p className="text-sm mb-1" style={{ color: '#e8e6f0' }}>
-                      Your donation of <span style={{ color: '#c9a84c', fontWeight: 700 }}>{donateAmount.toLocaleString()} RWF</span> has been recorded.
+                      {donationPurpose === 'vote' ? 'Your anonymous upvote is done: ' : 'Anonymous support added '}
+                      <span style={{ color: '#c9a84c', fontWeight: 700 }}>+{DONATION_VOTE_BOOST[donateAmount]} vote{DONATION_VOTE_BOOST[donateAmount] > 1 ? 's' : ''}</span>.
                     </p>
                     <p className="text-xs mb-5" style={{ color: '#6b6b8a' }}>
                       {donateModal.title} is now closer to being uploaded!

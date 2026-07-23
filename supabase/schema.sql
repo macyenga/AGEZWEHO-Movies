@@ -23,6 +23,21 @@ create table if not exists movies (
   created_at  timestamptz default now()
 );
 
+-- ── Games Table ──────────────────────────
+create table if not exists games (
+  id          uuid default gen_random_uuid() primary key,
+  title       text not null,
+  type        text default 'Game',
+  category    text,
+  version     text,
+  rating      text,
+  cover_url   text,
+  overview    text,
+  links       jsonb default '[]'::jsonb,
+  premium     boolean default true,
+  created_at  timestamptz default now()
+);
+
 -- ── Requests Table ────────────────────────
 create table if not exists requests (
   id              uuid default gen_random_uuid() primary key,
@@ -47,25 +62,63 @@ create table if not exists donations (
   created_at    timestamptz default now()
 );
 
+-- ── Transactions Table (payment gateway) ─
+create table if not exists transactions (
+  id            uuid default gen_random_uuid() primary key,
+  request_id    uuid references requests(id) on delete set null,
+  user_id       uuid references auth.users(id) on delete set null,
+  amount        integer not null,
+  tx_ref        text unique not null,
+  status        text default 'pending',
+  flw_id        text,
+  donor_email   text,
+  donor_phone   text,
+  created_at    timestamptz default now()
+);
+
+-- ── Premium Access Requests Table ────────
+create table if not exists premium_access_requests (
+  id            uuid default gen_random_uuid() primary key,
+  user_id       uuid references auth.users(id) on delete cascade,
+  status        text default 'pending',
+  created_at    timestamptz default now()
+);
+
 -- ── Row Level Security ────────────────────
 alter table movies     enable row level security;
+alter table games      enable row level security;
 alter table requests   enable row level security;
 alter table donations  enable row level security;
+alter table transactions enable row level security;
+alter table premium_access_requests enable row level security;
 
 -- Public can read everything
 create policy "public_read_movies"    on movies    for select using (true);
+create policy "public_read_games"     on games     for select using (true);
 create policy "public_read_requests"  on requests  for select using (true);
 create policy "public_read_donations" on donations for select using (true);
 
+-- Authenticated users can read their own
+create policy "auth_read_transactions" on transactions for select using (auth.role() = 'service_role' or user_id = auth.uid());
+create policy "auth_read_premium_access" on premium_access_requests for select using (auth.uid() = user_id or auth.role() = 'service_role');
+
 -- Public can insert
 create policy "public_insert_movies"    on movies    for insert with check (true);
+create policy "public_insert_games"     on games     for insert with check (true);
 create policy "public_insert_requests"  on requests  for insert with check (true);
 create policy "public_insert_donations" on donations for insert with check (true);
+create policy "auth_insert_transactions" on transactions for insert with check (auth.role() = 'service_role');
+create policy "auth_insert_premium_access" on premium_access_requests for insert with check (auth.uid() = user_id);
 
 -- Public can update (for votes, admin edits)
 create policy "public_update_movies"    on movies    for update using (true);
+create policy "public_update_games"     on games     for update using (true);
 create policy "public_update_requests"  on requests  for update using (true);
 create policy "public_update_donations" on donations for update using (true);
+
+-- Service role only for sensitive updates
+create policy "service_update_transactions" on transactions for update using (auth.role() = 'service_role');
+create policy "service_update_premium_access" on premium_access_requests for update using (auth.role() = 'service_role');
 
 -- Public can delete (admin)
 create policy "public_delete_movies" on movies for delete using (true);

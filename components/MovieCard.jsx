@@ -63,7 +63,7 @@ export default function MovieCard({ movie, index = 0 }) {
             onClick={toggleCollection}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.85 }}
-            className="absolute top-2 left-2 z-30 w-7 h-7 rounded-full flex items-center justify-center transition-all"
+            className="hidden"
             style={{
               background: inColl ? 'rgba(201,168,76,0.25)' : 'rgba(0,0,0,0.5)',
               border: inColl ? '1px solid rgba(201,168,76,0.5)' : '1px solid rgba(255,255,255,0.1)',

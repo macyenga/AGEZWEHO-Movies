@@ -51,7 +51,7 @@ export default function Document() {
   <meta name="application-name" content="Agezweho Movies" />
 
   {/* Google Verification */}
-  <meta name="google-site-verification" content="APNA_CODE_YAHAN" />
+  <meta name="google-site-verification" content="4R4CtipfBA-100wi1HYBeuWjzYxL5I_hYzQlkjIh9q0" />
 
   {/* JSON-LD Structured Data */}
   <script
@@ -60,9 +60,26 @@ export default function Document() {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Agezweho Movies",
+      "alternateName": ["Agezweho", "Agezweho Agasobanuye", "Agezweho Movies Rwanda"],
       "url": "https://agezweho.com",
       "description": "Rwanda's home for Agasobanuye movies, series & anime. Discover, download and watch your favourites — completely free.",
       "inLanguage": ["rw", "en"],
+      "areaServed": {
+        "@type": "Country",
+        "name": "Rwanda"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Agezweho Movies",
+        "url": "https://agezweho.com",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+250789690247",
+          "contactType": "customer support",
+          "areaServed": "RW",
+          "availableLanguage": ["Kinyarwanda", "English"]
+        }
+      },
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://agezweho.com/?q={search_term_string}",

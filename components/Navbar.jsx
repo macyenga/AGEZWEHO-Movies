@@ -20,9 +20,9 @@ export default function Navbar() {
 ];
   return (
     <motion.nav className="fixed top-0 left-0 right-0 z-50">
-      <motion.div style={{ opacity: bgO }}
+      <motion.div
         className="absolute inset-0"
-        style={{ background: 'rgba(8,8,18,0.92)', borderBottom: '1px solid rgba(201,168,76,0.08)', backdropFilter: 'blur(24px)' }}
+        style={{ opacity: bgO, background: 'rgba(8,8,18,0.92)', borderBottom: '1px solid rgba(201,168,76,0.08)', backdropFilter: 'blur(24px)' }}
       />
 
       <div className="relative max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">

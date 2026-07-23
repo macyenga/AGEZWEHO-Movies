@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import DonationFloat from '../components/DonationFloat';
 import { Analytics } from '@vercel/analytics/next';
 
 const pageVariants = {
@@ -25,6 +26,7 @@ export default function App({ Component, pageProps, router }) {
           <Component {...pageProps} />
         </motion.div>
       </AnimatePresence>
+      <DonationFloat />
       <Analytics />
     </>
   );

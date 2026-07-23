@@ -1,1 +1,21 @@
-
+{
+  "name": "Agezweho Movies",
+  "short_name": "Agezweho",
+  "description": "Rwanda's home for Agasobanuye movies, series, anime, games, and entertainment requests.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#c9a84c",
+  "orientation": "portrait-primary",
+  "categories": ["entertainment", "movies", "video"],
+  "lang": "rw",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

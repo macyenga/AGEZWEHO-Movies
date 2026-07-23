@@ -17,7 +17,7 @@ const PLATFORMS = [
   { name: 'Custom',       color: '#c9a84c' },
 ];
 
-const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', uploaded_by:'', featured:false, trailer_url:'' };
+const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', uploaded_by:'', uploader_momo_number:'', uploader_momo_code:'', featured:false, trailer_url:'' };
 
 export default function Submit() {
   const [form,    setForm]    = useState(EMPTY);
@@ -29,6 +29,7 @@ export default function Submit() {
 const [searchResults, setSearchResults] = useState([]);
 const [searching, setSearching]       = useState(false);
 const [showResults, setShowResults]   = useState(false);
+  const [subtitleLinks, setSubtitleLinks] = useState([]);
   const [success, setSuccess] = useState(false);
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
@@ -85,10 +86,12 @@ const validate = () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      await addMovie({ ...form, links: links.filter(l => l.url), watch_links: watchLinks.filter(l=>l.url) });
+      await addMovie({ ...form, links: links.filter(l => l.url), watch_links: watchLinks.filter(l=>l.url), subtitle_links: subtitleLinks.filter(l=>l.url) });
       setSuccess(true);
       setForm(EMPTY);
       setLinks([]);
+      setWatchLinks([]);
+      setSubtitleLinks([]);
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -320,6 +323,57 @@ const validate = () => {
     <div className="text-center py-3 rounded-xl text-xs"
       style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
       No watch links yet — click Add Link above
+    </div>
+  )}
+</div>
+
+{/* Subtitle Links */}
+<div>
+  <div className="flex items-center justify-between mb-3">
+    <div>
+      <span className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>Subtitle Links </span>
+      <span className="text-[10px]" style={{ color:'#3a3a2a' }}>optional</span>
+    </div>
+    <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+      onClick={() => setSubtitleLinks(l=>[...l,{label:'',language:'Kinyarwanda',url:''}])}
+      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
+      style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', color:'#93c5fd' }}>
+      <Plus size={11} /> Add Subtitle
+    </motion.button>
+  </div>
+  <AnimatePresence>
+    {subtitleLinks.map((link, i) => (
+      <motion.div key={i}
+        initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
+        className="mb-3 p-3 rounded-xl"
+        style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.15)' }}>
+        <div className="flex gap-2 items-center flex-wrap">
+          <input className="input-dark flex-1 min-w-[110px] px-2.5 py-1.5 rounded-lg text-xs"
+            value={link.label}
+            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,label:e.target.value}:x))}
+            placeholder="Label (e.g. Kinyarwanda Subs)" />
+          <input className="input-dark flex-1 min-w-[100px] px-2.5 py-1.5 rounded-lg text-xs"
+            value={link.language}
+            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,language:e.target.value}:x))}
+            placeholder="Language" />
+          <input className="input-dark flex-[2] min-w-[150px] px-2.5 py-1.5 rounded-lg text-xs"
+            value={link.url}
+            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,url:e.target.value}:x))}
+            placeholder="Subtitle file/link URL" />
+          <button onClick={() => setSubtitleLinks(l=>l.filter((_,idx)=>idx!==i))}
+            style={{ color:'#e05c3a44' }}
+            onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
+            onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </motion.div>
+    ))}
+  </AnimatePresence>
+  {subtitleLinks.length === 0 && (
+    <div className="text-center py-3 rounded-xl text-xs"
+      style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
+      No subtitles yet - click Add Subtitle above
     </div>
   )}
 </div>
