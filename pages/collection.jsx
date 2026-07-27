@@ -71,7 +71,7 @@ export default function Collection() {
             <BookOpen size={13} style={{ color: '#c9a84c', flexShrink: 0, marginTop: 1 }} />
             <span style={{ color: '#6a6a5a' }}>
               Your collection is saved in <span style={{ color: '#c9a84c' }}>this browser only</span> — it stays even after you close the tab.
-              Heart any movie to add it here.
+              Heart any Agasobanuye to add it here.
             </span>
           </motion.div>
         </motion.div>
@@ -119,12 +119,12 @@ export default function Collection() {
               Nothing saved yet
             </h3>
             <p className="text-sm mb-6" style={{ color: '#4a4a3a' }}>
-              Heart any movie or series to save it here.
+              Heart any Agasobanuye movie or series to save it here.
             </p>
             <Link href="/">
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm">
-                <Film size={14} /> Browse Library <ArrowRight size={13} />
+                <Film size={14} /> Browse Agasobanuye <ArrowRight size={13} />
               </motion.div>
             </Link>
           </motion.div>

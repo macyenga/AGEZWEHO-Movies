@@ -90,7 +90,6 @@ export default function Home({ movies: initial }) {
     return [1, '...', page-1, page, page+1, '...', totalPages];
   };
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const changePage = (p) => {
     setPage(p);
@@ -185,13 +184,13 @@ export default function Home({ movies: initial }) {
               <Link href="/submit">
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                   className="btn-primary flex items-center gap-2 px-5 py-2 rounded-xl text-xs">
-                  <Film size={13} /> Add a Movie
+                  <Film size={13} /> Add Agasobanuye
                 </motion.div>
               </Link>
               <Link href="/requests">
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                   className="btn-ghost flex items-center gap-2 px-5 py-2 rounded-xl text-xs">
-                  <Inbox size={13} /> Request a Movie
+                  <Inbox size={13} /> Request Agasobanuye
                 </motion.div>
               </Link>
               <Link href="/support">
@@ -234,7 +233,7 @@ export default function Home({ movies: initial }) {
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85 }}
               className="mt-3">
               <motion.a
-                href="https://t.me/+9QsRMsRrJwhlNDE1"
+                href="https://t.me/+n3etNnm3RxI5NGZl"
                 target="_blank" rel="noopener noreferrer"
                 whileHover={{ scale: 1.02, boxShadow: '0 0 24px rgba(34,158,217,0.2)' }}
                 whileTap={{ scale: 0.98 }}
@@ -300,7 +299,7 @@ export default function Home({ movies: initial }) {
           {/* Header */}
           <div className="flex items-center gap-3 mb-5">
             <Download size={13} style={{ color: '#c9a84c' }} />
-            <span className="section-tag">{filter === 'All' ? 'All Titles' : filter}</span>
+            <span className="section-tag">{filter === 'All' ? 'All Agasobanuye' : filter}</span>
             <div className="flex-1 divider-soft" />
             <span className="text-[11px]" style={{ color: '#6a6a5a' }}>
               {filtered.length} titles
@@ -420,10 +419,10 @@ export default function Home({ movies: initial }) {
           {/* Empty state */}
           {!loading && movies.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-sm mb-4" style={{ color: '#6a6a5a' }}>No movies added yet.</p>
+              <p className="text-sm mb-4" style={{ color: '#6a6a5a' }}>Nta Agasobanuye — no movies added yet.</p>
               <Link href="/submit">
                 <motion.div whileHover={{ scale: 1.03 }} className="btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm">
-                  <Film size={14} /> Add First Movie
+                  <Film size={14} /> Add First Agasobanuye
                 </motion.div>
               </Link>
             </div>

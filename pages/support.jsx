@@ -48,9 +48,9 @@ const SHARE_PLATFORMS = [
 const SITE_URL = 'https://agezweho.com';
 const SHARE_TEXT = '🎬 Agezweho Movies — Rwanda\'s home for Agasobanuye movies, series & anime! Free forever.';
 
-const MOMO_NUMBER = '0789690247';
-const USSD_CODE = '*182*8*1*156833#';
-const CONTACT_EMAIL = 'macyenga@gmail.com';
+const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
+const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'macyenga@gmail.com';
 
 export default function Support() {
   const [copiedUssd, setCopiedUssd] = useState(false);
@@ -187,7 +187,7 @@ export default function Support() {
             </motion.button>
 
             <p className="text-center text-[10px] mt-3" style={{ color:'#6a6a5a' }}>
-              Copy the number or dial the direct MoMo Pay code.
+              Admin confirms your payment after verification. Send the exact amount to help us track it.
             </p>
           </div>
         </motion.div>

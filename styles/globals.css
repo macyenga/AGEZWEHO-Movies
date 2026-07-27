@@ -180,3 +180,34 @@ body::after {
 .orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
 
 .page-wrapper { min-height: 100vh; }
+
+/* ── bg-grid ── */
+.bg-grid {
+  background: var(--bg);
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── section-label ── */
+.section-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ── hero-line ── */
+.hero-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+}
+
+/* ── badge-purple ── */
+.badge-purple {
+  background: rgba(139,92,246,0.1);
+  border: 1px solid rgba(139,92,246,0.2);
+  color: #a78bfa;
+}

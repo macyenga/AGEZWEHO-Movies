@@ -17,13 +17,14 @@ const PLATFORMS = [
   { name: 'Custom',      color: '#c9a84c' },
 ];
 
-const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', featured:false, platforms:[], watch_links:[] };
+const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', featured:false, platforms:[], watch_links:[], uploader_momo_number:'' };
 
 export default function AddMovieForm({ initial=null, onSave, onCancel, loading=false }) {
   const [form, setForm]     = useState(initial || EMPTY);
   const [links, setLinks] = useState(initial?.links || []);
   const [watchLinks, setWatchLinks] = useState(initial?.watch_links || []);
   const [subtitleLinks, setSubtitleLinks] = useState(initial?.subtitle_links || []);
+  const [uploader_momo_number, setUploaderMomoNumber] = useState(initial?.uploader_momo_number || '');
   const [errors, setErrors] = useState({});
 
   const set = (k,v) => { setForm(f=>({...f,[k]:v})); setErrors(e=>({...e,[k]:''})); };
@@ -42,7 +43,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 
   const handleSubmit = () => {
     if (!validate()) return;
-    onSave({ ...form, links: links.filter(l=>l.url), platforms: form.platforms||[], watch_links: watchLinks.filter(l=>l.url), subtitle_links: subtitleLinks.filter(l=>l.url) });
+    onSave({ ...form, links: links.filter(l=>l.url), platforms: form.platforms||[], watch_links: watchLinks.filter(l=>l.url), subtitle_links: subtitleLinks.filter(l=>l.url), uploader_momo_number });
   };
 
   const F = (k, label, placeholder, opts={}) => (
@@ -61,7 +62,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
   return (
     <div className="space-y-5">
       {/* Title */}
-      {F('title', 'Movie / Series Title', 'e.g. Pushpa 2: The Rule', { required: true })}
+      {F('title', 'Agasobanuye Title', 'e.g. Pushpa 2: The Rule', { required: true })}
 
       {/* Row */}
       <div className="grid grid-cols-2 gap-3">
@@ -73,7 +74,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
           <select className="input-dark w-full px-3 py-2 rounded-lg text-sm cursor-pointer"
             value={form.type} onChange={e=>set('type',e.target.value)}
             style={{ background: 'rgba(255,255,255,0.03)' }}>
-            {['Movie','Series','Documentary','Short Film'].map(t=>
+            {['Movie','Series','Anime','Documentary','Short Film'].map(t=>
               <option key={t} value={t} style={{ background: '#0f0f16' }}>{t}</option>
             )}
           </select>
@@ -201,57 +202,17 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
   )}
 </div>
 
-{/* Subtitle Links */}
-<div>
-  <div className="flex items-center justify-between mb-3">
-    <div>
-      <span className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>Subtitle Links </span>
-      <span className="text-[10px]" style={{ color:'#3a3a2a' }}>optional</span>
-    </div>
-    <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-      onClick={() => setSubtitleLinks(l=>[...l,{label:'',language:'Kinyarwanda',url:''}])}
-      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
-      style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', color:'#93c5fd' }}>
-      <Plus size={11} /> Add Subtitle
-    </motion.button>
-  </div>
-
-  <AnimatePresence>
-    {subtitleLinks.map((link, i) => (
-      <motion.div key={i}
-        initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-        className="mb-3 p-3 rounded-xl space-y-2"
-        style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.15)' }}>
-        <div className="flex gap-2 items-center flex-wrap">
-          <input className="input-dark flex-1 min-w-[110px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.label}
-            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,label:e.target.value}:x))}
-            placeholder="Label (e.g. Kinyarwanda Subs)" />
-          <input className="input-dark flex-1 min-w-[100px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.language}
-            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,language:e.target.value}:x))}
-            placeholder="Language" />
-          <input className="input-dark flex-[2] min-w-[150px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.url}
-            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,url:e.target.value}:x))}
-            placeholder="Subtitle file/link URL" />
-          <button onClick={() => setSubtitleLinks(l=>l.filter((_,idx)=>idx!==i))}
-            style={{ color:'#e05c3a44' }}
-            onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
-            onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </motion.div>
-    ))}
-  </AnimatePresence>
-
-  {subtitleLinks.length === 0 && (
-    <div className="text-center py-3 rounded-xl text-xs mb-2"
-      style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
-      No subtitles yet - click Add Subtitle above
-    </div>
-  )}
+{/* Mobile Money Number — for admin to credit uploader */}
+<div className="p-4 rounded-xl" style={{ background:'rgba(34,197,94,0.06)', border:'1px solid rgba(34,197,94,0.15)' }}>
+  <label className="block text-[11px] font-semibold mb-1.5 tracking-[2px] uppercase" style={{ color:'#22c55e' }}>
+    Uploader MoMo Number — for crediting ✦
+  </label>
+  <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
+    value={uploader_momo_number} onChange={e => setUploaderMomoNumber(e.target.value)}
+    placeholder="e.g. 0788123456" />
+  <p className="text-[10px] mt-1.5" style={{ color:'#4a4a3a' }}>
+    Required if you want credit/rewards when admin approves your upload
+  </p>
 </div>
 
       {/* Download Links */}
@@ -294,6 +255,8 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
                   value={link.label} onChange={e=>setLink(i,'label',e.target.value)} placeholder="Label (e.g. 1080p HD)" />
                 <input className="input-dark flex-[2] min-w-[140px] px-2.5 py-1.5 rounded-lg text-xs"
                   value={link.url} onChange={e=>setLink(i,'url',e.target.value)} placeholder="Download URL or page link" />
+                <input className="input-dark w-20 px-2 py-1.5 rounded-lg text-xs"
+                  value={link.info||''} onChange={e=>setLink(i,'info',e.target.value)} placeholder="e.g. 4K • 2.5GB" />
                 <input type="color" value={link.color||'#c9a84c'} onChange={e=>setLink(i,'color',e.target.value)}
                   className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0" title="Color" />
                 <button onClick={()=>removeLink(i)} className="transition-colors" style={{ color: '#e05c3a40' }}
@@ -321,7 +284,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
           {loading
             ? <motion.div animate={{ rotate: 360 }} transition={{ repeat:Infinity, duration:1, ease:'linear' }}><Film size={15}/></motion.div>
             : <Save size={15} />}
-          {loading ? 'Saving...' : (initial ? 'Save Changes' : 'Add Movie')}
+          {loading ? 'Saving...' : (initial ? 'Save Changes' : 'Add Agasobanuye')}
         </motion.button>
         {onCancel && (
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}

@@ -35,14 +35,14 @@ export default function Document() {
   <meta property="og:title" content="Agezweho Movies — Rwanda's Home for Agasobanuye Entertainment" />
   <meta property="og:description" content="Rwanda's home for Agasobanuye movies, series & anime. Discover, download and watch your favourites — completely free." />
   <meta property="og:url" content="https://agezweho.com" />
-  <meta property="og:image" content="https://agezweho.com/og-image.jpg" />
+  <meta property="og:image" content="https://agezweho.com/og-image.svg" />
   <meta property="og:locale" content="rw_RW" />
 
   {/* Twitter */}
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Agezweho Movies — Rwanda's Home for Agasobanuye Entertainment" />
   <meta name="twitter:description" content="Rwanda's home for Agasobanuye movies, series & anime. Discover, download and watch your favourites — completely free." />
-  <meta name="twitter:image" content="https://agezweho.com/og-image.jpg" />
+  <meta name="twitter:image" content="https://agezweho.com/og-image.svg" />
 
   {/* Mobile */}
   <meta name="mobile-web-app-capable" content="yes" />

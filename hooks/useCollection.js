@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const KEY = 'flixbase_collection';
+const KEY = 'agezweho_collection';
 
 export function useCollection() {
   const [collection, setCollection] = useState([]);

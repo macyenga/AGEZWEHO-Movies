@@ -31,6 +31,7 @@ const [searching, setSearching]       = useState(false);
 const [showResults, setShowResults]   = useState(false);
   const [subtitleLinks, setSubtitleLinks] = useState([]);
   const [success, setSuccess] = useState(false);
+  const [submittedBy, setSubmittedBy] = useState('');
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
 
@@ -38,7 +39,7 @@ const searchTMDB = async (query) => {
   if (!query.trim() || query.length < 2) { setSearchResults([]); setShowResults(false); return; }
   setSearching(true);
   try {
-    const res = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(query)}&apikey=e09889cb`);
+    const res = await fetch(`/api/omdb/search?q=${encodeURIComponent(query)}`);
     const data = await res.json();
     if (data.Search) {
       setSearchResults(data.Search.slice(0, 6));
@@ -54,7 +55,7 @@ const fillFromTMDB = async (item) => {
   setShowResults(false);
   setSearchQuery('');
   try {
-    const res = await fetch(`https://www.omdbapi.com/?i=${item.imdbID}&apikey=e09889cb`);
+    const res = await fetch(`/api/omdb/search?id=${item.imdbID}`);
     const d = await res.json();
     setForm(f => ({ ...f,
       title:     d.Title || item.Title || '',
@@ -87,6 +88,7 @@ const validate = () => {
     setLoading(true);
     try {
       await addMovie({ ...form, links: links.filter(l => l.url), watch_links: watchLinks.filter(l=>l.url), subtitle_links: subtitleLinks.filter(l=>l.url) });
+      setSubmittedBy(form.uploaded_by.trim());
       setSuccess(true);
       setForm(EMPTY);
       setLinks([]);
@@ -107,16 +109,16 @@ const validate = () => {
         <motion.div animate={{ scale:[1,1.15,1] }} transition={{ repeat:Infinity, duration:2 }}>
           <CheckCircle2 size={56} className="mx-auto mb-4" style={{ color:'#c9a84c' }} />
         </motion.div>
-        <h2 className="font-cinzel text-2xl mb-3" style={{ fontFamily:'Cinzel,serif', color:'#e8c87a' }}>Movie Added!</h2>
+        <h2 className="font-cinzel text-2xl mb-3" style={{ fontFamily:'Cinzel,serif', color:'#e8c87a' }}>Movie Submitted!</h2>
         <p className="text-sm mb-6" style={{ color:'#8a8778' }}>
-          {form.uploaded_by
-            ? `Thank you ${form.uploaded_by || ''}! Your movie has been added to the library.`
-            : 'Your movie has been added to the library.'}
+          {submittedBy
+            ? `Thank you ${submittedBy}! Your movie is waiting for admin review.`
+            : 'Your movie is waiting for admin review.'}
         </p>
         <div className="flex gap-3 justify-center">
           <Link href="/">
             <motion.div whileHover={{ scale:1.03 }} className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm">
-              <Film size={14} /> Browse Library
+              <Film size={14} /> Browse Agasobanuye
             </motion.div>
           </Link>
           <motion.button whileHover={{ scale:1.03 }} onClick={() => setSuccess(false)}
@@ -167,7 +169,7 @@ const validate = () => {
               style={{ color:'#6a6a5a' }}
               onMouseEnter={e=>e.currentTarget.style.color='#c9a84c'}
               onMouseLeave={e=>e.currentTarget.style.color='#6a6a5a'}>
-              <ArrowLeft size={13} /> Back to Library
+              <ArrowLeft size={13} /> Back to Agasobanuye
             </motion.div>
           </Link>
         </motion.div>
@@ -177,7 +179,7 @@ const validate = () => {
           <h1 className="font-cinzel font-semibold mb-1.5"
             style={{ fontFamily:'Cinzel,serif', fontSize:'1.6rem', letterSpacing:'0.08em',
               background:'linear-gradient(135deg,#f5e4a8,#c9a84c)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-            Add a Movie
+            Add Agasobanuye Movie
           </h1>
           <p className="text-xs" style={{ color:'#6a6a5a' }}>
             Share a movie, series, anime or tv shows with the community.
@@ -274,7 +276,7 @@ const validate = () => {
           );
         })}
         <div className="px-3 py-1.5 text-[9px] text-right" style={{ color:'#3a3a2a', background:'rgba(0,0,0,0.3)' }}>
-          Powered by TMDB
+          Powered by OMDB
         </div>
       </motion.div>
     )}
@@ -327,55 +329,17 @@ const validate = () => {
   )}
 </div>
 
-{/* Subtitle Links */}
-<div>
-  <div className="flex items-center justify-between mb-3">
-    <div>
-      <span className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>Subtitle Links </span>
-      <span className="text-[10px]" style={{ color:'#3a3a2a' }}>optional</span>
-    </div>
-    <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-      onClick={() => setSubtitleLinks(l=>[...l,{label:'',language:'Kinyarwanda',url:''}])}
-      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
-      style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', color:'#93c5fd' }}>
-      <Plus size={11} /> Add Subtitle
-    </motion.button>
-  </div>
-  <AnimatePresence>
-    {subtitleLinks.map((link, i) => (
-      <motion.div key={i}
-        initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-        className="mb-3 p-3 rounded-xl"
-        style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.15)' }}>
-        <div className="flex gap-2 items-center flex-wrap">
-          <input className="input-dark flex-1 min-w-[110px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.label}
-            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,label:e.target.value}:x))}
-            placeholder="Label (e.g. Kinyarwanda Subs)" />
-          <input className="input-dark flex-1 min-w-[100px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.language}
-            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,language:e.target.value}:x))}
-            placeholder="Language" />
-          <input className="input-dark flex-[2] min-w-[150px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.url}
-            onChange={e => setSubtitleLinks(l=>l.map((x,idx)=>idx===i?{...x,url:e.target.value}:x))}
-            placeholder="Subtitle file/link URL" />
-          <button onClick={() => setSubtitleLinks(l=>l.filter((_,idx)=>idx!==i))}
-            style={{ color:'#e05c3a44' }}
-            onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
-            onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </motion.div>
-    ))}
-  </AnimatePresence>
-  {subtitleLinks.length === 0 && (
-    <div className="text-center py-3 rounded-xl text-xs"
-      style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
-      No subtitles yet - click Add Subtitle above
-    </div>
-  )}
+{/* Mobile Money Number — for admin to credit uploader */}
+<div className="p-4 rounded-xl" style={{ background:'rgba(34,197,94,0.06)', border:'1px solid rgba(34,197,94,0.15)' }}>
+  <label className="block text-[11px] font-semibold mb-1.5 tracking-[2px] uppercase" style={{ color:'#22c55e' }}>
+    MoMo Number — so admin can credit you ✦
+  </label>
+  <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
+    value={form.uploader_momo_number} onChange={e => set('uploader_momo_number', e.target.value)}
+    placeholder="e.g. 0788123456" />
+  <p className="text-[10px] mt-1.5" style={{ color:'#4a4a3a' }}>
+    Optional — provide your mobile money number for rewards when admin approves your upload
+  </p>
 </div>
         
           {/* Download Links */}
@@ -457,7 +421,7 @@ const validate = () => {
             {loading
               ? <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:1, ease:'linear' }}><Film size={16}/></motion.div>
               : <Save size={16} />}
-            {loading ? 'Adding to Library...' : 'Add to Agezweho Movies'}
+            {loading ? 'Adding to Agasobanuye...' : 'Add to Agezweho Movies'}
           </motion.button>
         </motion.div>
       </div>

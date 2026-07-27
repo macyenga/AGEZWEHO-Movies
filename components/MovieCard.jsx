@@ -38,49 +38,30 @@ export default function MovieCard({ movie, index = 0 }) {
       <Link href={`/movies/${movie.id}`}>
         <motion.div
           ref={ref}
-          style={{ rotateX, rotateY, transformPerspective:900 }}
-          onMouseMove={handleMouse}
-          onMouseLeave={() => { x.set(0); y.set(0); }}
-          whileHover={{ scale:1.03 }} whileTap={{ scale:0.98 }}
-          className="group relative rounded-xl overflow-hidden cursor-pointer"
           style={{
+            rotateX,
+            rotateY,
+            transformPerspective: 900,
             background:'linear-gradient(160deg,rgba(26,26,40,0.9) 0%,rgba(15,15,22,0.95) 100%)',
             border:'1px solid rgba(255,255,255,0.06)',
             boxShadow:'0 4px 24px rgba(0,0,0,0.5)',
             transition:'border-color 0.3s, box-shadow 0.3s',
           }}
+          onMouseMove={handleMouse}
+          whileHover={{ scale:1.03 }} whileTap={{ scale:0.98 }}
+          className="group relative rounded-xl overflow-hidden cursor-pointer"
           onMouseEnter={e => {
             e.currentTarget.style.borderColor='rgba(201,168,76,0.25)';
             e.currentTarget.style.boxShadow='0 8px 40px rgba(0,0,0,0.6), 0 0 30px rgba(201,168,76,0.06)';
           }}
           onMouseLeave={e => {
+            x.set(0);
+            y.set(0);
             e.currentTarget.style.borderColor='rgba(255,255,255,0.06)';
             e.currentTarget.style.boxShadow='0 4px 24px rgba(0,0,0,0.5)';
           }}
         >
           {/* ── Heart / Save button ── */}
-          <motion.button
-            onClick={toggleCollection}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.85 }}
-            className="hidden"
-            style={{
-              background: inColl ? 'rgba(201,168,76,0.25)' : 'rgba(0,0,0,0.5)',
-              border: inColl ? '1px solid rgba(201,168,76,0.5)' : '1px solid rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(4px)',
-              opacity: inColl ? 1 : 0,
-            }}
-            // Show on hover via parent group
-            title={inColl ? 'Remove from collection' : 'Save to collection'}
-          >
-            <Heart
-              size={12}
-              fill={inColl ? '#c9a84c' : 'none'}
-              style={{ color: inColl ? '#c9a84c' : '#fff' }}
-            />
-          </motion.button>
-
-          {/* Make heart always visible when saved, show on hover otherwise */}
           <style>{`
             .group:hover .heart-btn { opacity: 1 !important; }
           `}</style>

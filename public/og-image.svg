@@ -1,0 +1,14 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0a0a0f"/>
+  <rect x="0" y="0" width="1200" height="630" fill="url(#g)"/>
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="rgba(201,168,76,0.08)"/>
+      <stop offset="100%" stop-color="rgba(10,10,15,0)"/>
+    </radialGradient>
+  </defs>
+  <text x="600" y="280" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-size="86" font-weight="bold" fill="#f5e4a8" filter="url(#glow)">AGEZWEHO</text>
+  <text x="600" y="350" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" fill="#e8c87a" letter-spacing="4">MOVIES</text>
+  <text x="600" y="400" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" fill="#8a8778">Rwanda's Home for Agasobanuye Movies &amp; Entertainment</text>
+  <line x1="480" y1="440" x2="720" y2="440" stroke="rgba(201,168,76,0.4)" stroke-width="1"/>
+</svg>
