@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { getMovies, getMovieById } from '../../lib/supabase';
 import CinematicBackground from '../../components/CinematicBackground';
-import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Heart, X } from 'lucide-react';
+import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Heart, Phone, X } from 'lucide-react';
 
 const SITE_URL = 'https://agezweho.com';
 
@@ -22,6 +22,7 @@ export default function MovieDetail({ movie }) {
   const [donateState, setDonateState] = useState('idle'); // idle | loading | done | error
   const [donateResult, setDonateResult] = useState(null);
   const [donateError, setDonateError] = useState('');
+  const [donorPhone, setDonorPhone] = useState('');
 
   if (!movie) return (
     <div className="min-h-screen flex items-center justify-center bg-deep">
@@ -52,7 +53,7 @@ export default function MovieDetail({ movie }) {
       const res = await fetch('/api/payments/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: donateAmount, movie_id: movie.id }),
+        body: JSON.stringify({ amount: donateAmount, movie_id: movie.id, phone: donorPhone.trim() }),
       });
       const data = await res.json();
       if (!res.ok) { setDonateError(data.error || 'Something went wrong'); setDonateState('error'); return; }
@@ -193,7 +194,7 @@ export default function MovieDetail({ movie }) {
         </div>
       )}
       <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-        onClick={() => { setDonateAmount(1000); setDonateState('idle'); setDonateResult(null); setShowDonate(true); }}
+        onClick={() => { setDonateAmount(1000); setDonateState('idle'); setDonateResult(null); setDonorPhone(''); setShowDonate(true); }}
         className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold"
         style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:'#e8c87a' }}>
         🤝 Gurira MB {movie.uploaded_by}
@@ -227,6 +228,22 @@ export default function MovieDetail({ movie }) {
               Gurira MB <span className="font-semibold" style={{ color:'#e8c87a' }}>{movie.uploaded_by}</span>.
               Pay admin, admin will send the money to uploader manually.
             </p>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color:'#6b6b8a' }}>
+                  Your Phone Number <span style={{ color:'#e05c3a' }}>*</span>
+                </label>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
+                  <Phone size={14} style={{ color:'#6b6b8a' }} />
+                  <input type="tel" value={donorPhone} onChange={e => setDonorPhone(e.target.value)}
+                    placeholder="078XXXXXXX"
+                    className="flex-1 bg-transparent text-sm outline-none" style={{ color:'#e8e6f0' }} />
+                </div>
+                <p className="text-[10px] mt-1" style={{ color:'#4a4a3a' }}>
+                  Admin uses this to verify your payment and credit the uploader.
+                </p>
+              </div>
 
             {donateState === 'done' && donateResult ? (
               <div className="space-y-3 text-center">
@@ -288,7 +305,7 @@ export default function MovieDetail({ movie }) {
               )}
 
               <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                onClick={handleDonate} disabled={donateState === 'loading' || donateAmount < 500}
+                onClick={handleDonate} disabled={donateState === 'loading' || donateAmount < 500 || !donorPhone.trim()}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
                 style={{ background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.4)', color:'#e8c87a' }}>
                 {donateState === 'loading' ? (
