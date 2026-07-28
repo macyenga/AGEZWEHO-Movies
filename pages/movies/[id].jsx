@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { getMovies, getMovieById } from '../../lib/supabase';
 import CinematicBackground from '../../components/CinematicBackground';
-import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, Captions, DollarSign, Beer, X } from 'lucide-react';
+import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Beer, X } from 'lucide-react';
 
 const SITE_URL = 'https://agezweho.com';
 
@@ -35,18 +35,12 @@ export default function MovieDetail({ movie }) {
 
   const links = Array.isArray(movie.links) ? movie.links : [];
   const watchLinks = Array.isArray(movie.watch_links) ? movie.watch_links : [];
-  const subtitleLinks = Array.isArray(movie.subtitle_links)
-    ? movie.subtitle_links
-    : Array.isArray(movie.subtitles)
-      ? movie.subtitles
-      : [];
   const pageUrl = `${SITE_URL}/movies/${movie.id}`;
   const primaryWatch = watchLinks[0];
   const primaryDownload = links[0];
-  const primarySubtitle = subtitleLinks[0];
   const stars = movie.rating ? Math.round(parseFloat(movie.rating) / 2) : 0;
   const ratingValue = Number.parseFloat(movie.rating);
-  const seoTitle = `${movie.title} ${movie.year || ''} - Watch, Download${subtitleLinks.length ? ' & Subtitles' : ''} | Agezweho Movies Rwanda`;
+  const seoTitle = `${movie.title} ${movie.year || ''} - Watch, Download | Agezweho Movies Rwanda`;
   const seoDescription = movie.overview
     || `Watch and download ${movie.title} on Agezweho Movies, Rwanda's home for Agasobanuye movies, series, anime and entertainment.`;
   const shareText = `${movie.title} on Agezweho Movies Rwanda`;
@@ -355,7 +349,6 @@ export default function MovieDetail({ movie }) {
           {movie.genre && <span className="badge badge-muted">{movie.genre}</span>}
           {movie.year && <span className="badge badge-muted">{movie.year}</span>}
           {watchLinks.length > 0 && <span className="badge badge-green">Play Ready</span>}
-          {subtitleLinks.length > 0 && <span className="badge badge-blue">Subtitles</span>}
           </div>
 
           <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.16 }}
@@ -391,20 +384,7 @@ export default function MovieDetail({ movie }) {
                   <Download size={15} /> Request Link
                 </Link>
               )}
-              {primarySubtitle ? (
-                <motion.a href={primarySubtitle.url} target="_blank" rel="noopener noreferrer"
-                  whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold"
-                  style={{ background:'rgba(59,130,246,0.12)', border:'1px solid rgba(59,130,246,0.3)', color:'#93c5fd', textDecoration:'none' }}>
-                  <Captions size={15} /> Subtitles
-                </motion.a>
-              ) : (
-                <Link href="/requests" className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold"
-                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778', textDecoration:'none' }}>
-                  <Captions size={15} /> Request Subs
-                </Link>
-              )}
-            </div>
+</div>
           </motion.div>
 
           <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.18 }}
@@ -538,29 +518,6 @@ export default function MovieDetail({ movie }) {
 
           <span className="relative z-10 tracking-wide">{l.label || 'Watch Online'}</span>
           <ExternalLink size={12} className="relative z-10" style={{ opacity:0.7 }} />
-        </motion.a>
-      ))}
-    </div>
-  </motion.div>
-)}
-
-        {/* Subtitles */}
-{subtitleLinks.length > 0 && (
-  <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.3 }} className="mb-6">
-    <div className="section-tag mb-3 flex items-center gap-2">
-      <Captions size={11} /> Subtitles
-    </div>
-    <div className="flex flex-wrap gap-3">
-      {subtitleLinks.map((l, i) => (
-        <motion.a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
-          initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }}
-          transition={{ delay:0.3 + i*0.05 }}
-          whileHover={{ scale:1.04, y:-2 }} whileTap={{ scale:0.97 }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold"
-          style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.25)', color:'#93c5fd', textDecoration:'none' }}>
-          <Captions size={13} />
-          {l.label || l.language || 'Download Subtitles'}
-          <ExternalLink size={10} style={{ opacity:0.6 }} />
         </motion.a>
       ))}
     </div>

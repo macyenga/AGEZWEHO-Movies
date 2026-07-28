@@ -44,6 +44,7 @@ export default function Admin() {
   const [addAdminError, setAddAdminError] = useState('');
   const [addAdminSuccess, setAddAdminSuccess] = useState('');
   const [editingMovie, setEditingMovie] = useState(null);
+  const [creatingMovie, setCreatingMovie] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
 
   const [txSearch, setTxSearch] = useState('');
@@ -185,15 +186,26 @@ export default function Admin() {
     finally { setActionLoading(null); }
   };
 
-  const handleDeleteMovie = async (id) => {
-    if (!confirm('Delete this movie permanently?')) return;
-    setActionLoading(`del_${id}`);
-    try {
-      await doAdminRequest('/api/admin/movies', 'DELETE', { id });
-      await refresh();
-    } catch (err) { setError(err.message); }
-    finally { setActionLoading(null); }
-  };
+   const handleDeleteMovie = async (id) => {
+     if (!confirm('Delete this movie permanently?')) return;
+     setActionLoading(`del_${id}`);
+     try {
+       await doAdminRequest('/api/admin/movies', 'DELETE', { id });
+       await refresh();
+     } catch (err) { setError(err.message); }
+     finally { setActionLoading(null); }
+   };
+
+   const handleCreateMovie = async (movieData) => {
+     setEditLoading(true);
+     try {
+       const result = await doAdminRequest('/api/admin/movies', 'POST', movieData);
+       setEditingMovie(null);
+       setCreatingMovie(false);
+       await refresh();
+     } catch (err) { setError(err.message); }
+     finally { setEditLoading(false); }
+   };
 
   const handleEditMovie = async (updates) => {
     if (!editingMovie) return;
@@ -476,8 +488,29 @@ export default function Admin() {
                   <>
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-[11px]" style={{ color: '#6a6a5a' }}>Total: <span style={{ color:'#e8e6f0' }}>{data?.allMovies?.length || 0}</span> Agasobanuye</span>
+                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => setCreatingMovie(true)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold ml-auto"
+                        style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                        <Plus size={11} /> Add Movie
+                      </motion.button>
                     </div>
-                    {data?.allMovies?.length === 0 ? (
+                    {creatingMovie ? (
+                      <div>
+                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
+                          onClick={() => { setCreatingMovie(false); }}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs mb-4"
+                          style={{ color: '#6a6a5a' }}>
+                          <ArrowLeft size={13} /> Back to all movies
+                        </motion.button>
+                        <AddMovieForm
+                          initial={null}
+                          onSave={handleCreateMovie}
+                          onCancel={() => { setCreatingMovie(false); }}
+                          loading={editLoading}
+                        />
+                      </div>
+                    ) : data?.allMovies?.length === 0 ? (
                       <p className="text-sm text-center py-8" style={{ color: '#6a6a5a' }}>Nta Agasobanuye — no movies yet</p>
                     ) : data?.allMovies?.map(m => (
                       <div key={m.id} className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>

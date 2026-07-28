@@ -30,6 +30,22 @@ function pickMovieUpdates(body) {
 export default async function handler(req, res) {
   if (!(await requireAdmin(req, res))) return;
 
+  if (req.method === 'POST') {
+    const body = req.body || {};
+    const movie = pickMovieUpdates(body);
+    if (!movie.title) return res.status(400).json({ error: 'Title is required' });
+    if (!movie.status) movie.status = 'pending';
+
+    const { data, error } = await supabaseAdmin
+      .from('movies')
+      .insert([movie])
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(201).json({ movie: data });
+  }
+
   if (req.method === 'PATCH') {
     const { id, ...body } = req.body || {};
     if (!id) return res.status(400).json({ error: 'Movie ID required' });

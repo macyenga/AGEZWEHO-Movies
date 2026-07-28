@@ -23,7 +23,6 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
   const [form, setForm]     = useState(initial || EMPTY);
   const [links, setLinks] = useState(initial?.links || []);
   const [watchLinks, setWatchLinks] = useState(initial?.watch_links || []);
-  const [subtitleLinks, setSubtitleLinks] = useState(initial?.subtitle_links || []);
   const [uploader_momo_number, setUploaderMomoNumber] = useState(initial?.uploader_momo_number || '');
   const [errors, setErrors] = useState({});
 
@@ -43,7 +42,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 
   const handleSubmit = () => {
     if (!validate()) return;
-    onSave({ ...form, links: links.filter(l=>l.url), platforms: form.platforms||[], watch_links: watchLinks.filter(l=>l.url), subtitle_links: subtitleLinks.filter(l=>l.url), uploader_momo_number });
+    onSave({ ...form, links: links.filter(l=>l.url), platforms: form.platforms||[], watch_links: watchLinks.filter(l=>l.url), uploader_momo_number });
   };
 
   const F = (k, label, placeholder, opts={}) => (

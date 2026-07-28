@@ -25,7 +25,7 @@ create table if not exists movies (
   uploaded_by     text,
   uploader_momo_number   text,
   featured        boolean default false,
-  status          text default 'approved',
+  status          text default 'pending',
   created_at      timestamptz default now()
 );
 
@@ -43,7 +43,7 @@ create table if not exists games (
   premium     boolean default true,
   price       integer default 50,
   uploader_momo_number text,
-  status      text default 'approved',
+  status      text default 'pending',
   created_at  timestamptz default now()
 );
 
@@ -53,11 +53,13 @@ alter table movies add column if not exists platforms jsonb default '[]'::jsonb;
 alter table movies add column if not exists trailer_url text;
 alter table movies add column if not exists uploaded_by text;
 alter table movies add column if not exists uploader_momo_number text;
-alter table movies add column if not exists status text default 'approved';
+alter table movies add column if not exists status text default 'pending';
+alter table movies alter column status set default 'pending';
 
 alter table games add column if not exists price integer default 50;
 alter table games add column if not exists uploader_momo_number text;
-alter table games add column if not exists status text default 'approved';
+alter table games add column if not exists status text default 'pending';
+alter table games alter column status set default 'pending';
 
 -- ── Requests Table ────────────────────────
 create table if not exists requests (
@@ -218,34 +220,34 @@ drop policy if exists "public_delete_movies" on movies;
 drop policy if exists "public_delete_requests" on requests;
 
 -- ── Seed Sample Data ──────────────────────
-insert into movies (title, year, type, language, genre, rating, poster_url, overview, links, featured) values
+insert into movies (title, year, type, language, genre, rating, poster_url, overview, links, featured, status) values
 (
   'Pushpa 2: The Rule', '2024', 'Movie', 'Telugu/Hindi', 'Action',  '8.3',
   'https://image.tmdb.org/t/p/w342/eTlR0swrUJL0y6yjGWBFkOJvCMW.jpg',
   'Pushpa Raj expands his red-sandalwood smuggling empire and faces a fierce new antagonist bent on destroying everything he has built.',
   '[{"label":"JioCinema","url":"https://www.jiocinema.com","color":"#6B4DE6"},{"label":"Amazon Prime","url":"https://www.primevideo.com","color":"#00A8E1"}]',
-  true
+  true, 'approved'
 ),
 (
   'Stree 2', '2024', 'Movie', 'Hindi', 'Horror Comedy', '7.9',
   'https://image.tmdb.org/t/p/w342/pvBHkB2MzO0L9OwxFwcuJDfX7gL.jpg',
   'The gang of Chanderi faces a far more terrifying supernatural force than Stree — one that may require an unlikely alliance to defeat.',
   '[{"label":"Netflix","url":"https://www.netflix.com","color":"#E50914"}]',
-  true
+  true, 'approved'
 ),
 (
   'Mirzapur S3', '2024', 'Series', 'Hindi', 'Crime Drama', '8.1',
   'https://image.tmdb.org/t/p/w342/2sLUoMmYlEEt8cq6DQhz8oTIUcW.jpg',
   'The power struggle for control of Mirzapur reaches a boiling point as old loyalties shatter and new blood rises to claim the throne.',
   '[{"label":"Amazon Prime","url":"https://www.primevideo.com","color":"#00A8E1"}]',
-  false
+  false, 'approved'
 ),
 (
   'Animal', '2023', 'Movie', 'Hindi', 'Action Drama', '6.8',
   'https://image.tmdb.org/t/p/w342/oaGvjB0DvdhXhOAuEV3F9VM1xSO.jpg',
   'A son''s obsessive devotion to his father spirals into violence and vengeance as corporate conspiracies and family betrayals collide.',
   '[{"label":"Netflix","url":"https://www.netflix.com","color":"#E50914"},{"label":"JioCinema","url":"https://www.jiocinema.com","color":"#6B4DE6"}]',
-  false
+  false, 'approved'
 );
 
 insert into requests (title, requested_by, note, votes) values

@@ -17,7 +17,7 @@ const PLATFORMS = [
   { name: 'Custom',       color: '#c9a84c' },
 ];
 
-const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', uploaded_by:'', uploader_momo_number:'', uploader_momo_code:'', featured:false, trailer_url:'' };
+const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', uploaded_by:'', uploader_momo_number:'', featured:false, trailer_url:'' };
 
 export default function Submit() {
   const [form,    setForm]    = useState(EMPTY);
@@ -29,7 +29,7 @@ export default function Submit() {
 const [searchResults, setSearchResults] = useState([]);
 const [searching, setSearching]       = useState(false);
 const [showResults, setShowResults]   = useState(false);
-  const [subtitleLinks, setSubtitleLinks] = useState([]);
+const [searchError, setSearchError] = useState('');
   const [success, setSuccess] = useState(false);
   const [submittedBy, setSubmittedBy] = useState('');
 
@@ -37,18 +37,26 @@ const [showResults, setShowResults]   = useState(false);
 
 const searchTMDB = async (query) => {
   if (!query.trim() || query.length < 2) { setSearchResults([]); setShowResults(false); return; }
-  setSearching(true);
-  try {
-    const res = await fetch(`/api/omdb/search?q=${encodeURIComponent(query)}`);
-    const data = await res.json();
-    if (data.Search) {
-      setSearchResults(data.Search.slice(0, 6));
-      setShowResults(true);
-    } else {
-      setSearchResults([]);
-    }
-  } catch { setSearchResults([]); }
-  finally { setSearching(false); }
+setSearching(true);
+setSearchError('');
+setShowResults(false);
+try {
+  const res = await fetch(`/api/omdb/search?q=${encodeURIComponent(query)}`);
+  const data = await res.json();
+  if (!res.ok) {
+    setSearchError(data.error || 'Search failed');
+    setSearchResults([]);
+  } else if (data.Search) {
+    setSearchResults(data.Search.slice(0, 6));
+    setShowResults(true);
+  } else {
+    setSearchResults([]);
+  }
+} catch {
+  setSearchError('Search unavailable');
+  setSearchResults([]);
+}
+finally { setSearching(false); }
 };
 
 const fillFromTMDB = async (item) => {
@@ -87,13 +95,12 @@ const validate = () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      await addMovie({ ...form, links: links.filter(l => l.url), watch_links: watchLinks.filter(l=>l.url), subtitle_links: subtitleLinks.filter(l=>l.url) });
+      await addMovie({ ...form, links: links.filter(l => l.url), watch_links: watchLinks.filter(l=>l.url) });
       setSubmittedBy(form.uploaded_by.trim());
       setSuccess(true);
       setForm(EMPTY);
       setLinks([]);
       setWatchLinks([]);
-      setSubtitleLinks([]);
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -220,6 +227,7 @@ const validate = () => {
         const val = e.target.value;
         setSearchQuery(val);
         set('title', val);
+        setSearchError('');
         searchTMDB(val);
       }}
       placeholder="Type movie or series name to search..."
@@ -234,6 +242,9 @@ const validate = () => {
     )}
   </div>
   {errors.title && <p className="text-red-400/80 text-xs mt-1">{errors.title}</p>}
+  {searchError && !showResults && (
+    <p className="text-xs mt-1" style={{ color: '#e05c3a' }}>{searchError}</p>
+  )}
 
   {/* Search Results Dropdown */}
   <AnimatePresence>
@@ -247,7 +258,7 @@ const validate = () => {
          const year = item.Year;
          const poster = item.Poster !== 'N/A' ? item.Poster : null;
           return (
-            <motion.div key={item.id}
+            <motion.div key={item.imdbID}
               whileHover={{ background:'rgba(201,168,76,0.08)' }}
               onMouseDown={() => fillFromTMDB(item)}
               className="flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors"
@@ -267,9 +278,9 @@ const validate = () => {
                   </span>
                 </div>
               </div>
-              {item.vote_average > 0 && (
+              {item.imdbRating && item.imdbRating !== 'N/A' && (
                 <span className="text-[10px] flex-shrink-0" style={{ color:'#c9a84c' }}>
-                  ★ {item.vote_average.toFixed(1)}
+                  ★ {item.imdbRating}
                 </span>
               )}
             </motion.div>
