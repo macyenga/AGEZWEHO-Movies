@@ -1039,13 +1039,13 @@ export default function Admin() {
 
                     {payouts.movieUploaders?.length > 0 && (
                       <div className="space-y-3">
-                        <span className="text-xs font-semibold" style={{ color: '#e8e6f0' }}>Movie Uploaders (Buy a Beer)</span>
+                        <span className="text-xs font-semibold" style={{ color: '#e8e6f0' }}>Movie Uploaders (Gurira MB)</span>
                         {payouts.movieUploaders.map(u => (
                           <div key={u.name} className="p-4 rounded-xl"
                             style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium" style={{ color: '#e8e6f0' }}>
-                                🍺 {u.name}
+                                🤝 {u.name}
                                 {u.momo_number && <span className="text-[10px] ml-2" style={{ color:'#6a6a5a' }}>({u.momo_number})</span>}
                               </span>
                               <span className="text-xs font-bold" style={{ color: '#22c55e' }}>{u.totalEarnings.toLocaleString()} RWF</span>

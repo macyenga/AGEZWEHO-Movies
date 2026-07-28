@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { getMovies, getMovieById } from '../../lib/supabase';
 import CinematicBackground from '../../components/CinematicBackground';
-import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Beer, X } from 'lucide-react';
+import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Heart, X } from 'lucide-react';
 
 const SITE_URL = 'https://agezweho.com';
 
@@ -196,7 +196,7 @@ export default function MovieDetail({ movie }) {
         onClick={() => { setDonateAmount(1000); setDonateState('idle'); setDonateResult(null); setShowDonate(true); }}
         className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold"
         style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:'#e8c87a' }}>
-        🍺 Buy a Beer for {movie.uploaded_by}
+        🤝 Gurira MB {movie.uploaded_by}
       </motion.button>
 
       {/* Donate Modal */}
@@ -213,7 +213,7 @@ export default function MovieDetail({ movie }) {
             onClick={e => e.stopPropagation()}>
 
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom:'1px solid rgba(201,168,76,0.1)' }}>
-            <span className="text-sm font-semibold" style={{ color:'#e8e0d0' }}>🍺 Buy a Beer</span>
+            <span className="text-sm font-semibold" style={{ color:'#e8e0d0' }}>🤝 Gurira MB</span>
             <button onClick={() => setShowDonate(false)} className="p-1 rounded-lg transition-colors"
               style={{ color:'#6a6a5a' }}
               onMouseEnter={e=>e.currentTarget.style.color='#c9a84c'}
@@ -224,8 +224,8 @@ export default function MovieDetail({ movie }) {
 
             <div className="p-5 space-y-4">
             <p className="text-xs" style={{ color:'#8a8778' }}>
-              Send a tip to <span className="font-semibold" style={{ color:'#e8c87a' }}>{movie.uploaded_by}</span>.
-              50% goes directly to them, 50% supports the platform.
+              Gurira MB <span className="font-semibold" style={{ color:'#e8c87a' }}>{movie.uploaded_by}</span>.
+              Pay admin, admin will send the money to uploader manually.
             </p>
 
             {donateState === 'done' && donateResult ? (
@@ -277,9 +277,8 @@ export default function MovieDetail({ movie }) {
 
               <div className="p-3 rounded-xl text-[10px] leading-relaxed"
                 style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.1)', color:'#8a8778' }}>
-                <span className="font-semibold" style={{ color:'#e8c87a' }}>Split:</span> You pay {donateAmount.toLocaleString()} RWF
-                — <span style={{ color:'#22c55e' }}>{Math.floor(donateAmount/2).toLocaleString()} RWF</span> goes to {movie.uploaded_by}
-                , <span style={{ color:'#c9a84c' }}>{Math.ceil(donateAmount/2).toLocaleString()} RWF</span> supports the platform.
+                You pay <span className="font-semibold" style={{ color:'#fbbf24' }}>{donateAmount.toLocaleString()} RWF</span> to admin.
+                Admin will send the money to <span style={{ color:'#22c55e' }}>{movie.uploaded_by}</span> manually.
               </div>
 
               {donateState === 'error' && (
@@ -295,7 +294,7 @@ export default function MovieDetail({ movie }) {
                 {donateState === 'loading' ? (
                   <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:1, ease:'linear' }} className="w-4 h-4 rounded-full" style={{ border:'2px solid rgba(201,168,76,0.3)', borderTopColor:'#e8c87a' }} />
                 ) : (
-                  <><Beer size={15} /> Buy Beer — {donateAmount.toLocaleString()} RWF</>
+                  <><Heart size={15} /> Gurira MB — {donateAmount.toLocaleString()} RWF</>
                 )}
               </motion.button>
               </>
