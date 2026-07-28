@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import DonationFloat from '../components/DonationFloat';
 import { AuthProvider } from '../contexts/AuthContext';
-import { Analytics } from '@vercel/analytics/next';
+// import { Analytics } from '@vercel/analytics/next';
+// Cloudflare: Replace with Cloudflare Web Analytics snippet from dashboard
 
 const pageVariants = {
   initial: { opacity: 0, y: 18 },
@@ -28,7 +29,7 @@ export default function App({ Component, pageProps, router }) {
         </motion.div>
       </AnimatePresence>
       <DonationFloat />
-      <Analytics />
+      {/* <Analytics /> */}
     </AuthProvider>
   );
 }

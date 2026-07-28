@@ -14,6 +14,8 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.local.production
 
 # Logs
 npm-debug.log*
@@ -29,3 +31,12 @@ yarn-error.log*
 
 # Vercel
 .vercel
+
+# Cloudflare
+wrangler.toml
+.open-next/
+.cloudflare/
+.dev.vars
+.dev.vars.*
+# Cloudflare Workers temp files
+.wrangler/
