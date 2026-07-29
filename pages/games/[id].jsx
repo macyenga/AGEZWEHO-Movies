@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
 import { supabase } from '../../lib/supabase';
+import SEOHead from '../../components/SEOHead';
 import { supabaseAdmin } from '../../lib/server/supabase-admin';
 import CinematicBackground from '../../components/CinematicBackground';
+import AdBanner from '../../components/ads/AdBanner';
 import { useAuth } from '../../contexts/AuthContext';
-import { ArrowLeft, Download, ExternalLink, Package, Star, Shield, Zap, Lock, CheckCircle2, Loader2, Heart, Phone, Send } from 'lucide-react';
+import { ArrowLeft, Download, ExternalLink, Package, Star, Shield, Zap, Lock, CheckCircle2, Loader2, Heart, Phone, Send, Crown } from 'lucide-react';
 
 const UNLOCK_KEY = 'agezweho_unlocked_games';
 const GAME_TX_KEY = 'agezweho_game_transactions';
@@ -14,7 +15,7 @@ const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
 const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 
 export default function GameDetail({ game }) {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const [unlocked, setUnlocked] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
   const [donateStep, setDonateStep] = useState('confirm');
@@ -27,6 +28,12 @@ export default function GameDetail({ game }) {
 
   const loadUnlockedLinks = useCallback(async () => {
     if (!game?.id || !user) return false;
+
+    if (isPro) {
+      setDownloadLinks(Array.isArray(game?.links) ? game.links : []);
+      setUnlocked(true);
+      return true;
+    }
 
     const token = (await supabase.auth.getSession()).data.session?.access_token;
     if (!token) return false;
@@ -43,7 +50,7 @@ export default function GameDetail({ game }) {
     const unlockedGames = JSON.parse(localStorage.getItem(UNLOCK_KEY) || '{}');
     localStorage.setItem(UNLOCK_KEY, JSON.stringify({ ...unlockedGames, [game.id]: true }));
     return true;
-  }, [game?.id, user]);
+  }, [game?.id, user, isPro, game?.links]);
 
   const checkPaymentStatus = useCallback(async (txRef = pendingTxRef) => {
     if (!txRef) return false;
@@ -122,10 +129,29 @@ export default function GameDetail({ game }) {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head>
-        <title>{game.title} — Agezweho Movies</title>
-        <meta name="description" content={game.overview || `Download ${game.title} for free on Agezweho Movies`} />
-      </Head>
+      <SEOHead
+        title={game.title}
+        description={game.overview || `Download ${game.title} for free on Agezweho Movies — Rwanda's home for premium content and Agasobanuye entertainment.`}
+        keywords={`${game.title} download, ${game.title} ${game.version || ''}, ${game.category || ''} games, modded apps, premium content Rwanda`}
+        ogImage={game.cover_url || undefined}
+        canonical={`https://agezweho.com/games/${game.id}`}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: game.title,
+          url: `https://agezweho.com/games/${game.id}`,
+          image: game.cover_url || 'https://agezweho.com/og-image.svg',
+          description: game.overview || `Download ${game.title} on Agezweho Movies`,
+          applicationCategory: game.category || 'GameApplication',
+          operatingSystem: 'Android, Windows',
+          offers: {
+            '@type': 'Offer',
+            price: game.price || '0',
+            priceCurrency: 'RWF',
+            availability: 'https://schema.org/InStock',
+          },
+        }}
+      />
       <CinematicBackground />
 
       {/* Ambient bg from cover */}
@@ -270,26 +296,59 @@ export default function GameDetail({ game }) {
                 className="p-6 rounded-2xl text-center"
                 style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.2)' }}>
                 <Lock size={32} style={{ color: '#fbbf24', margin: '0 auto 12px' }} />
-                <h3 className="font-cinzel text-lg mb-2" style={{ fontFamily: 'Cinzel,serif', color: '#fbbf24' }}>Donate to Unlock</h3>
+                <h3 className="font-cinzel text-lg mb-2" style={{ fontFamily: 'Cinzel,serif', color: '#fbbf24' }}>
+                  {isPro ? 'Pro Access' : 'Donate to Unlock'}
+                </h3>
                 <p className="text-xs mb-4" style={{ color: '#8a8060' }}>
-                  Download links are locked. Donate <strong>{donateAmount} RWF</strong> via MTN MoMo to unlock.
+                  {isPro
+                    ? 'You are Pro! Download links are being unlocked...'
+                    : `Download links are locked. Donate <strong>${donateAmount} RWF</strong> via MTN MoMo to unlock.`
+                  }
                 </p>
                 {user ? (
-                  <motion.button
-                    whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => setShowDonate(true)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
-                    style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
-                    <Heart size={14} /> Donate {donateAmount} RWF to Unlock
-                  </motion.button>
-                ) : (
-                  <Link href={`/auth/login?redirect=/games/${game.id}`}>
-                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  isPro ? (
+                    <motion.div
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold"
-                      style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: '#e8c87a' }}>
-                      Sign In to Donate
+                      style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                      <Crown size={14} /> Unlocking for Pro...
                     </motion.div>
-                  </Link>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                        onClick={() => setShowDonate(true)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
+                        style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
+                        <Heart size={14} /> Donate {donateAmount} RWF
+                      </motion.button>
+                      <Link href="/subscribe">
+                        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-semibold cursor-pointer"
+                          style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#b8a060' }}>
+                          <Crown size={12} /> Or go Pro — unlock all for 2,000 RWF/month
+                        </motion.div>
+                      </Link>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Link href={`/auth/login?redirect=/games/${game.id}`}>
+                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
+                        style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: '#e8c87a' }}>
+                        Sign In to Unlock
+                      </motion.div>
+                    </Link>
+                    <Link href="/subscribe">
+                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-semibold cursor-pointer"
+                        style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#b8a060' }}>
+                        <Crown size={12} /> Or go Pro for unlimited access
+                      </motion.div>
+                    </Link>
+                  </div>
                 )}
               </motion.div>
             ) : (
@@ -344,11 +403,19 @@ export default function GameDetail({ game }) {
                         <p className="text-xs text-center mb-3" style={{ color: '#8a8060' }}>
                           Donate <strong>{donateAmount} RWF</strong> to unlock download links for this content.
                         </p>
-                        <div className="p-3 rounded-xl mb-4" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                        <div className="p-3 rounded-xl mb-3" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
                           <p className="text-[11px] text-center" style={{ color: '#c9a84c' }}>
                             Send <strong>{donateAmount} RWF</strong> via MTN MoMo to <strong style={{ color: '#fbbf24' }}>{MOMO_NUMBER}</strong> or USSD <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
                           </p>
                         </div>
+                        <Link href="/subscribe">
+                          <div className="p-2 rounded-xl mb-4 text-center cursor-pointer" style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.1)' }}>
+                            <p className="text-[10px]" style={{ color: '#b8a060' }}>
+                              <Crown size={10} style={{ display:'inline', verticalAlign:'middle', marginRight:4 }} />
+                              Go Pro for 2,000 RWF/month — unlock all premium content, no per-item fees
+                            </p>
+                          </div>
+                        </Link>
                         <div className="mb-4">
                           <label className="block text-[10px] uppercase tracking-widest mb-1.5" style={{ color: '#6a6a5a' }}>Your MTN Phone Number</label>
                           <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -406,6 +473,8 @@ export default function GameDetail({ game }) {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <AdBanner size="300x250" className="mb-6" />
 
             {/* Disclaimer */}
             <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import CinematicBackground from '../components/CinematicBackground';
@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase';
 import {
   Shield, Film, Wallet, Mail, Users, Heart,
   CheckCircle2, XCircle, Loader2, Trash2, Plus, UserPlus, Edit3, List, ArrowLeft, Package,
-  BarChart3, DollarSign, Search, RotateCcw, Filter, TrendingUp, X
+  BarChart3, DollarSign, Search, RotateCcw, Filter, TrendingUp, X, Crown
 } from 'lucide-react';
 
 const TABS = [
@@ -20,6 +20,7 @@ const TABS = [
   { id: 'transactions', label: 'Transactions', icon: Wallet },
   { id: 'donations', label: 'Donations', icon: Heart },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'subscriptions', label: 'Subscriptions', icon: Crown },
   { id: 'payouts', label: 'Payouts', icon: DollarSign },
   { id: 'contacts', label: 'Messages', icon: Mail },
   { id: 'admins', label: 'Admins', icon: Users },
@@ -65,6 +66,10 @@ export default function Admin() {
   const [showProcessPayout, setShowProcessPayout] = useState(null);
   const [payoutForm, setPayoutForm] = useState({ amount: '', notes: '' });
   const [payoutActionLoading, setPayoutActionLoading] = useState(false);
+
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [subUserMap, setSubUserMap] = useState({});
+  const [subLoading, setSubLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -149,9 +154,26 @@ export default function Admin() {
     } catch {} finally { setPayoutsLoading(false); }
   };
 
+  const loadSubscriptions = async () => {
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    if (!token) return;
+    setSubLoading(true);
+    try {
+      const res = await fetch('/api/admin/subscriptions', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setSubscriptions(result.subscriptions || []);
+        setSubUserMap(result.userMap || {});
+      }
+    } catch {} finally { setSubLoading(false); }
+  };
+
   useEffect(() => { if (tab === 'transactions') loadTransactions(); }, [tab, txFilter]);
   useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab, analyticsPeriod]);
   useEffect(() => { if (tab === 'payouts') loadPayouts(); }, [tab]);
+  useEffect(() => { if (tab === 'subscriptions') loadSubscriptions(); }, [tab]);
 
   const doAction = async (url, body, refreshKey) => {
     setActionLoading(refreshKey);
@@ -162,9 +184,10 @@ export default function Admin() {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Action failed');
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || 'Action failed');
       await refresh();
-    } catch { setError('Action failed'); }
+    } catch (err) { setError(err.message || 'Action failed'); }
     finally { setActionLoading(null); }
   };
 
@@ -360,7 +383,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head><title>Admin — Agezweho Movies</title></Head>
+      <SEOHead title="Admin" noIndex />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-24">
@@ -602,9 +625,9 @@ export default function Admin() {
                           {actionLoading === `delgame_${g.id}` ? <Loader2 size={11} /> : <Trash2 size={11} />} Delete
                         </motion.button>
                       </div>
-                    </div>
-                  );
-                })}
+                          </div>
+                      );
+                    })}
               </div>
             )}
 
@@ -917,10 +940,9 @@ export default function Admin() {
                                   }} />
                                 </div>
                                 <span className="text-[9px] w-16 text-right flex-shrink-0" style={{ color: '#e8e6f0' }}>{r.total.toLocaleString()} RWF</span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                    </div>
+                    );})}
+                  </div>
                       )}
                     </div>
 
@@ -1161,16 +1183,148 @@ export default function Admin() {
                   <p className="text-sm text-center py-8" style={{ color: '#6a6a5a' }}>No messages</p>
                 ) : (
                   data.contacts.map((c, i) => (
-                    <div key={i} className="p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Mail size={12} style={{ color: '#3b82f6' }} />
-                        <span className="text-xs font-medium" style={{ color: '#3b82f6' }}>{c.name}</span>
-                        <span className="text-[10px]" style={{ color: '#6a6a5a' }}>{c.email}</span>
+                    <div key={c.id || i} className="p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="flex items-start gap-2 mb-2">
+                        <Mail size={12} style={{ color: '#3b82f6', marginTop: 2 }} />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-medium" style={{ color: '#3b82f6' }}>{c.name}</span>
+                          <span className="text-[10px] ml-2" style={{ color: '#6a6a5a' }}>{c.email}</span>
+                          {c.created_at && <span className="text-[9px] ml-2" style={{ color: '#4a4a3a' }}>{new Date(c.created_at).toLocaleDateString()}</span>}
+                        </div>
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          onClick={async () => {
+                            if (!confirm('Delete this message?')) return;
+                            setActionLoading(`contact_${c.id}`);
+                            try {
+                              await doAdminRequest('/api/admin/contacts', 'DELETE', { id: c.id });
+                              await refresh();
+                            } catch (err) { setError(err.message); }
+                            finally { setActionLoading(null); }
+                          }}
+                          disabled={actionLoading === `contact_${c.id}`}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] flex-shrink-0"
+                          style={{ color: '#f87171', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                          {actionLoading === `contact_${c.id}` ? <Loader2 size={10} /> : <Trash2 size={10} />}
+                        </motion.button>
                       </div>
                       {c.subject && <div className="text-xs mb-1" style={{ color: '#c9a84c' }}>{c.subject}</div>}
                       <p className="text-xs leading-relaxed" style={{ color: '#a8a49a' }}>{c.message}</p>
                     </div>
                   ))
+                )}
+              </div>
+            )}
+
+            {tab === 'subscriptions' && (
+              <div className="space-y-3">
+                {subLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 size={20} style={{ color: '#c9a84c' }} className="animate-spin" />
+                  </div>
+                ) : subscriptions.length === 0 ? (
+                  <p className="text-sm text-center py-8" style={{ color: '#6a6a5a' }}>No subscriptions yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {(() => {
+                      const active = subscriptions.filter(s => s.status === 'active');
+                      const expired = subscriptions.filter(s => {
+                        if (s.status !== 'active') return false;
+                        return s.expires_at && new Date(s.expires_at) <= new Date();
+                      });
+                      const pending = subscriptions.filter(s => s.status === 'pending');
+                      return (
+                        <div className="flex gap-4 mb-3 p-3 rounded-xl" style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <span className="text-[10px]" style={{ color: '#6a6a5a' }}>Total: <span style={{ color: '#e8e6f0' }}>{subscriptions.length}</span></span>
+                          <span className="text-[10px]" style={{ color: '#6a6a5a' }}>Active: <span style={{ color: '#22c55e' }}>{active.length - expired.length}</span></span>
+                          <span className="text-[10px]" style={{ color: '#6a6a5a' }}>Expired: <span style={{ color: '#f87171' }}>{expired.length}</span></span>
+                          <span className="text-[10px]" style={{ color: '#6a6a5a' }}>Pending: <span style={{ color: '#fbbf24' }}>{pending.length}</span></span>
+                        </div>
+                      );
+                    })()}
+                    <span className="text-[10px]" style={{ color: '#6a6a5a' }}>{subscriptions.length} subscription(s)</span>
+                    {subscriptions.map(sub => {
+                      const isExpired = sub.status === 'active' && sub.expires_at && new Date(sub.expires_at) <= new Date();
+                      const actualStatus = isExpired ? 'expired' : sub.status;
+                      const aC = isExpired ? '#f87171' : sub.status === 'active' ? '#22c55e' : sub.status === 'pending' ? '#fbbf24' : '#6a6a5a';
+                      const aBg = isExpired ? 'rgba(239,68,68,0.03)' : sub.status === 'active' ? 'rgba(34,197,94,0.03)' : sub.status === 'pending' ? 'rgba(251,191,36,0.04)' : 'rgba(14,14,22,0.6)';
+                      const aBd = isExpired ? 'rgba(239,68,68,0.12)' : sub.status === 'active' ? 'rgba(34,197,94,0.12)' : sub.status === 'pending' ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.06)';
+                      return (
+                      <div key={sub.id} className="flex items-center gap-3 p-4 rounded-xl" style={{ background: aBg, border: `1px solid ${aBd}` }}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${aC}15` }}>
+                          <Crown size={16} style={{ color: aC }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium" style={{ color: '#e8e6f0' }}>
+                            Pro
+                            <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded`}
+                              style={{ background: `${aC}15`, color: aC }}>
+                              {actualStatus}
+                            </span>
+                            {sub.expires_at && sub.status === 'active' && (
+                              <span className="ml-1 text-[10px]" style={{ color: isExpired ? '#f87171' : '#6a6a5a' }}>
+                                Expires: {new Date(sub.expires_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px]" style={{ color: '#6a6a5a' }}>
+                            User: {subUserMap[sub.user_id] || sub.user_id?.slice(0, 8)}
+                            {sub.phone && <span> • Phone: <span style={{ color: '#fbbf24' }}>{sub.phone}</span></span>}
+                            {sub.amount && <span> • {sub.amount.toLocaleString()} RWF</span>}
+                            {sub.tx_ref && <span> • Ref: <span style={{ color: '#38bdf8' }}>{sub.tx_ref.slice(0, 12)}</span></span>}
+                            <span> • {new Date(sub.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          {sub.status === 'pending' && (
+                            <>
+                              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                onClick={async () => {
+                                  setActionLoading(`sub_${sub.id}`);
+                                  try {
+                                    const token = (await supabase.auth.getSession()).data.session?.access_token;
+                                    const res = await fetch('/api/admin/approve-subscription', {
+                                      method: 'POST',
+                                      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ subscription_id: sub.id, action: 'approve' }),
+                                    });
+                                    const result = await res.json();
+                                    if (!res.ok) throw new Error(result.error || 'Approve failed');
+                                    await loadSubscriptions();
+                                  } catch (err) { setError(err.message); }
+                                  finally { setActionLoading(null); }
+                                }}
+                                disabled={actionLoading === `sub_${sub.id}`}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                                style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                                {actionLoading === `sub_${sub.id}` ? <Loader2 size={12} /> : <CheckCircle2 size={12} />} Approve
+                              </motion.button>
+                              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                onClick={async () => {
+                                  setActionLoading(`subrej_${sub.id}`);
+                                  try {
+                                    const token = (await supabase.auth.getSession()).data.session?.access_token;
+                                    const res = await fetch('/api/admin/approve-subscription', {
+                                      method: 'POST',
+                                      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ subscription_id: sub.id, action: 'reject' }),
+                                    });
+                                    const result = await res.json();
+                                    if (!res.ok) throw new Error(result.error || 'Reject failed');
+                                    await loadSubscriptions();
+                                  } catch (err) { setError(err.message); }
+                                  finally { setActionLoading(null); }
+                                }}
+                                disabled={actionLoading === `subrej_${sub.id}`}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                                {actionLoading === `subrej_${sub.id}` ? <Loader2 size={12} /> : <XCircle size={12} />} Reject
+                              </motion.button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );})}
+                  </div>
                 )}
               </div>
             )}

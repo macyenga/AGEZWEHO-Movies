@@ -255,4 +255,38 @@ insert into requests (title, requested_by, note, votes) values
 ('Panchayat Season 4', 'Ananya', 'Best Indian series ever. Waiting eagerly!', 17),
 ('Kalki 2898-AD', 'Rohan', 'Prabhas and Deepika — this will be epic.', 11);
 
+-- ── Subscriptions Table (Pro Membership) ──
+create table if not exists subscriptions (
+  id            uuid default gen_random_uuid() primary key,
+  user_id       uuid references auth.users(id) on delete cascade not null,
+  plan_type     text default 'pro',
+  status        text default 'pending',
+  phone         text,
+  payment_method text,
+  amount        integer not null,
+  months        integer default 1,
+  expires_at    timestamptz,
+  approved_by   uuid references auth.users(id) on delete set null,
+  approved_at   timestamptz,
+  created_at    timestamptz default now()
+);
+
+create index if not exists subscriptions_user_id_idx on subscriptions (user_id);
+create index if not exists subscriptions_status_idx on subscriptions (status);
+
+alter table subscriptions enable row level security;
+
+drop policy if exists "auth_read_subscriptions" on subscriptions;
+create policy "auth_read_subscriptions" on subscriptions for select using (auth.role() = 'service_role' or user_id = auth.uid());
+
+drop policy if exists "auth_insert_subscriptions" on subscriptions;
+create policy "auth_insert_subscriptions" on subscriptions for insert with check (auth.role() = 'service_role');
+
+drop policy if exists "service_update_subscriptions" on subscriptions;
+create policy "service_update_subscriptions" on subscriptions for update using (auth.role() = 'service_role');
+
+-- Migration: add phone and tx_ref columns to subscriptions (if missing)
+alter table subscriptions add column if not exists phone text;
+alter table subscriptions add column if not exists tx_ref text;
+
 -- ── Migrations ────────────────────────────

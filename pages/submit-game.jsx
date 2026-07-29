@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
-import { supabase } from '../lib/supabase';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import CATEGORIES from '../lib/categories';
 import { Plus, Trash2, Save, ArrowLeft, CheckCircle2, Package, Lock, Loader2 } from 'lucide-react';
@@ -65,7 +64,11 @@ export default function SubmitGame() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head><title>Add Game / Modded App — Agezweho Movies</title></Head>
+      <SEOHead
+        title="Add Game / Modded App"
+        description="Submit your game or modded app to Agezweho Movies premium content library and earn money."
+        canonical="https://agezweho.com/submit-game"
+      />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-20 pb-24">

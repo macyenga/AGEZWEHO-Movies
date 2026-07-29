@@ -1,12 +1,16 @@
 import Link from 'next/link';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { ArrowLeft, Film } from 'lucide-react';
 
 export default function Custom404() {
   return (
     <div className="min-h-screen bg-deep flex items-center justify-center">
-      <Head><title>404 — Agezweho Movies</title></Head>
+      <SEOHead
+        title="404 — Page Not Found"
+        description="The page you are looking for does not exist. Return to Agezweho Movies — Rwanda's home for Agasobanuye entertainment."
+        canonical="https://agezweho.com/404"
+      />
       <CinematicBackground />
       <div className="relative z-10 text-center px-6 max-w-md">
         <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6"

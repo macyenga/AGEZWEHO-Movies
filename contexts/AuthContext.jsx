@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPro, setIsPro] = useState(false);
 
   const checkAdminStatus = useCallback(async (userId) => {
     try {
@@ -17,11 +18,31 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const checkProStatus = useCallback(async (userId) => {
+    try {
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('id, expires_at')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (data) {
+        const expiresAt = new Date(data.expires_at);
+        setIsPro(expiresAt > new Date());
+      } else {
+        setIsPro(false);
+      }
+    } catch {
+      setIsPro(false);
+    }
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
         checkAdminStatus(session.user.id);
+        checkProStatus(session.user.id);
       }
       setLoading(false);
     });
@@ -30,20 +51,23 @@ export function AuthProvider({ children }) {
       if (session?.user) {
         setUser(session.user);
         checkAdminStatus(session.user.id);
+        checkProStatus(session.user.id);
       } else {
         setUser(null);
         setIsAdmin(false);
+        setIsPro(false);
       }
     });
 
     return () => subscription?.unsubscribe();
-  }, [checkAdminStatus]);
+  }, [checkAdminStatus, checkProStatus]);
 
   const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     setUser(data.user);
     await checkAdminStatus(data.user.id);
+    await checkProStatus(data.user.id);
     return data;
   };
 
@@ -62,10 +86,11 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
     setUser(null);
     setIsAdmin(false);
+    setIsPro(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, isPro, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

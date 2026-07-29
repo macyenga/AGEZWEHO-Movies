@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
-import { getMovies, getMovieById } from '../../lib/supabase';
+import { getMovieById } from '../../lib/supabase';
+import SEOHead from '../../components/SEOHead';
 import CinematicBackground from '../../components/CinematicBackground';
+import AdBanner from '../../components/ads/AdBanner';
 import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Heart, Phone, X } from 'lucide-react';
 
 const SITE_URL = 'https://agezweho.com';
@@ -124,23 +125,17 @@ export default function MovieDetail({ movie }) {
 
   return (
     <div className="min-h-screen bg-deep">
-    <Head>
-    <title>{movie.title} {movie.year || ''} — Watch {movie.language || 'Kinyarwanda'} {movie.type || 'Movie'} Online | Agezweho Movies</title>
-    <meta name="description" content={`${movie.overview || `Watch ${movie.title} online on Agezweho Movies — Rwanda's home for Agasobanuye entertainment.`}`} />
-    <meta name="keywords" content={`${movie.title} download, ${movie.title} ${movie.year || ''}, ${movie.title} ${movie.language || 'hindi'}, ${movie.title} 1080p download, ${movie.title} 4k download, ${movie.genre || ''} movies download free`} />
-    <meta property="og:title" content={movie.title + ' — Agezweho Movies'} />
-    <meta property="og:description" content={movie.overview || 'Watch on Agezweho Movies'} />
-    {movie.poster_url && <meta property="og:image" content={movie.poster_url} />}
-    <meta name="title" content={seoTitle} />
-    <link rel="canonical" href={pageUrl} />
-    <meta property="og:type" content="video.movie" />
-    <meta property="og:url" content={pageUrl} />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={`${movie.title} - Agezweho Movies Rwanda`} />
-    <meta name="twitter:description" content={seoDescription} />
-    {movie.poster_url && <meta name="twitter:image" content={movie.poster_url} />}
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-    </Head>
+    <SEOHead
+      title={`${movie.title} ${movie.year || ''} — Watch ${movie.language || 'Kinyarwanda'} ${movie.type || 'Movie'} Online`}
+      description={movie.overview || `Watch ${movie.title} online on Agezweho Movies — Rwanda's home for Agasobanuye entertainment.`}
+      keywords={`${movie.title} download, ${movie.title} ${movie.year || ''}, ${movie.title} ${movie.language || 'hindi'}, ${movie.title} 1080p download, ${movie.title} 4k download, ${movie.genre || ''} movies download free`}
+      ogTitle={`${movie.title} — Agezweho Movies`}
+      ogDescription={movie.overview || 'Watch on Agezweho Movies'}
+      ogImage={movie.poster_url || undefined}
+      ogType="video.movie"
+      canonical={pageUrl}
+      jsonLd={jsonLd}
+    />
 
     <CinematicBackground />
     {movie.poster_url && (
@@ -160,6 +155,8 @@ export default function MovieDetail({ movie }) {
     </motion.div>
     </Link>
     </motion.div>
+
+    <AdBanner size="728x90" className="mb-6" />
 
     <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
     {/* Poster */}
@@ -403,6 +400,8 @@ export default function MovieDetail({ movie }) {
 </div>
           </motion.div>
 
+          <AdBanner size="300x250" className="mb-6" />
+
           <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.18 }}
             className="mb-6">
             <div className="section-tag mb-3 flex items-center gap-2">
@@ -585,7 +584,10 @@ export default function MovieDetail({ movie }) {
             )
           }
           </motion.div>
-       {/* How to Download */}
+        {/* Ads */}
+<AdBanner size="300x250" className="mb-6" />
+
+        {/* How to Download */}
 <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.5 }} className="mt-6">
   <motion.a
     href="https://drive.google.com/drive/folders/1s-llW3hYo3-4pK6U2XR3M5bJEakbHDjI"

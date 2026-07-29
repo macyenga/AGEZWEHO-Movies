@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     .sort((a, b) => (b.donation_total || 0) - (a.donation_total || 0))
     .slice(0, 20);
 
-  const topGames = [];
+  let topGames = [];
   const gameRevenue = {};
   for (const tx of completed || []) {
     if (tx.game_id) {
@@ -84,15 +84,16 @@ export default async function handler(req, res) {
   for (const [id, rev] of Object.entries(gameRevenue)) {
     topGames.push({ id, title: gameMap[id] || 'Unknown', revenue: rev });
   }
-  topGames.sort((a, b) => b.revenue - a.revenue).slice(0, 20);
+  topGames = topGames.sort((a, b) => b.revenue - a.revenue).slice(0, 20);
 
   const totalByStatus = {
     pending: 0, completed: 0, cancelled: 0, refunded: 0,
   };
-  for (const tx of completed || []) totalByStatus.completed++;
+  const { data: completedCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'completed');
   const { data: pendingCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'pending');
   const { data: cancelledCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'cancelled');
   const { data: refundedCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'refunded');
+  totalByStatus.completed = completedCount?.length || 0;
   totalByStatus.pending = pendingCount?.length || 0;
   totalByStatus.cancelled = cancelledCount?.length || 0;
   totalByStatus.refunded = refundedCount?.length || 0;

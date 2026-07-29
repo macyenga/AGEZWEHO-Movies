@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { submitContact } from '../lib/supabase';
 import { ArrowLeft, Send, CheckCircle2, Mail, MessageSquare, User } from 'lucide-react';
+import AdBanner from '../components/ads/AdBanner';
 
 const EMPTY = { name:'', email:'', subject:'', message:'' };
 
@@ -40,7 +41,11 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head><title>Contact Us — Agezweho Movies</title></Head>
+      <SEOHead
+        title="Contact Us"
+        description="Get in touch with Agezweho Movies — send us a message, ask questions, or report issues. We're here to help."
+        canonical="https://agezweho.com/contact"
+      />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 pt-20 pb-24">
@@ -150,6 +155,8 @@ export default function Contact() {
             </motion.button>
           </motion.div>
         )}
+
+        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
     </div>
   );

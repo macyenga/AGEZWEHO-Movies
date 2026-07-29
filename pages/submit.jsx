@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { addMovie } from '../lib/supabase';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { Film, Plus, Trash2, Save, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import AdBanner from '../components/ads/AdBanner';
 
 const PLATFORMS = [
   { name: 'Telegram',     color: '#229ED9' },
@@ -139,6 +141,11 @@ const validate = () => {
 
   return (
     <div className="min-h-screen bg-deep">
+      <SEOHead
+        title="Add Agasobanuye"
+        description="Submit a new Agasobanuye movie, series, or anime to Agezweho Movies — share with the Rwanda community."
+        canonical="https://agezweho.com/submit"
+      />
       <CinematicBackground />
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-20 pb-24">
 
@@ -435,6 +442,8 @@ const validate = () => {
             {loading ? 'Adding to Agasobanuye...' : 'Add to Agezweho Movies'}
           </motion.button>
         </motion.div>
+
+        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
     </div>
   );

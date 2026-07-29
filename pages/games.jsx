@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import SearchBar from '../components/SearchBar';
+import AdBanner from '../components/ads/AdBanner';
 import CATEGORIES, { CATEGORY_GROUPS } from '../lib/categories';
-import { Package, Download, Star, Plus, ChevronDown } from 'lucide-react';
+import { Package, Download, Star, Plus, ChevronDown, Crown, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const ACCENT = '#c9a84c';
 
@@ -15,6 +17,7 @@ export default function Games() {
   const [filter, setFilter] = useState('');
   const [loading,setLoading]= useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
+  const { user, isPro } = useAuth();
 
   useEffect(() => {
     fetch('/api/games')
@@ -34,9 +37,12 @@ export default function Games() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head>
-        <title>Premium Content — Agezweho Movies</title>
-      </Head>
+      <SEOHead
+        title="Premium Content"
+        description="Download premium games, modded apps, and exclusive content on Agezweho Movies — Rwanda's home for Agasobanuye entertainment."
+        keywords="premium games Rwanda, modded apps, game download Rwanda, Agezweho premium, Android games, PC games Rwanda"
+        canonical="https://agezweho.com/games"
+      />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-24">
@@ -110,6 +116,37 @@ export default function Games() {
           </Link>
         </div>
 
+        {/* Pro upsell banner */}
+        {!isPro && (
+          <Link href="/subscribe">
+            <motion.div whileHover={{ scale:1.01 }} whileTap={{ scale:0.99 }}
+              className="relative overflow-hidden rounded-2xl mb-6 p-5 cursor-pointer"
+              style={{ background:'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(201,168,76,0.05))', border:'1px solid rgba(251,191,36,0.2)' }}>
+              <motion.div className="absolute inset-0 pointer-events-none"
+                style={{ background:'linear-gradient(105deg,transparent 30%,rgba(251,191,36,0.08) 50%,transparent 70%)' }}
+                animate={{ x:['-200%','300%'] }}
+                transition={{ repeat:Infinity, duration:3, ease:'easeInOut' }} />
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background:'rgba(251,191,36,0.15)', border:'1px solid rgba(251,191,36,0.3)' }}>
+                  <Crown size={18} style={{ color:'#fbbf24' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold" style={{ color:'#fbbf24' }}>Go Pro for unlimited access</div>
+                  <div className="text-[11px] mt-0.5" style={{ color:'#8a8778' }}>
+                    Get all premium content free + remove all ads — just 2,000 RWF/month
+        </div>
+
+        <AdBanner size="300x250" className="mt-6 mb-2 mx-auto" />
+      </div>
+                <ArrowRight size={16} style={{ color:'#fbbf24', flexShrink:0 }} />
+              </div>
+            </motion.div>
+          </Link>
+        )}
+
+        <AdBanner size="728x90" className="mb-6" />
+
         {/* Grid */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -172,11 +209,19 @@ export default function Games() {
                       </div>
                     )}
 
-                    {/* Price badge */}
-                    <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md"
-                      style={{ background:'rgba(10,10,15,0.75)', border:'1px solid rgba(251,191,36,0.2)' }}>
-                      <span className="text-[10px] font-semibold" style={{ color:'#fbbf24' }}>{item.price || 50} RWF</span>
-                    </div>
+                    {/* Price / Pro badge */}
+                    {isPro ? (
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md"
+                        style={{ background:'rgba(34,197,94,0.15)', border:'1px solid rgba(34,197,94,0.3)' }}>
+                        <Crown size={8} style={{ color:'#22c55e' }} />
+                        <span className="text-[10px] font-semibold" style={{ color:'#22c55e' }}>Free</span>
+                      </div>
+                    ) : (
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md"
+                        style={{ background:'rgba(10,10,15,0.75)', border:'1px solid rgba(251,191,36,0.2)' }}>
+                        <span className="text-[10px] font-semibold" style={{ color:'#fbbf24' }}>{item.price || 50} RWF</span>
+                      </div>
+                    )}
 
                     {/* Download count */}
                     {item.download_count > 0 && (

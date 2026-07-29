@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
+import SEOHead from '../../components/SEOHead';
 import CinematicBackground from '../../components/CinematicBackground';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft, LogIn, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
+import AdBanner from '../../components/ads/AdBanner';
 
 export default function Login() {
   const { user, loading: authLoading, login, isAdmin } = useAuth();
@@ -38,7 +39,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-deep flex items-center justify-center">
-      <Head><title>Login — Agezweho Movies</title></Head>
+      <SEOHead
+        title="Login"
+        description="Sign in to your Agezweho Movies account to vote, request movies, and manage your collection."
+        canonical="https://agezweho.com/auth/login"
+      />
       <CinematicBackground />
       <div className="relative z-10 w-full max-w-md px-4">
         <motion.div initial={{ opacity: 0, x: -14 }} className="mb-6">
@@ -115,6 +120,8 @@ export default function Login() {
             </p>
           </div>
         </motion.div>
+
+        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
     </div>
   );

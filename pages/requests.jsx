@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getRequests, addRequest } from '../lib/supabase';
+import { supabase, getRequests, addRequest } from '../lib/supabase';
 import CinematicBackground from '../components/CinematicBackground';
+import AdBanner from '../components/ads/AdBanner';
 import SearchBar from '../components/SearchBar';
-import { Star, ChevronUp, Send, Sparkles, CheckCircle2, Smartphone, Heart, Loader2, Phone } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
+import { useAuth } from '../contexts/AuthContext';
+import { Star, ChevronUp, Send, Sparkles, CheckCircle2, Smartphone, Heart, Loader2, Phone, Crown } from 'lucide-react';
 
 const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
 const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 
 export default function Requests({ requests: initial }) {
+  const { user, isPro } = useAuth();
   const [requests, setRequests] = useState(initial || []);
   const [query,    setQuery]    = useState('');
   const [form,     setForm]     = useState({ title: '', year: '', language: '', source: '', requested_by: '', note: '' });
@@ -20,6 +24,8 @@ export default function Requests({ requests: initial }) {
   const [donateStep, setDonateStep] = useState('pay');
   const [processing, setProcessing] = useState(false);
   const [donorPhone, setDonorPhone] = useState('');
+  const [voteAmount, setVoteAmount] = useState(50);
+  const voteBoost = Math.max(1, Math.floor(voteAmount / 50));
 
   useEffect(() => {
     if (!initial) getRequests().then(setRequests);
@@ -36,6 +42,28 @@ export default function Requests({ requests: initial }) {
     setDonateModal(req);
     setDonateStep('pay');
     setDonorPhone('');
+    setVoteAmount(50);
+  };
+
+  const handleProVote = async (req) => {
+    if (voted[req.id]) return;
+    setProcessing(true);
+    try {
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const res = await fetch('/api/requests/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: req.id, skipPayment: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setVoted(prev => ({ ...prev, [req.id]: true }));
+      setRequests(prev => prev.map(r => r.id === data.request.id ? data.request : r));
+    } catch (err) {
+      setErrors({ submit: err.message });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleDonate = async () => {
@@ -46,7 +74,7 @@ export default function Requests({ requests: initial }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: 50,
+          amount: voteAmount,
           request_id: donateModal.id,
           phone: donorPhone.trim(),
         }),
@@ -55,14 +83,6 @@ export default function Requests({ requests: initial }) {
       if (!res.ok) throw new Error(data.error);
       setDonateStep('submitted');
       setVoted(prev => ({ ...prev, [donateModal.id]: true }));
-      const res2 = await fetch('/api/requests/vote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: donateModal.id }),
-      });
-      const voteData = await res2.json();
-      if (!res2.ok) throw new Error(voteData.error);
-      setRequests(prev => prev.map(r => r.id === voteData.request.id ? voteData.request : r));
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -100,6 +120,12 @@ export default function Requests({ requests: initial }) {
 
   return (
     <div className="min-h-screen bg-grid">
+      <SEOHead
+        title="Movie Requests"
+        description="Request movies, series, and anime on Agezweho Movies — vote for what you want and help decide what gets added next."
+        keywords="movie requests Rwanda, Agasobanuye requests, request movie, vote for movie, suggest movie Rwanda"
+        canonical="https://agezweho.com/requests"
+      />
       <CinematicBackground />
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-20">
 
@@ -286,24 +312,30 @@ export default function Requests({ requests: initial }) {
               >
                 {/* Vote button */}
                 <motion.button
-                  onClick={() => handleVote(r)}
-                  disabled={voted[r.id]}
-                  whileHover={!voted[r.id] ? { scale: 1.05 } : {}}
-                  whileTap={!voted[r.id] ? { scale: 0.95 } : {}}
+                  onClick={() => isPro ? handleProVote(r) : handleVote(r)}
+                  disabled={voted[r.id] || processing}
+                  whileHover={!voted[r.id] && !processing ? { scale: 1.05 } : {}}
+                  whileTap={!voted[r.id] && !processing ? { scale: 0.95 } : {}}
                   className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all flex-shrink-0"
                   style={voted[r.id]
                     ? { background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', cursor: 'default' }
-                    : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }
+                    : isPro
+                      ? { background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', cursor: 'pointer' }
+                      : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }
                   }
                   data-hover
                 >
-                  <ChevronUp size={16} className={voted[r.id] ? 'text-[#c9a84c]' : 'text-[#6b6b8a]'} />
-                  <span className={`text-sm font-bold font-cinzel ${voted[r.id] ? 'text-[#c9a84c]' : 'text-[#e8e6f0]'}`}
+                  {isPro ? (
+                    <Crown size={14} style={{ color: voted[r.id] ? '#c9a84c' : '#fbbf24' }} />
+                  ) : (
+                    <ChevronUp size={16} className={voted[r.id] ? 'text-[#c9a84c]' : 'text-[#6b6b8a]'} />
+                  )}
+                  <span className={`text-sm font-bold font-cinzel ${voted[r.id] ? 'text-[#c9a84c]' : isPro ? 'text-[#fbbf24]' : 'text-[#e8e6f0]'}`}
                     style={{ fontFamily: 'Orbitron, monospace' }}>
                     {r.votes}
                   </span>
-                  <span className="text-[9px]" style={{ color: voted[r.id] ? '#c9a84c' : '#6b6b8a' }}>
-                    50 RWF
+                  <span className="text-[9px]" style={{ color: voted[r.id] ? '#c9a84c' : isPro ? '#fbbf24' : '#6b6b8a' }}>
+                    {isPro ? 'Pro' : '50 RWF'}
                   </span>
                 </motion.button>
 
@@ -338,29 +370,44 @@ export default function Requests({ requests: initial }) {
               >
                 {donateStep === 'pay' && (
                   <div className="p-6">
-                    <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <Smartphone size={18} style={{ color: '#FFCC00' }} />
                         <h3 className="font-semibold text-lg" style={{ fontFamily: 'Cinzel,serif', color: '#FFCC00' }}>
-                          Vote — 50 RWF
+                          Boost Vote
                         </h3>
                       </div>
                       <button onClick={() => setDonateModal(null)} className="text-[#6b6b8a] hover:text-white text-lg">✕</button>
                     </div>
 
-                    <p className="text-sm mb-1" style={{ color: '#e8e6f0' }}>{donateModal.title}</p>
-                    <p className="text-xs mb-4" style={{ color: '#6b6b8a' }}>
-                      Send <strong style={{ color: '#FFCC00' }}>50 RWF</strong> via MTN MoMo to vote for this request.
-                    </p>
+                    <p className="text-sm mb-3" style={{ color: '#e8e6f0' }}>{donateModal.title}</p>
 
-                    <div className="p-4 rounded-xl mb-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-xs mb-2" style={{ color: '#8a8060' }}>MTN Mobile Money</p>
-                      <p className="text-4xl font-bold my-3" style={{ color: '#FFCC00', fontFamily: 'Cinzel,serif' }}>
-                        50 <span className="text-sm" style={{ color: '#8a8060' }}>RWF</span>
-                      </p>
-                      <p className="text-xs" style={{ color: '#4a4a3a' }}>
-                        Vote boost: <span style={{ color: '#c9a84c' }}>+1</span>
-                      </p>
+                    <div className="p-4 rounded-xl mb-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Choose amount</p>
+                      <div className="flex gap-2 justify-center mb-3">
+                        {[50, 100, 200, 500].map(a => (
+                          <motion.button key={a} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                            onClick={() => setVoteAmount(a)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                            style={voteAmount === a
+                              ? { background: 'rgba(255,204,0,0.15)', border: '1px solid rgba(255,204,0,0.4)', color: '#FFCC00' }
+                              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8a8060' }
+                            }>{a} RWF</motion.button>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 justify-center">
+                        <input type="number" value={voteAmount} onChange={e => setVoteAmount(Math.max(50, parseInt(e.target.value) || 50))}
+                          min="50" step="10"
+                          className="w-24 text-center px-2 py-1.5 rounded-lg text-sm font-bold outline-none"
+                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,204,0,0.25)', color: '#FFCC00', fontFamily: 'Cinzel,serif' }} />
+                        <span className="text-xs" style={{ color: '#8a8060' }}>RWF</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between px-3 py-2 rounded-lg mb-4"
+                      style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.12)' }}>
+                      <span className="text-xs" style={{ color: '#6b6b8a' }}>Vote boost</span>
+                      <span className="text-sm font-bold" style={{ color: '#22c55e' }}>+{voteBoost} vote{voteBoost > 1 ? 's' : ''}</span>
                     </div>
 
                     <div className="mb-4">
@@ -391,7 +438,7 @@ export default function Requests({ requests: initial }) {
                           <Loader2 size={16} />
                         </motion.div>
                       ) : <Send size={14} />}
-                      {processing ? 'Submitting...' : 'Submit Vote — 50 RWF'}
+                      {processing ? 'Submitting...' : `Send ${voteAmount} RWF — +${voteBoost} vote${voteBoost > 1 ? 's' : ''}`}
                     </motion.button>
                   </div>
                 )}
@@ -401,7 +448,7 @@ export default function Requests({ requests: initial }) {
                     <CheckCircle2 size={48} style={{ color: '#22c55e', margin: '0 auto 12px' }} />
                     <h3 className="text-lg font-semibold mb-2" style={{ color: '#22c55e' }}>Vote Submitted!</h3>
                     <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>
-                      Send <strong>50 RWF</strong> via MTN MoMo to <strong style={{ color: '#fbbf24' }}>{MOMO_NUMBER}</strong>
+                      Send <strong>{voteAmount} RWF</strong> via MTN MoMo to <strong style={{ color: '#fbbf24' }}>{MOMO_NUMBER}</strong>
                     </p>
                     <div className="p-3 rounded-xl mb-4 text-xs" style={{ background: 'rgba(255,204,0,0.06)', border: '1px solid rgba(255,204,0,0.15)' }}>
                       <p style={{ color: '#8a8060' }}>
@@ -426,6 +473,11 @@ export default function Requests({ requests: initial }) {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <AdBanner size="728x90" className="flex-1" />
+          <AdBanner size="300x250" className="sm:w-[300px]" />
+        </div>
 
         {/* Fulfilled section */}
         {fulfilled.length > 0 && (
@@ -461,11 +513,12 @@ export default function Requests({ requests: initial }) {
   );
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   try {
     const requests = await getRequests();
-    return { props: { requests }, revalidate: 30 };
-  } catch {
-    return { props: { requests: [] }, revalidate: 30 };
+    return { props: { requests } };
+  } catch (e) {
+    console.error('getServerSideProps error:', e);
+    return { props: { requests: [] } };
   }
 }

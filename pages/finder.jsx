@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { Search, ArrowLeft, ExternalLink, Film } from 'lucide-react';
+import AdBanner from '../components/ads/AdBanner';
 
 const SITES = [
   { name: 'NCDTV',             color: '#22c55e', icon: '📺', badge: 'Very Active', url: q => `https://www.ncdtv.net/search?q=${encodeURIComponent(q)}` },
@@ -50,10 +51,12 @@ export default function Finder() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head>
-        <title>Movie Finder — Agezweho Movies</title>
-        <meta name="description" content="Search across 15 Kinyarwanda Agasobanuye movie sites at once — NCDTV, KinyaFilms, AgasobanuyeKose, AgasobanuyeNow, and more" />
-      </Head>
+      <SEOHead
+        title="Movie Finder"
+        description="Search across 15 Kinyarwanda Agasobanuye movie sites at once — NCDTV, KinyaFilms, AgasobanuyeKose, AgasobanuyeNow, and more"
+        keywords="agasobanuye search, movie finder Rwanda, Kinyarwanda movies search, find movies online, NCDTV, KinyaFilms, AgasobanuyeKose"
+        canonical="https://agezweho.com/finder"
+      />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-20 pb-24">
@@ -180,6 +183,8 @@ export default function Finder() {
             </p>
           </motion.div>
         )}
+
+        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
     </div>
   );

@@ -26,6 +26,20 @@ export default async function handler(req, res) {
 
   if (!game.premium) return res.status(200).json({ links: game.links || [] });
 
+  const { data: sub } = await supabaseAdmin
+    .from('subscriptions')
+    .select('id, expires_at')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (sub) {
+    const expiresAt = new Date(sub.expires_at);
+    if (expiresAt > new Date()) {
+      return res.status(200).json({ links: game.links || [] });
+    }
+  }
+
   const { data: access } = await supabaseAdmin
     .from('transactions')
     .select('id')

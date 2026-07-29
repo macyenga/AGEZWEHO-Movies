@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
-import { ArrowLeft, Heart, Share2, Smartphone, Mail, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Wifi, Share2, Smartphone, Mail, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 
 const SHARE_PLATFORMS = [
@@ -52,7 +52,7 @@ const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
 const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'macyenga@gmail.com';
 
-export default function Support() {
+export default function BuyMB() {
   const [copiedUssd, setCopiedUssd] = useState(false);
   const [copiedNumber, setCopiedNumber] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -82,10 +82,11 @@ export default function Support() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head>
-        <title>Support Us — Agezweho Movies</title>
-        <meta name="description" content="Support Agezweho Movies — Rwanda's home for Agasobanuye entertainment. Donate via MTN Mobile Money or share with friends." />
-      </Head>
+      <SEOHead
+        title="Buy us MB"
+        description="Buy us MB/data bundles to support Agezweho Movies — Rwanda's home for Agasobanuye movies, series & anime"
+        canonical="https://agezweho.com/support"
+      />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 pt-20 pb-24">
@@ -108,28 +109,28 @@ export default function Support() {
             animate={{ scale:[1,1.12,1] }}
             transition={{ repeat:Infinity, duration:2.5, ease:'easeInOut' }}
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.3)' }}>
-            <Heart size={28} fill="#c9a84c" style={{ color:'#c9a84c' }} />
+            style={{ background:'rgba(56,189,248,0.1)', border:'1px solid rgba(56,189,248,0.3)' }}>
+            <Wifi size={28} style={{ color:'#38bdf8' }} />
           </motion.div>
           <h1 className="font-cinzel font-bold text-2xl sm:text-3xl mb-3"
             style={{ fontFamily:'Cinzel,serif',
-              background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
+              background:'linear-gradient(135deg,#7dd3fc,#38bdf8)',
               WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-            Support Us
+            Buy us MB
           </h1>
           <div className="divider-gold w-20 mx-auto mb-4" />
           <p className="text-sm leading-relaxed" style={{ color:'#8a8778' }}>
-            Agezweho Movies is <span style={{ color:'#c9a84c' }}>free</span> and always will be.
-            <br />Your support helps us add more content and keep the site running.
+            Help us stay connected! Send us MB/data bundles via MTN MoMo
+            <br />and we'll use it to keep Agezweho Movies running smoothly.
           </p>
         </motion.div>
 
-        {/* MTN Mobile Money Donation Card */}
+        {/* MTN MoMo Card */}
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
           className="p-6 rounded-2xl mb-6 relative overflow-hidden"
-          style={{ background:'rgba(255,204,0,0.06)', border:'1px solid rgba(255,204,0,0.25)' }}>
+          style={{ background:'rgba(56,189,248,0.06)', border:'1px solid rgba(56,189,248,0.25)' }}>
           <motion.div className="absolute inset-0 pointer-events-none"
-            style={{ background:'linear-gradient(105deg,transparent 30%,rgba(255,204,0,0.08) 50%,transparent 70%)' }}
+            style={{ background:'linear-gradient(105deg,transparent 30%,rgba(56,189,248,0.08) 50%,transparent 70%)' }}
             animate={{ x:['-100%','200%'] }}
             transition={{ repeat:Infinity, duration:4, ease:'easeInOut', repeatDelay:2 }}
           />
@@ -137,21 +138,21 @@ export default function Support() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background:'rgba(255,204,0,0.15)', border:'1px solid rgba(255,204,0,0.3)' }}>
-                <Smartphone size={24} style={{ color:'#FFCC00' }} />
+                style={{ background:'rgba(56,189,248,0.15)', border:'1px solid rgba(56,189,248,0.3)' }}>
+                <Smartphone size={24} style={{ color:'#38bdf8' }} />
               </div>
               <div>
-                <h2 className="font-cinzel font-semibold text-lg" style={{ fontFamily:'Cinzel,serif', color:'#FFCC00' }}>
-                  MTN Mobile Money
+                <h2 className="font-cinzel font-semibold text-lg" style={{ fontFamily:'Cinzel,serif', color:'#38bdf8' }}>
+                  Send via MTN MoMo
                 </h2>
-                <p className="text-xs" style={{ color:'#8a8060' }}>Donate to support Agezweho Movies</p>
+                <p className="text-xs" style={{ color:'#8a8060' }}>Your support buys us data to keep the site alive</p>
               </div>
             </div>
 
             <div className="p-4 rounded-xl mb-4 text-center"
-              style={{ background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,204,0,0.2)' }}>
+              style={{ background:'rgba(0,0,0,0.3)', border:'1px solid rgba(56,189,248,0.2)' }}>
               <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Send Mobile Money to:</p>
-              <p className="text-3xl font-bold tracking-wider mb-3" style={{ color:'#FFCC00', fontFamily:'monospace' }}>
+              <p className="text-3xl font-bold tracking-wider mb-3" style={{ color:'#38bdf8', fontFamily:'monospace' }}>
                 {MOMO_NUMBER}
               </p>
               <motion.button
@@ -159,16 +160,16 @@ export default function Support() {
                 onClick={() => copyToClipboard(MOMO_NUMBER, 'number')}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium mb-4"
                 style={{ 
-                  background: copiedNumber ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
-                  border: `1px solid ${copiedNumber ? 'rgba(34,197,94,0.4)' : 'rgba(255,204,0,0.3)'}`,
-                  color: copiedNumber ? '#22c55e' : '#FFCC00'
+                  background: copiedNumber ? 'rgba(34,197,94,0.15)' : 'rgba(56,189,248,0.1)',
+                  border: `1px solid ${copiedNumber ? 'rgba(34,197,94,0.4)' : 'rgba(56,189,248,0.3)'}`,
+                  color: copiedNumber ? '#22c55e' : '#38bdf8'
                 }}>
                 {copiedNumber ? <Check size={16} /> : <Copy size={16} />}
                 {copiedNumber ? 'Copied!' : 'Copy MoMo Number'}
               </motion.button>
 
               <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Or dial this USSD code:</p>
-              <p className="text-2xl font-bold tracking-wider" style={{ color:'#FFCC00', fontFamily:'monospace' }}>
+              <p className="text-2xl font-bold tracking-wider" style={{ color:'#38bdf8', fontFamily:'monospace' }}>
                 {USSD_CODE}
               </p>
             </div>
@@ -178,16 +179,16 @@ export default function Support() {
               onClick={() => copyToClipboard(USSD_CODE, 'ussd')}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
               style={{ 
-                background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
-                border: `1px solid ${copiedUssd ? 'rgba(34,197,94,0.4)' : 'rgba(255,204,0,0.3)'}`,
-                color: copiedUssd ? '#22c55e' : '#FFCC00'
+                background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(56,189,248,0.1)',
+                border: `1px solid ${copiedUssd ? 'rgba(34,197,94,0.4)' : 'rgba(56,189,248,0.3)'}`,
+                color: copiedUssd ? '#22c55e' : '#38bdf8'
               }}>
               {copiedUssd ? <Check size={16} /> : <Copy size={16} />}
               {copiedUssd ? 'Copied!' : 'Copy USSD Code'}
             </motion.button>
 
             <p className="text-center text-[10px] mt-3" style={{ color:'#6a6a5a' }}>
-              Admin confirms your payment after verification. Send the exact amount to help us track it.
+              Every MB helps us serve you better. Murakoze cyane!
             </p>
           </div>
         </motion.div>
@@ -269,7 +270,7 @@ export default function Support() {
         <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
           className="text-center mt-6">
           <p className="text-xs" style={{ color:'#4a4a3a' }}>
-            Murakoze gufasha! (Thank you for helping!) — Agezweho Movies Team
+            Murakoze! Your MB keeps Agezweho Movies alive. — Agezweho Movies Team
           </p>
         </motion.div>
       </div>

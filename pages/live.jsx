@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { ArrowLeft, ExternalLink, Tv2, X, Play, Globe } from 'lucide-react';
+import AdBanner from '../components/ads/AdBanner';
 
 const RWANDA_CHANNELS = [
   { label: 'B+ TV', lang: 'ENG', flag: '🇷🇼', url: 'https://tv.btnrwanda.com:3432/live/bpluslive.m3u8' },
@@ -146,10 +147,12 @@ export default function Live() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <Head>
-        <title>Live — Agezweho Movies</title>
-        <meta name="description" content="Watch live Sports and Rwanda TV channels on Agezweho Movies" />
-      </Head>
+      <SEOHead
+        title="Live TV"
+        description="Watch live Sports and Rwanda TV channels on Agezweho Movies — B+ TV, BTN, Isibo TV, KC2, Rwanda TV, TV10 and more"
+        keywords="live TV Rwanda, Rwanda TV channels, B+ TV live, BTN TV, Isibo TV, watch live sports Rwanda, IPTV Rwanda"
+        canonical="https://agezweho.com/live"
+      />
       <CinematicBackground />
 
       {/* Ambient glow */}
@@ -227,6 +230,8 @@ export default function Live() {
         <p className="text-[10px] text-center mt-4" style={{ color: '#3a3a2a' }}>
           Streams are publicly available IPTV links. If a channel doesn&apos;t load, try another.
         </p>
+
+        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
 
       {/* Player modal */}

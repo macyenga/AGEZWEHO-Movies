@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import DonationFloat from '../components/DonationFloat';
 import { AuthProvider } from '../contexts/AuthContext';
+import { Popunder, SocialBar, SmartLink } from '../components/ads/AdBanner';
 // import { Analytics } from '@vercel/analytics/next';
 // Cloudflare: Replace with Cloudflare Web Analytics snippet from dashboard
 
@@ -29,6 +30,9 @@ export default function App({ Component, pageProps, router }) {
         </motion.div>
       </AnimatePresence>
       <DonationFloat />
+      <SmartLink />
+      <Popunder />
+      <SocialBar />
       {/* <Analytics /> */}
     </AuthProvider>
   );

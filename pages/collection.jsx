@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { useCollection } from '../hooks/useCollection';
 import { Heart, Trash2, Film, ArrowRight, Star, BookOpen } from 'lucide-react';
+import AdBanner from '../components/ads/AdBanner';
 
 export default function Collection() {
   const { collection, removeFromCollection, clearCollection, loaded } = useCollection();
@@ -11,6 +13,11 @@ export default function Collection() {
 
   return (
     <div className="min-h-screen bg-deep">
+      <SEOHead
+        title="My Collection"
+        description="Your saved movie collection on Agezweho Movies — keep track of your favourite Agasobanuye movies, series, and anime."
+        canonical="https://agezweho.com/collection"
+      />
       <CinematicBackground />
 
       {/* Ambient glow */}
@@ -215,6 +222,8 @@ export default function Collection() {
             </AnimatePresence>
           </motion.div>
         )}
+
+        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
     </div>
   );

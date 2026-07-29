@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Head from 'next/head';
+import SEOHead from '../components/SEOHead';
 import { getMovies } from '../lib/supabase';
 import CinematicBackground from '../components/CinematicBackground';
 import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
+import AdBanner, { NativeBanner } from '../components/ads/AdBanner';
 import { Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart } from 'lucide-react';
 
 
@@ -60,10 +61,10 @@ export default function Home({ movies: initial }) {
   const [query,   setQuery]   = useState('');
   const [filter,  setFilter]  = useState('All');
   const [page,    setPage]    = useState(1);
-  const [loading, setLoading] = useState(!initial);
+  const [loading, setLoading] = useState(!initial || initial.length === 0);
 
   useEffect(() => {
-    if (!initial) getMovies().then(d => { setMovies(d); setLoading(false); }).catch(() => setLoading(false));
+    if (!initial || initial.length === 0) getMovies().then(d => { setMovies(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   // Reset to page 1 when filter or search changes
@@ -100,19 +101,12 @@ export default function Home({ movies: initial }) {
 
   return (
     <>
-      <Head>
-        
-      <title>Agezweho Movies — Rwanda's Home for Agasobanuye Movies & Entertainment</title>
-       <meta name="description" content="Agezweho Movies — Iyago ry'ibihugu bya Rwanda na Burundi. Reba, kurura unde micungire y'amafilm, serisi, na anime. Bicengera neza, ntabwo ari inguzanyo." />
-        <meta name="keywords" content="Agezweho Movies, Rwanda movies, Kinyarwanda movies, Agasobanuye, Rwandan entertainment, Burundi movies, Kirundi movies, free movie download, watch movies online, Bollywood, Hollywood, anime, web series, ibihugu bya Rwanda, amafilm ya Kinyarwanda" />
-        <meta property="og:title" content="Agezweho Movies — Rwanda's Home for Agasobanuye Movies & Entertainment" />
-        <meta property="og:description" content="Rwanda's home for Agasobanuye movies, series & anime. Discover, download and watch your favourites — completely free." />
-        <meta property="og:locale" content="rw_RW" />
-        <meta name="google-site-verification" content="4R4CtipfBA-100wi1HYBeuWjzYxL5I_hYzQlkjIh9q0" />
-        <link rel="canonical" href="https://agezweho.com" />
-        <link rel="alternate" hrefLang="en" href="https://agezweho.com" />
-        <link rel="alternate" hrefLang="rw" href="https://agezweho.com" />
-      </Head>
+      <SEOHead
+        title="Rwanda's Home for Agasobanuye Movies & Entertainment"
+        description="Agezweho Movies — Iyago ry'ibihugu bya Rwanda na Burundi. Reba, kurura unde micungire y'amafilm, serisi, na anime. Bicengera neza, ntabwo ari inguzanyo."
+        keywords="Agezweho Movies, Rwanda movies, Kinyarwanda movies, Agasobanuye, Rwandan entertainment, Burundi movies, Kirundi movies, free movie download, watch movies online, Bollywood, Hollywood, anime, web series, ibihugu bya Rwanda, amafilm ya Kinyarwanda"
+        canonical="https://agezweho.com"
+      />
 
       <div className="min-h-screen bg-deep">
         <CinematicBackground />
@@ -257,6 +251,12 @@ export default function Home({ movies: initial }) {
 
        {/* Notice Board */}
 <NoticeBoard /> 
+
+        {/* ══ ADS ══ */}
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-6">
+          <AdBanner size="728x90" className="mb-3" />
+          <NativeBanner />
+        </div>
 
         {/* ══ TRENDING TODAY ══ */}
         {movies.length > 0 && (
@@ -433,11 +433,12 @@ export default function Home({ movies: initial }) {
   );
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   try {
     const movies = await getMovies();
-    return { props: { movies }, revalidate: 60 };
-  } catch {
-    return { props: { movies: [] }, revalidate: 60 };
+    return { props: { movies } };
+  } catch (e) {
+    console.error('getServerSideProps error:', e);
+    return { props: { movies: [] } };
   }
 }
