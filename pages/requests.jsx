@@ -6,20 +6,22 @@ import AdBanner from '../components/ads/AdBanner';
 import SearchBar from '../components/SearchBar';
 import SEOHead from '../components/SEOHead';
 import { useAuth } from '../contexts/AuthContext';
-import { Star, ChevronUp, Send, Sparkles, CheckCircle2, Smartphone, Heart, Loader2, Phone, Crown } from 'lucide-react';
+import {
+  Star, ChevronUp, Send, Sparkles, CheckCircle2, Smartphone, Heart, Loader2, Phone, Crown,
+  ArrowLeft, Inbox, Search, TrendingUp, Clock,
+} from 'lucide-react';
 
-const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
 const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 
 export default function Requests({ requests: initial }) {
   const { user, isPro } = useAuth();
   const [requests, setRequests] = useState(initial || []);
-  const [query,    setQuery]    = useState('');
-  const [form,     setForm]     = useState({ title: '', year: '', language: '', source: '', requested_by: '', note: '' });
-  const [loading,  setLoading]  = useState(false);
-  const [voted,    setVoted]    = useState({});
-  const [success,  setSuccess]  = useState(false);
-  const [errors,   setErrors]   = useState({});
+  const [query, setQuery] = useState('');
+  const [form, setForm] = useState({ title: '', year: '', language: '', source: '', requested_by: '', note: '' });
+  const [loading, setLoading] = useState(false);
+  const [voted, setVoted] = useState({});
+  const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
   const [donateModal, setDonateModal] = useState(null);
   const [donateStep, setDonateStep] = useState('pay');
   const [processing, setProcessing] = useState(false);
@@ -34,7 +36,7 @@ export default function Requests({ requests: initial }) {
   const filtered = requests.filter(r =>
     !query || r.title.toLowerCase().includes(query.toLowerCase())
   );
-  const pending   = filtered.filter(r => !r.fulfilled);
+  const pending = filtered.filter(r => !r.fulfilled);
   const fulfilled = filtered.filter(r => r.fulfilled);
 
   const handleVote = (req) => {
@@ -92,7 +94,7 @@ export default function Requests({ requests: initial }) {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-   const errs = {};
+    const errs = {};
     if (!form.title.trim()) errs.title = 'Title is required';
     if (!form.year?.trim()) errs.year = 'Year is required';
     if (!form.language?.trim()) errs.language = 'Language is required';
@@ -103,13 +105,13 @@ export default function Requests({ requests: initial }) {
     setLoading(true);
     try {
       const r = await addRequest({
-  title: form.title,
-  year: form.year,
-  language: form.language,
-  source: form.source,
-  votes: 0,
-  fulfilled: false
-});
+        title: form.title,
+        year: form.year,
+        language: form.language,
+        source: form.source,
+        votes: 0,
+        fulfilled: false,
+      });
       setRequests(prev => [r, ...prev]);
       setForm({ title: '', year: '', language: '', source: '', requested_by: '', note: '' });
       setSuccess(true);
@@ -118,201 +120,175 @@ export default function Requests({ requests: initial }) {
     finally { setLoading(false); }
   };
 
+  const totalVotes = requests.reduce((s, r) => s + (r.votes || 0), 0);
+
   return (
-    <div className="min-h-screen bg-grid">
+    <div className="min-h-screen bg-deep">
       <SEOHead
-        title="Movie Requests"
-        description="Request movies, series, and anime on Agezweho Movies — vote for what you want and help decide what gets added next."
-        keywords="movie requests Rwanda, Agasobanuye requests, request movie, vote for movie, suggest movie Rwanda"
+        title="Movie Requests — Agasobanuye Rocky 2026, Agent Kim & More"
+        description="Request agasobanuye movies, series, and anime on Agezweho — vote for Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim reactivated, Gashya 2026 Netflix, Fey, Junior Giti, Yanga episodes you want added next"
+        keywords="agasobanuye request, agasobanuye rocky 2026, agasobanuye by rocky kimomo, agasobanuye sankara 2026, agasobanuye agent kim, agent kim reactivated, agasobanuye gashya 2026 netflix, agasobanuye by fey 2025, agasobanuye by junior giti, agasobanuye by yanga, agahinde agasobanuye na rocky, movie requests Rwanda, Kinyarwanda movies"
         canonical="https://agezweho.com/requests"
       />
       <CinematicBackground />
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-20">
 
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-20 pb-24">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles size={14} className="text-[#ff0080]" />
-            <span className="section-label">Community</span>
-            <Sparkles size={14} className="text-[#c9a84c]" />
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)' }}>
+              <Inbox size={20} style={{ color: '#c9a84c' }} />
+            </div>
+            <div>
+              <h1 className="font-cinzel font-bold text-lg" style={{
+                fontFamily: 'Cinzel,serif',
+                background: 'linear-gradient(135deg,#f5e4a8,#c9a84c)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>Movie Requests</h1>
+              <p className="text-[10px]" style={{ color: '#6a6a5a' }}>Request and vote for movies to be added</p>
+            </div>
           </div>
-          <h1 className="font-cinzel font-black text-3xl sm:text-4xl tracking-[4px] mb-3"
-            style={{ fontFamily: 'Orbitron, monospace' }}>
-            <span className="text-gold">MOVIE</span>{' '}
-            <span className="text-gold-glow">REQUESTS</span>
-          </h1>
-          <div className="hero-line w-32 mx-auto mb-4" />
-          <p className="text-[#6b6b8a] text-sm leading-relaxed max-w-md mx-auto">
-            Can&apos;t find your favourite movie? Request it and let others upvote it to get it added faster.
+          <div className="divider-gold w-16" />
+        </motion.div>
+
+        {/* Stats bar */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="flex gap-3 mb-5 flex-wrap">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.12)' }}>
+            <Inbox size={11} style={{ color: '#c9a84c' }} />
+            <span className="text-[10px]" style={{ color: '#6a6a5a' }}><span style={{ color:'#e8e6f0' }}>{pending.length}</span> pending</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.12)' }}>
+            <CheckCircle2 size={11} style={{ color: '#22c55e' }} />
+            <span className="text-[10px]" style={{ color: '#6a6a5a' }}><span style={{ color:'#e8e6f0' }}>{fulfilled.length}</span> fulfilled</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.12)' }}>
+            <TrendingUp size={11} style={{ color: '#f97316' }} />
+            <span className="text-[10px]" style={{ color: '#6a6a5a' }}><span style={{ color:'#e8e6f0' }}>{totalVotes}</span> votes</span>
+          </div>
+        </motion.div>
+
+        {/* Guidance box */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="mb-5 p-4 rounded-xl"
+          style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)' }}>
+          <p className="text-[10px] font-semibold mb-1.5" style={{ color: '#c9a84c' }}>
+            Important
+          </p>
+          <p className="text-[10px] leading-relaxed" style={{ color: '#8a8778' }}>
+            Fill all details accurately — exact title, year, language. Incomplete info delays processing.
+            <span style={{ color: '#fbbf24' }}> Upvote is 50 RWF via USSD.</span>
           </p>
         </motion.div>
 
-                
-{/* Guidance box */}
-<motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  className="mb-5 p-4 rounded-xl"
-  style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)' }}
->
-  <p
-    className="text-[11px] font-semibold mb-2"
-    style={{ color: '#c9a84c' }}
-  >
-    📌 Important:
-  </p>
-
-  <p
-    className="text-[12px] leading-relaxed"
-    style={{ color: '#a6a5a' }}
-  >
-    Please fill all details carefully and accurately. Enter the exact Movie/Series
-    title, release year, and language. Incomplete, incorrect, or random
-    information can make it difficult to find and process your request. The more
-    accurate the details, the faster your request can be fulfilled.
-    <span style={{ color: '#FFCC00' }}> Upvote is 50 RWF via MTN MoMo. Votes count after payment confirmation.</span> Thank you! 😊
-  </p>
-</motion.div>
         {/* Request form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-10 p-6 rounded-2xl"
-          style={{ background: 'rgba(13,13,26,0.8)', border: '1px solid rgba(201,168,76,0.12)', backdropFilter: 'blur(20px)' }}
-        >
-          <div className="flex items-center gap-2 mb-5">
-            <Star size={15} className="text-[#c9a84c]" />
-            <span className="text-[11px] uppercase tracking-[3px] text-[#c9a84c]">Submit a Request</span>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+          className="mb-8 p-5 rounded-2xl"
+          style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(201,168,76,0.12)', backdropFilter: 'blur(20px)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <Star size={14} style={{ color: '#c9a84c' }} />
+            <span className="text-[10px] font-semibold uppercase tracking-[2px]" style={{ color: '#c9a84c' }}>Submit a Request</span>
           </div>
 
           <AnimatePresence>
             {success && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2 mb-4 px-4 py-3 rounded-xl text-sm text-[#c9a84c]"
-                style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)' }}
-              >
-                <CheckCircle2 size={16} /> Request submitted! Others can now upvote it.
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="flex items-center gap-2 mb-4 px-3 py-2.5 rounded-xl text-xs"
+                style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', color: '#22c55e' }}>
+                <CheckCircle2 size={14} /> Request submitted! Others can now upvote it.
               </motion.div>
             )}
           </AnimatePresence>
 
-    <div className="space-y-4">
+          <div className="space-y-3.5">
             <div>
-              <label className="block text-[11px] text-[#6b6b8a] uppercase tracking-widest mb-1.5">
+              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color:'#6a6a5a' }}>
                 Movie / Series Title <span style={{ color:'#e05c3a' }}>*</span>
               </label>
-              <input
-                className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm ${errors.title ? 'border-red-500/50' : ''}`}
-                value={form.title}
-                onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setErrors({}); }}
-                placeholder="e.g. KGF Chapter 3"
-              />
-              {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title}</p>}
+              <input className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.title ? 'border-red-500/40' : ''}`}
+                value={form.title} onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setErrors({}); }}
+                placeholder="e.g. KGF Chapter 3" />
+              {errors.title && <p className="text-red-400 text-[10px] mt-1">{errors.title}</p>}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color:'#6a6a5a' }}>
+                  Year <span style={{ color:'#e05c3a' }}>*</span>
+                </label>
+                <input className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.year ? 'border-red-500/40' : ''}`}
+                  value={form.year || ''} onChange={e => { setForm(f => ({ ...f, year: e.target.value })); setErrors({}); }}
+                  placeholder="e.g. 2025" />
+                {errors.year && <p className="text-red-400 text-[10px] mt-1">{errors.year}</p>}
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color:'#6a6a5a' }}>
+                  Language <span style={{ color:'#e05c3a' }}>*</span>
+                </label>
+                <input className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.language ? 'border-red-500/40' : ''}`}
+                  value={form.language || ''} onChange={e => { setForm(f => ({ ...f, language: e.target.value })); setErrors({}); }}
+                  placeholder="e.g. Hindi, English" />
+                {errors.language && <p className="text-red-400 text-[10px] mt-1">{errors.language}</p>}
+              </div>
             </div>
             <div>
-              <label className="block text-[11px] uppercase tracking-widest mb-1.5" style={{ color:'#6a6a5a' }}>
-                Year <span style={{ color:'#e05c3a' }}>*</span>
+              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color:'#6a6a5a' }}>
+                Where did you hear about Agezweho? <span style={{ color:'#e05c3a' }}>*</span>
               </label>
-              <input
-                className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm ${errors.year ? 'border-red-500/50' : ''}`}
-                value={form.year || ''}
-                onChange={e => { setForm(f => ({ ...f, year: e.target.value })); setErrors({}); }}
-                placeholder="e.g. 2025"
-              />
-              {errors.year && <p className="text-red-400 text-xs mt-1">{errors.year}</p>}
-            </div>
-            <div>
-              <label className="block text-[11px] uppercase tracking-widest mb-1.5" style={{ color:'#6a6a5a' }}>
-                Language <span style={{ color:'#e05c3a' }}>*</span>
-              </label>
-              <input
-                className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm ${errors.language ? 'border-red-500/50' : ''}`}
-                value={form.language || ''}
-                onChange={e => { setForm(f => ({ ...f, language: e.target.value })); setErrors({}); }}
-                placeholder="e.g. Hindi, English, Tamil..."
-              />
-              {errors.language && <p className="text-red-400 text-xs mt-1">{errors.language}</p>}
-            </div>
-            <div>
-              <label className="block text-[11px] uppercase tracking-widest mb-1.5" style={{ color:'#6a6a5a' }}>
-                Where did you hear about FlixBase? <span style={{ color:'#e05c3a' }}>*</span>
-              </label>
-              <select
-                className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm cursor-pointer ${errors.source ? 'border-red-500/50' : ''}`}
-                value={form.source || ''}
-                onChange={e => { setForm(f => ({ ...f, source: e.target.value })); setErrors({}); }}
-                style={{ background:'rgba(255,255,255,0.03)' }}
-              >
-                <option value="" style={{ background:'#0f0f16' }}>Select an option...</option>
+              <select className={`input-dark w-full px-3 py-2 rounded-lg text-sm cursor-pointer ${errors.source ? 'border-red-500/40' : ''}`}
+                value={form.source || ''} onChange={e => { setForm(f => ({ ...f, source: e.target.value })); setErrors({}); }}
+                style={{ background:'rgba(255,255,255,0.03)' }}>
+                <option value="" style={{ background:'#0f0f16' }}>Select...</option>
                 <option value="Telegram" style={{ background:'#0f0f16' }}>Telegram</option>
                 <option value="WhatsApp" style={{ background:'#0f0f16' }}>WhatsApp</option>
                 <option value="Google Search" style={{ background:'#0f0f16' }}>Google Search</option>
                 <option value="Instagram" style={{ background:'#0f0f16' }}>Instagram</option>
                 <option value="YouTube" style={{ background:'#0f0f16' }}>YouTube</option>
-                <option value="Friend" style={{ background:'#0f0f16' }}>Friend / Word of mouth</option>
+                <option value="Friend" style={{ background:'#0f0f16' }}>Friend</option>
                 <option value="Other" style={{ background:'#0f0f16' }}>Other</option>
               </select>
-              {errors.source && <p className="text-red-400 text-xs mt-1">{errors.source}</p>}
+              {errors.source && <p className="text-red-400 text-[10px] mt-1">{errors.source}</p>}
             </div>
-            {errors.submit && <p className="text-red-400 text-xs">{errors.submit}</p>}
-            <motion.button
-              onClick={handleSubmit}
-              disabled={loading}
+            {errors.submit && <p className="text-red-400 text-[10px]">{errors.submit}</p>}
+            <motion.button onClick={handleSubmit} disabled={loading}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              className="btn-primary flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold"
-              data-hover
-            >
-              {loading ? (
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
-                  <Send size={15} />
-                </motion.div>
-              ) : <Send size={15} />}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold"
+              style={{
+                background: 'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(180,140,60,0.08))',
+                border: '1px solid rgba(201,168,76,0.3)',
+                color: '#c9a84c',
+                boxShadow: '0 0 16px rgba(201,168,76,0.06)',
+              }}>
+              {loading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
               {loading ? 'Submitting...' : 'Submit Request'}
             </motion.button>
           </div>
         </motion.div>
 
-
-
         {/* Search */}
-        <div className="mb-6">
+        <div className="mb-5">
           <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} placeholder="Search requests..." />
-        </div>
-
-        {/* Stats */}
-        <div className="flex gap-4 mb-6 text-sm">
-          <span className="text-[#6b6b8a]"><span className="text-[#e8e6f0] font-medium">{pending.length}</span> pending</span>
-          <span className="text-[#6b6b8a]"><span className="text-[#c9a84c] font-medium">{fulfilled.length}</span> fulfilled</span>
         </div>
 
         {/* Pending requests */}
         {pending.length === 0 ? (
-          <div className="text-center py-8 text-[#6b6b8a] text-sm">
-            {query ? `No requests match "${query}"` : 'No pending requests.'}
+          <div className="text-center py-16">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.12)' }}>
+              <Inbox size={28} style={{ color: '#4a4a3a' }} />
+            </div>
+            <p className="text-sm" style={{ color: '#6a6a5a' }}>
+              {query ? `No requests match "${query}"` : 'No pending requests'}
+            </p>
           </div>
         ) : (
-          <div className="space-y-3 mb-8">
+          <div className="space-y-2.5 mb-8">
             {pending.map((r, i) => (
-              <motion.div
-                key={r.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-start gap-4 p-4 rounded-xl group transition-colors"
-                style={{ background: 'rgba(13,13,26,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}
-                whileHover={{ borderColor: 'rgba(201,168,76,0.15)' }}
-              >
+              <motion.div key={r.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                className="flex items-start gap-4 p-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+                style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.05)' }}>
                 {/* Vote button */}
-                <motion.button
-                  onClick={() => isPro ? handleProVote(r) : handleVote(r)}
+                <motion.button onClick={() => isPro ? handleProVote(r) : handleVote(r)}
                   disabled={voted[r.id] || processing}
                   whileHover={!voted[r.id] && !processing ? { scale: 1.05 } : {}}
                   whileTap={!voted[r.id] && !processing ? { scale: 0.95 } : {}}
@@ -320,78 +296,72 @@ export default function Requests({ requests: initial }) {
                   style={voted[r.id]
                     ? { background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', cursor: 'default' }
                     : isPro
-                      ? { background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', cursor: 'pointer' }
-                      : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }
-                  }
-                  data-hover
-                >
+                      ? { background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)' }
+                      : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }
+                  }>
                   {isPro ? (
                     <Crown size={14} style={{ color: voted[r.id] ? '#c9a84c' : '#fbbf24' }} />
                   ) : (
-                    <ChevronUp size={16} className={voted[r.id] ? 'text-[#c9a84c]' : 'text-[#6b6b8a]'} />
+                    <ChevronUp size={16} className={voted[r.id] ? 'text-[#c9a84c]' : 'text-[#6a6a5a]'} />
                   )}
                   <span className={`text-sm font-bold font-cinzel ${voted[r.id] ? 'text-[#c9a84c]' : isPro ? 'text-[#fbbf24]' : 'text-[#e8e6f0]'}`}
-                    style={{ fontFamily: 'Orbitron, monospace' }}>
+                    style={{ fontFamily: 'Cinzel,serif' }}>
                     {r.votes}
                   </span>
-                  <span className="text-[9px]" style={{ color: voted[r.id] ? '#c9a84c' : isPro ? '#fbbf24' : '#6b6b8a' }}>
+                  <span className="text-[8px]" style={{ color: voted[r.id] ? '#c9a84c' : isPro ? '#fbbf24' : '#4a4a3a' }}>
                     {isPro ? 'Pro' : '50 RWF'}
                   </span>
                 </motion.button>
 
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-[#e8e6f0] text-sm mb-0.5">{r.title}</div>
-                  <div className="text-[#6b6b8a] text-xs">by {r.requested_by || 'Anonymous'}</div>
-                  {r.note && <div className="text-[#8888a0] text-xs mt-1.5 leading-relaxed">{r.note}</div>}
+                <div className="flex-1 min-w-0 pt-1">
+                  <div className="text-sm font-medium mb-0.5" style={{ color: '#e8e6f0' }}>{r.title}</div>
+                  <div className="flex items-center gap-2 text-[10px]" style={{ color: '#4a4a3a' }}>
+                    <span>by {r.requested_by || 'Anonymous'}</span>
+                    {r.year && <><span>·</span><span>{r.year}</span></>}
+                    {r.language && <><span>·</span><span>{r.language}</span></>}
+                  </div>
+                  {r.note && <div className="text-[11px] mt-1.5 leading-relaxed" style={{ color: '#8a8778' }}>{r.note}</div>}
                 </div>
               </motion.div>
             ))}
           </div>
         )}
 
-        {/* ══ DONATE MODAL ══ */}
+        {/* Donate Modal */}
         <AnimatePresence>
           {donateModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
-              onClick={() => setDonateModal(null)}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                onClick={e => e.stopPropagation()}
+              onClick={() => setDonateModal(null)}>
+              <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }} onClick={e => e.stopPropagation()}
                 className="w-full max-w-md rounded-2xl overflow-hidden"
-                style={{ background: 'rgba(13,13,26,0.95)', border: '1px solid rgba(201,168,76,0.2)' }}
-              >
+                style={{ background: 'rgba(12,12,24,0.95)', border: '1px solid rgba(201,168,76,0.2)' }}>
                 {donateStep === 'pay' && (
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <Smartphone size={18} style={{ color: '#FFCC00' }} />
-                        <h3 className="font-semibold text-lg" style={{ fontFamily: 'Cinzel,serif', color: '#FFCC00' }}>
+                        <Smartphone size={18} style={{ color: '#fbbf24' }} />
+                        <h3 className="font-cinzel text-lg font-semibold" style={{ fontFamily: 'Cinzel,serif', color: '#fbbf24' }}>
                           Boost Vote
                         </h3>
                       </div>
-                      <button onClick={() => setDonateModal(null)} className="text-[#6b6b8a] hover:text-white text-lg">✕</button>
+                      <button onClick={() => setDonateModal(null)} className="text-[#4a4a3a] hover:text-white text-lg">✕</button>
                     </div>
 
-                    <p className="text-sm mb-3" style={{ color: '#e8e6f0' }}>{donateModal.title}</p>
+                    <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>{donateModal.title}</p>
 
                     <div className="p-4 rounded-xl mb-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Choose amount</p>
+                      <p className="text-[10px] mb-2" style={{ color: '#6a6a5a' }}>Choose amount</p>
                       <div className="flex gap-2 justify-center mb-3">
                         {[50, 100, 200, 500].map(a => (
                           <motion.button key={a} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                             onClick={() => setVoteAmount(a)}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold"
                             style={voteAmount === a
-                              ? { background: 'rgba(255,204,0,0.15)', border: '1px solid rgba(255,204,0,0.4)', color: '#FFCC00' }
-                              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8a8060' }
+                              ? { background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.4)', color: '#fbbf24' }
+                              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#4a4a3a' }
                             }>{a} RWF</motion.button>
                         ))}
                       </div>
@@ -399,45 +369,39 @@ export default function Requests({ requests: initial }) {
                         <input type="number" value={voteAmount} onChange={e => setVoteAmount(Math.max(50, parseInt(e.target.value) || 50))}
                           min="50" step="10"
                           className="w-24 text-center px-2 py-1.5 rounded-lg text-sm font-bold outline-none"
-                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,204,0,0.25)', color: '#FFCC00', fontFamily: 'Cinzel,serif' }} />
-                        <span className="text-xs" style={{ color: '#8a8060' }}>RWF</span>
+                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24', fontFamily: 'Cinzel,serif' }} />
+                        <span className="text-xs" style={{ color: '#4a4a3a' }}>RWF</span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between px-3 py-2 rounded-lg mb-4"
                       style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.12)' }}>
-                      <span className="text-xs" style={{ color: '#6b6b8a' }}>Vote boost</span>
+                      <span className="text-xs" style={{ color: '#4a4a3a' }}>Vote boost</span>
                       <span className="text-sm font-bold" style={{ color: '#22c55e' }}>+{voteBoost} vote{voteBoost > 1 ? 's' : ''}</span>
                     </div>
 
                     <div className="mb-4">
-                      <label className="block text-[11px] uppercase tracking-widest mb-2" style={{ color: '#6b6b8a' }}>
+                      <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#6a6a5a' }}>
                         Your MTN Phone Number
                       </label>
                       <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Phone size={14} style={{ color: '#6b6b8a' }} />
+                        <Phone size={13} style={{ color: '#4a4a3a' }} />
                         <input type="tel" value={donorPhone} onChange={e => setDonorPhone(e.target.value)}
                           placeholder="078XXXXXXX"
                           className="flex-1 bg-transparent text-sm outline-none" style={{ color: '#e8e6f0' }} />
                       </div>
-                      <p className="text-[10px] mt-1" style={{ color: '#4a4a3a' }}>
-                        Admin uses this to verify your payment.
-                      </p>
+                      <p className="text-[9px] mt-1" style={{ color: '#3a3a2a' }}>Admin uses this to verify your payment.</p>
                     </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleDonate}
-                      disabled={processing || !donorPhone.trim()}
-                      className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
-                      style={{ background: !donorPhone.trim() ? 'rgba(255,255,255,0.05)' : 'rgba(255,204,0,0.12)', border: `1px solid ${!donorPhone.trim() ? 'rgba(255,255,255,0.08)' : 'rgba(255,204,0,0.3)'}`, color: !donorPhone.trim() ? '#4a4a3a' : '#FFCC00' }}
-                    >
-                      {processing ? (
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
-                          <Loader2 size={16} />
-                        </motion.div>
-                      ) : <Send size={14} />}
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      onClick={handleDonate} disabled={processing || !donorPhone.trim()}
+                      className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                      style={{
+                        background: !donorPhone.trim() ? 'rgba(255,255,255,0.05)' : 'rgba(251,191,36,0.12)',
+                        border: `1px solid ${!donorPhone.trim() ? 'rgba(255,255,255,0.08)' : 'rgba(251,191,36,0.3)'}`,
+                        color: !donorPhone.trim() ? '#3a3a2a' : '#fbbf24',
+                      }}>
+                      {processing ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
                       {processing ? 'Submitting...' : `Send ${voteAmount} RWF — +${voteBoost} vote${voteBoost > 1 ? 's' : ''}`}
                     </motion.button>
                   </div>
@@ -448,22 +412,16 @@ export default function Requests({ requests: initial }) {
                     <CheckCircle2 size={48} style={{ color: '#22c55e', margin: '0 auto 12px' }} />
                     <h3 className="text-lg font-semibold mb-2" style={{ color: '#22c55e' }}>Vote Submitted!</h3>
                     <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>
-                      Send <strong>{voteAmount} RWF</strong> via MTN MoMo to <strong style={{ color: '#fbbf24' }}>{MOMO_NUMBER}</strong>
+                      Send <strong>{voteAmount} RWF</strong> via USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
                     </p>
-                    <div className="p-3 rounded-xl mb-4 text-xs" style={{ background: 'rgba(255,204,0,0.06)', border: '1px solid rgba(255,204,0,0.15)' }}>
-                      <p style={{ color: '#8a8060' }}>
-                        USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
-                      </p>
-                      <p className="mt-1" style={{ color: '#8a8060' }}>
-                        Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong> has been sent to admin for verification.
-                      </p>
+                    <div className="p-3 rounded-xl mb-4 text-xs" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                      <p style={{ color: '#6a6a5a' }}>USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong></p>
+                      <p className="mt-1" style={{ color: '#6a6a5a' }}>Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong></p>
                     </div>
-                    <p className="text-xs mb-5" style={{ color: '#6b6b8a' }}>
-                      Your vote will appear after payment confirmation. You can close this and check back later.
-                    </p>
+                    <p className="text-[10px] mb-5" style={{ color: '#4a4a3a' }}>Vote appears after payment confirmation.</p>
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                       onClick={() => { setDonateModal(null); getRequests().then(d => setRequests(d)); }}
-                      className="w-full py-3 rounded-xl text-sm font-semibold"
+                      className="w-full py-2.5 rounded-xl text-sm font-semibold"
                       style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c' }}>
                       Done
                     </motion.button>
@@ -474,7 +432,7 @@ export default function Requests({ requests: initial }) {
           )}
         </AnimatePresence>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <AdBanner size="728x90" className="flex-1" />
           <AdBanner size="300x250" className="sm:w-[300px]" />
         </div>
@@ -483,24 +441,19 @@ export default function Requests({ requests: initial }) {
         {fulfilled.length > 0 && (
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <CheckCircle2 size={15} className="text-[#c9a84c]" />
-              <span className="text-[11px] uppercase tracking-[3px] text-[#6b6b8a]">Already Added</span>
-              <div className="flex-1 h-px bg-white/[0.06]" />
+              <CheckCircle2 size={13} style={{ color: '#22c55e' }} />
+              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#22c55e' }}>Already Added</span>
+              <div className="flex-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} />
             </div>
             <div className="space-y-2">
               {fulfilled.map((r, i) => (
-                <motion.div
-                  key={r.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.5 }}
-                  transition={{ delay: i * 0.04 }}
+                <motion.div key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: i * 0.04 }}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                  style={{ background: 'rgba(13,13,26,0.3)', border: '1px solid rgba(255,255,255,0.04)' }}
-                >
-                  <CheckCircle2 size={14} className="text-[#c9a84c] flex-shrink-0" />
-                  <span className="text-[#e8e6f0] text-sm">{r.title}</span>
-                  <span className="text-[10px] ml-auto"
-                    style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', color: '#c9a84c', padding: '2px 8px', borderRadius: 4 }}>
+                  style={{ background: 'rgba(14,14,22,0.3)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <CheckCircle2 size={13} style={{ color: '#22c55e', flexShrink: 0 }} />
+                  <span className="text-sm" style={{ color: '#e8e6f0' }}>{r.title}</span>
+                  <span className="text-[9px] ml-auto px-2 py-0.5 rounded font-medium"
+                    style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', color: '#22c55e' }}>
                     Added ✓
                   </span>
                 </motion.div>
@@ -517,8 +470,7 @@ export async function getServerSideProps() {
   try {
     const requests = await getRequests();
     return { props: { requests } };
-  } catch (e) {
-    console.error('getServerSideProps error:', e);
+  } catch {
     return { props: { requests: [] } };
   }
 }

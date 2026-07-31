@@ -42,9 +42,9 @@ export default function MovieDetail({ movie }) {
   const primaryDownload = links[0];
   const stars = movie.rating ? Math.round(parseFloat(movie.rating) / 2) : 0;
   const ratingValue = Number.parseFloat(movie.rating);
-  const seoTitle = `${movie.title} ${movie.year || ''} - Watch, Download | Agezweho Movies Rwanda`;
-  const seoDescription = movie.overview
-    || `Watch and download ${movie.title} on Agezweho Movies, Rwanda's home for Agasobanuye movies, series, anime and entertainment.`;
+const seoTitle = `${movie.title} ${movie.year || ''} - Agasobanuye Watch, Download | Agezweho Movies Rwanda`;
+const seoDescription = movie.overview || `Watch and download ${movie.title} — Agasobanuye — on Agezweho Movies, Rwanda's home for Agasobanuye entertainment, Rocky 2026, Sankara 2026, Agent Kim, Gashya 2026 Netflix and more.`;
+const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}, agasobanuye, agasobanuye rocky 2026, agasobanuye sankara 2026, agasobanuye agent kim, agasobanuye gashya 2026 netflix, agasobanuye by rocky kimomo, ${movie.title} 1080p download, ${movie.title} 4k download, ${movie.title} netflix, ${movie.genre || ''} movies download free`;
   const shareText = `${movie.title} on Agezweho Movies Rwanda`;
   const handleDonate = async () => {
     setDonateState('loading');
@@ -126,9 +126,9 @@ export default function MovieDetail({ movie }) {
   return (
     <div className="min-h-screen bg-deep">
     <SEOHead
-      title={`${movie.title} ${movie.year || ''} — Watch ${movie.language || 'Kinyarwanda'} ${movie.type || 'Movie'} Online`}
-      description={movie.overview || `Watch ${movie.title} online on Agezweho Movies — Rwanda's home for Agasobanuye entertainment.`}
-      keywords={`${movie.title} download, ${movie.title} ${movie.year || ''}, ${movie.title} ${movie.language || 'hindi'}, ${movie.title} 1080p download, ${movie.title} 4k download, ${movie.genre || ''} movies download free`}
+      title={seoTitle}
+      description={seoDescription}
+      keywords={seoKeywords}
       ogTitle={`${movie.title} — Agezweho Movies`}
       ogDescription={movie.overview || 'Watch on Agezweho Movies'}
       ogImage={movie.poster_url || undefined}

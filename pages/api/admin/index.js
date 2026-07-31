@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   if (!(await requireAdmin(req, res))) return;
 
-  const [pendingMovies, pendingTxs, completedTxs, contacts, admins, completedDonations, allMovies, allRequests, allGames] = await Promise.all([
+  const [pendingMovies, pendingTxs, completedTxs, contacts, admins, completedDonations, allMovies, allRequests, allGames, allNews, allShop] = await Promise.all([
     supabaseAdmin.from('movies').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(50),
     supabaseAdmin.from('transactions').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(50),
     supabaseAdmin.from('transactions').select('*').eq('status', 'completed').order('created_at', { ascending: false }).limit(50),
@@ -16,6 +16,8 @@ export default async function handler(req, res) {
     supabaseAdmin.from('movies').select('*').order('created_at', { ascending: false }).limit(100),
     supabaseAdmin.from('requests').select('*').order('created_at', { ascending: false }).limit(100),
     supabaseAdmin.from('games').select('*').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('news').select('*').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('shop').select('*').order('created_at', { ascending: false }).limit(100),
   ]);
 
   const userIds = [...new Set([
@@ -64,6 +66,8 @@ export default async function handler(req, res) {
     allMovies: allMovies.data || [],
     allRequests: allRequests.data || [],
     allGames: allGames.data || [],
+    allNews: allNews.data || [],
+    allShop: allShop.data || [],
     gameEarnings,
     requestDonations,
     movieDonations,

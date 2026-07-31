@@ -4,14 +4,14 @@ import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { submitContact } from '../lib/supabase';
-import { ArrowLeft, Send, CheckCircle2, Mail, MessageSquare, User } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, Mail, MessageSquare, User, MessageCircle, Sparkles } from 'lucide-react';
 import AdBanner from '../components/ads/AdBanner';
 
 const EMPTY = { name:'', email:'', subject:'', message:'' };
 
 export default function Contact() {
-  const [form,    setForm]    = useState(EMPTY);
-  const [errors,  setErrors]  = useState({});
+  const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -19,7 +19,7 @@ export default function Contact() {
 
   const validate = () => {
     const e = {};
-    if (!form.name.trim())    e.name    = 'Name is required';
+    if (!form.name.trim()) e.name = 'Name is required';
     if (!form.message.trim()) e.message = 'Message is required';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -32,7 +32,7 @@ export default function Contact() {
       await submitContact(form);
       setSuccess(true);
       setForm(EMPTY);
-    } catch (err) {
+    } catch {
       setErrors({ submit: 'Something went wrong. Please try again.' });
     } finally {
       setLoading(false);
@@ -43,41 +43,34 @@ export default function Contact() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Contact Us"
-        description="Get in touch with Agezweho Movies — send us a message, ask questions, or report issues. We're here to help."
+        description="Get in touch with Agezweho — send us a message, ask questions, or report issues"
         canonical="https://agezweho.com/contact"
       />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 pt-20 pb-24">
-
-        {/* Back */}
-        <motion.div initial={{ opacity:0, x:-14 }} animate={{ opacity:1, x:0 }} className="mb-6">
-          <Link href="/">
-            <motion.div whileHover={{ x:-3 }} className="inline-flex items-center gap-1.5 text-xs transition-colors"
-              style={{ color:'#6a6a5a' }}
-              onMouseEnter={e=>e.currentTarget.style.color='#c9a84c'}
-              onMouseLeave={e=>e.currentTarget.style.color='#6a6a5a'}>
-              <ArrowLeft size={13} /> Back
-            </motion.div>
-          </Link>
-        </motion.div>
-
         {/* Header */}
-        <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} className="text-center mb-10">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.25)' }}>
-            <Mail size={24} style={{ color:'#c9a84c' }} />
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} className="mb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <Link href="/">
+              <motion.div whileHover={{ x:-3 }} className="text-xs" style={{ color:'#6a6a5a' }}>
+                <ArrowLeft size={13} />
+              </motion.div>
+            </Link>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.25)' }}>
+              <Mail size={20} style={{ color:'#c9a84c' }} />
+            </div>
+            <div>
+              <h1 className="font-cinzel font-bold text-lg" style={{
+                fontFamily:'Cinzel,serif',
+                background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
+                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
+              }}>Contact Us</h1>
+              <p className="text-[10px]" style={{ color:'#6a6a5a' }}>We'd love to hear from you</p>
+            </div>
           </div>
-          <h1 className="font-cinzel font-bold text-2xl sm:text-3xl mb-2"
-            style={{ fontFamily:'Cinzel,serif',
-              background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
-              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-            Contact Us
-          </h1>
-          <p className="text-xs leading-relaxed" style={{ color:'#6a6a5a' }}>
-            Have a question, suggestion or issue? We'd love to hear from you.
-          </p>
-          <div className="divider-gold w-20 mx-auto mt-3" />
+          <div className="divider-gold w-16" />
         </motion.div>
 
         {/* Success */}
@@ -86,20 +79,23 @@ export default function Contact() {
             <motion.div initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0 }}
               className="text-center py-16">
               <motion.div animate={{ scale:[1,1.15,1] }} transition={{ repeat:Infinity, duration:2 }}>
-                <CheckCircle2 size={52} className="mx-auto mb-4" style={{ color:'#c9a84c' }} />
+                <CheckCircle2 size={52} className="mx-auto mb-4" style={{ color:'#22c55e' }} />
               </motion.div>
-              <h3 className="font-cinzel text-xl mb-2" style={{ fontFamily:'Cinzel,serif', color:'#e8c87a' }}>Message Sent!</h3>
-              <p className="text-sm mb-6" style={{ color:'#6a6a5a' }}>We'll get back to you soon. Thank you! 🙏</p>
-              <motion.button whileHover={{ scale:1.03 }} onClick={() => setSuccess(false)}
-                className="btn-primary px-5 py-2.5 rounded-xl text-sm">Send Another</motion.button>
+              <h3 className="font-cinzel text-xl mb-2" style={{ fontFamily:'Cinzel,serif', color:'#22c55e' }}>Message Sent!</h3>
+              <p className="text-sm mb-6" style={{ color:'#6a6a5a' }}>We'll get back to you soon.</p>
+              <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }} onClick={() => setSuccess(false)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:'#c9a84c' }}>
+                <Send size={14} /> Send Another
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Form */}
         {!success && (
-          <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-            className="space-y-4 p-6 rounded-2xl"
+          <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
+            className="space-y-4 p-5 rounded-2xl"
             style={{ background:'rgba(14,14,22,0.8)', border:'1px solid rgba(201,168,76,0.12)', backdropFilter:'blur(20px)' }}>
 
             {/* Name */}
@@ -109,13 +105,13 @@ export default function Contact() {
               </label>
               <input className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm ${errors.name?'border-red-500/40':''}`}
                 value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Your name" />
-              {errors.name && <p className="text-red-400/80 text-xs mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-red-400/80 text-[10px] mt-1">{errors.name}</p>}
             </div>
 
             {/* Email */}
             <div>
               <label className="flex items-center gap-1.5 text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-                <Mail size={10} /> Email <span style={{ color:'#4a4a3a', letterSpacing:0 }}>optional</span>
+                <Mail size={10} /> Email <span style={{ color:'#3a3a2a', letterSpacing:0 }}>(optional)</span>
               </label>
               <input className="input-dark w-full px-3 py-2.5 rounded-lg text-sm"
                 value={form.email} onChange={e=>set('email',e.target.value)}
@@ -124,8 +120,8 @@ export default function Contact() {
 
             {/* Subject */}
             <div>
-              <label className="text-[10px] font-medium mb-1.5 tracking-[2px] uppercase block" style={{ color:'#6a6a5a' }}>
-                Subject <span style={{ color:'#4a4a3a', letterSpacing:0 }}>optional</span>
+              <label className="text-[10px] font-medium mb-1.5 tracking-[2px] uppercase flex items-center gap-1.5" style={{ color:'#6a6a5a' }}>
+                <MessageCircle size={10} /> Subject <span style={{ color:'#3a3a2a', letterSpacing:0 }}>(optional)</span>
               </label>
               <input className="input-dark w-full px-3 py-2.5 rounded-lg text-sm"
                 value={form.subject} onChange={e=>set('subject',e.target.value)}
@@ -140,29 +136,30 @@ export default function Contact() {
               <textarea className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm resize-none ${errors.message?'border-red-500/40':''}`}
                 rows={5} value={form.message} onChange={e=>set('message',e.target.value)}
                 placeholder="Write your message here..." />
-              {errors.message && <p className="text-red-400/80 text-xs mt-1">{errors.message}</p>}
+              {errors.message && <p className="text-red-400/80 text-[10px] mt-1">{errors.message}</p>}
             </div>
 
-            {errors.submit && <p className="text-red-400/80 text-xs">{errors.submit}</p>}
+            {errors.submit && <p className="text-red-400/80 text-[10px]">{errors.submit}</p>}
 
             <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
               onClick={handleSubmit} disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium">
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold"
+              style={{
+                background: 'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(180,140,60,0.08))',
+                border: '1px solid rgba(201,168,76,0.3)',
+                color: '#c9a84c',
+                boxShadow: '0 0 16px rgba(201,168,76,0.06)',
+              }}>
               {loading
-                ? <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:1, ease:'linear' }}><Send size={15}/></motion.div>
+                ? <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor:'#c9a84c', borderTopColor:'transparent' }} />
                 : <Send size={15} />}
               {loading ? 'Sending...' : 'Send Message'}
             </motion.button>
           </motion.div>
         )}
 
-        <AdBanner size="728x90" className="mt-8 mb-2" />
+        <AdBanner size="728x90" className="mt-8" />
       </div>
     </div>
   );
 }
-
-
-
-
-

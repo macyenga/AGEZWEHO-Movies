@@ -5,8 +5,9 @@ import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import SearchBar from '../components/SearchBar';
 import AdBanner from '../components/ads/AdBanner';
+import FilterNav from '../components/FilterNav';
 import CATEGORIES, { CATEGORY_GROUPS } from '../lib/categories';
-import { Package, Download, Star, Plus, ChevronDown, Crown, ArrowRight } from 'lucide-react';
+import { Package, Download, Star, Plus, ChevronDown, Crown, ArrowRight, AlertTriangle, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const ACCENT = '#c9a84c';
@@ -64,13 +65,13 @@ export default function Games() {
           </div>
         </motion.div>
 
-        {/* Filter + Add button row */}
-        <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
+        {/* Sticky filter nav */}
+        <FilterNav items={[]}>
           {/* Category dropdown */}
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium"
               style={filter
                 ? { background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color: ACCENT }
                 : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }
@@ -83,7 +84,7 @@ export default function Games() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
                 <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-64 max-h-80 overflow-y-auto rounded-xl p-2"
+                  className="absolute top-full right-0 mt-2 z-50 w-64 max-h-80 overflow-y-auto rounded-xl p-2"
                   style={{ background:'rgba(10,10,20,0.96)', border:'1px solid rgba(201,168,76,0.15)', backdropFilter:'blur(16px)' }}>
                   <button onClick={() => { setFilter(''); setShowDropdown(false); }}
                     className="w-full text-left px-3 py-2 rounded-lg text-xs transition-colors"
@@ -107,14 +108,15 @@ export default function Games() {
             )}
           </div>
 
-          <Link href="/submit-game">
+          <Link href="/submit-game" className="flex-shrink-0">
             <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium"
               style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.3)', color: ACCENT }}>
               <Plus size={13} /> Add Content
             </motion.div>
           </Link>
-        </div>
+        </FilterNav>
+        <div className="pt-4" />
 
         {/* Pro upsell banner */}
         {!isPro && (
@@ -144,6 +146,24 @@ export default function Games() {
             </motion.div>
           </Link>
         )}
+
+        {/* Disclaimer banner — covers all categories */}
+        <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }}
+          className="mb-6 p-4 rounded-xl relative overflow-hidden"
+          style={{ background:'rgba(224,92,58,0.06)', border:'1px solid rgba(224,92,58,0.2)' }}>
+          <div className="flex gap-3 items-start">
+            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color:'#e05c3a' }} />
+            <div>
+              <p className="text-xs font-semibold mb-1" style={{ color:'#e05c3a' }}>Disclaimer</p>
+              <p className="text-[11px] leading-relaxed" style={{ color:'#8a8778' }}>
+                Content on this page is uploaded by community members. We do not host, verify, or endorse any files,
+                links, or materials. All downloads and usage are entirely at <span style={{ color:'#e05c3a' }}>your own risk</span>.
+                We are <span style={{ color:'#e05c3a' }}>not responsible</span> for any damage, data loss, device issues,
+                or legal consequences. If uncertain, always use official versions.
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
         <AdBanner size="728x90" className="mb-6" />
 
@@ -217,8 +237,9 @@ export default function Games() {
                         <span className="text-[10px] font-semibold" style={{ color:'#22c55e' }}>Free</span>
                       </div>
                     ) : (
-                      <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md"
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-1.5 py-0.5 rounded-md"
                         style={{ background:'rgba(10,10,15,0.75)', border:'1px solid rgba(251,191,36,0.2)' }}>
+                        <Lock size={8} style={{ color:'#fbbf24' }} />
                         <span className="text-[10px] font-semibold" style={{ color:'#fbbf24' }}>{item.price || 50} RWF</span>
                       </div>
                     )}

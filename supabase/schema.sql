@@ -289,4 +289,66 @@ create policy "service_update_subscriptions" on subscriptions for update using (
 alter table subscriptions add column if not exists phone text;
 alter table subscriptions add column if not exists tx_ref text;
 
--- ── Migrations ────────────────────────────
+-- ── News Table (Pro News / Twitter-style) ──
+create table if not exists news (
+  id              uuid default gen_random_uuid() primary key,
+  title           text not null,
+  content         text,
+  image_url       text,
+  category        text default 'Amakuru',
+  author_name     text default 'Anonymous',
+  author_id       uuid references auth.users(id) on delete set null,
+  publisher_momo  text,
+  status          text default 'pending',
+  likes           integer default 0,
+  comments_count  integer default 0,
+  created_at      timestamptz default now()
+);
+
+alter table news enable row level security;
+
+-- Public can read approved news
+drop policy if exists "public_read_news" on news;
+create policy "public_read_news" on news for select using (status = 'approved' or auth.role() = 'service_role');
+
+-- Service role manages all mutations
+drop policy if exists "service_all_news" on news;
+create policy "service_all_news" on news for all using (auth.role() = 'service_role');
+
+-- Index for faster feed queries
+create index if not exists news_status_created_idx on news (status, created_at desc);
+create index if not exists news_category_idx on news (category);
+
+-- Like increment function (used by API)
+create or replace function increment_news_likes(row_id uuid)
+returns integer language plpgsql security definer as $$
+begin
+  update news set likes = likes + 1 where id = row_id;
+  return (select likes from news where id = row_id);
+end;
+$$;
+
+-- ── Shop Table (WhatsApp marketplace) ──
+create table if not exists shop (
+  id              uuid default gen_random_uuid() primary key,
+  title           text not null,
+  description     text,
+  price           text,
+  image_url       text,
+  category        text default 'Other',
+  seller_name     text default 'Anonymous',
+  seller_whatsapp text not null,
+  status          text default 'active',
+  created_at      timestamptz default now()
+);
+
+alter table shop enable row level security;
+
+drop policy if exists "public_read_shop" on shop;
+create policy "public_read_shop" on shop for select using (status = 'active' or auth.role() = 'service_role');
+
+drop policy if exists "service_all_shop" on shop;
+create policy "service_all_shop" on shop for all using (auth.role() = 'service_role');
+
+create index if not exists shop_status_created_idx on shop (status, created_at desc);
+create index if not exists shop_category_idx on shop (category);

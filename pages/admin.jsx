@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase';
 import {
   Shield, Film, Wallet, Mail, Users, Heart,
   CheckCircle2, XCircle, Loader2, Trash2, Plus, UserPlus, Edit3, List, ArrowLeft, Package,
-  BarChart3, DollarSign, Search, RotateCcw, Filter, TrendingUp, X, Crown
+  BarChart3, DollarSign, Search, RotateCcw, Filter, TrendingUp, X, Crown, Newspaper, ShoppingBag
 } from 'lucide-react';
 
 const TABS = [
@@ -23,6 +23,8 @@ const TABS = [
   { id: 'subscriptions', label: 'Subscriptions', icon: Crown },
   { id: 'payouts', label: 'Payouts', icon: DollarSign },
   { id: 'contacts', label: 'Messages', icon: Mail },
+  { id: 'news', label: 'News', icon: Newspaper },
+  { id: 'shop', label: 'Shop', icon: ShoppingBag },
   { id: 'admins', label: 'Admins', icon: Users },
 ];
 
@@ -274,6 +276,62 @@ export default function Admin() {
     setActionLoading(`delgame_${id}`);
     try {
       await doAdminRequest('/api/admin/games', 'DELETE', { id });
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleApproveNews = async (id) => {
+    setActionLoading(`news_${id}`);
+    try {
+      await doAdminRequest('/api/admin/news', 'PATCH', { id, status: 'approved' });
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleRejectNews = async (id) => {
+    setActionLoading(`news_${id}`);
+    try {
+      await doAdminRequest('/api/admin/news', 'PATCH', { id, status: 'rejected' });
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleDeleteNews = async (id) => {
+    if (!confirm('Delete this news post permanently?')) return;
+    setActionLoading(`delnews_${id}`);
+    try {
+      await doAdminRequest('/api/admin/news', 'DELETE', { id });
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleMarkSold = async (id) => {
+    setActionLoading(`shop_${id}`);
+    try {
+      await doAdminRequest('/api/admin/shop', 'PATCH', { id, status: 'sold' });
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleReactivateShop = async (id) => {
+    setActionLoading(`shop_${id}`);
+    try {
+      await doAdminRequest('/api/admin/shop', 'PATCH', { id, status: 'active' });
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleDeleteShopItem = async (id) => {
+    if (!confirm('Delete this shop listing permanently?')) return;
+    setActionLoading(`delshop_${id}`);
+    try {
+      await doAdminRequest('/api/admin/shop', 'DELETE', { id });
       await refresh();
     } catch (err) { setError(err.message); }
     finally { setActionLoading(null); }
@@ -1212,6 +1270,111 @@ export default function Admin() {
                     </div>
                   ))
                 )}
+              </div>
+            )}
+
+            {tab === 'news' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[11px]" style={{ color: '#6a6a5a' }}>Total: <span style={{ color:'#e8e6f0' }}>{data?.allNews?.length || 0}</span> news posts</span>
+                </div>
+                {data?.allNews?.length === 0 ? (
+                  <p className="text-sm text-center py-8" style={{ color: '#6a6a5a' }}>No news posts</p>
+                ) : data?.allNews?.map(n => (
+                  <div key={n.id} className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    {n.image_url && <img src={n.image_url} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium leading-snug" style={{ color: '#e8e6f0' }}>{n.title}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: '#6a6a5a' }}>
+                        {n.author_name} <span style={{ color:'#4a4a3a' }}>•</span> {n.category}
+                      </div>
+                      <div className="text-[10px] mt-1 flex gap-3 flex-wrap" style={{ color: '#4a4a3a' }}>
+                        <span className={n.status === 'approved' ? 'text-green-400' : n.status === 'pending' ? 'text-yellow-400' : 'text-red-400'}>
+                          {n.status || 'pending'}
+                        </span>
+                        <span>{n.likes || 0} likes</span>
+                        {n.publisher_momo && <span style={{ color:'#22c55e' }}>Tips enabled</span>}
+                        <span>{new Date(n.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap justify-end">
+                      {n.status !== 'approved' && (
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          onClick={() => handleApproveNews(n.id)} disabled={actionLoading === `news_${n.id}`}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                          style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                          {actionLoading === `news_${n.id}` ? <Loader2 size={11} /> : <CheckCircle2 size={11} />} Approve
+                        </motion.button>
+                      )}
+                      {n.status !== 'rejected' && (
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          onClick={() => handleRejectNews(n.id)} disabled={actionLoading === `news_${n.id}`}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                          <XCircle size={11} /> Reject
+                        </motion.button>
+                      )}
+                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDeleteNews(n.id)} disabled={actionLoading === `delnews_${n.id}`}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                        {actionLoading === `delnews_${n.id}` ? <Loader2 size={11} /> : <Trash2 size={11} />} Delete
+                      </motion.button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {tab === 'shop' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[11px]" style={{ color: '#6a6a5a' }}>Total: <span style={{ color:'#e8e6f0' }}>{data?.allShop?.length || 0}</span> listings</span>
+                </div>
+                {data?.allShop?.length === 0 ? (
+                  <p className="text-sm text-center py-8" style={{ color: '#6a6a5a' }}>No shop listings</p>
+                ) : data?.allShop?.map(s => (
+                  <div key={s.id} className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    {s.image_url && <img src={s.image_url} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium leading-snug" style={{ color: '#e8e6f0' }}>{s.title}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: '#6a6a5a' }}>
+                        {s.seller_name} <span style={{ color:'#4a4a3a' }}>•</span> {s.category}
+                      </div>
+                      <div className="text-[10px] mt-1 flex gap-3 flex-wrap" style={{ color: '#4a4a3a' }}>
+                        <span className={s.status === 'active' ? 'text-green-400' : 'text-yellow-500'}>
+                          {s.status}
+                        </span>
+                        {s.price && <span style={{ color:'#fbbf24' }}>{s.price}</span>}
+                        <span style={{ color:'#25d366' }}>WA: {s.seller_whatsapp}</span>
+                        <span>{new Date(s.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap justify-end">
+                      {s.status === 'active' ? (
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          onClick={() => handleMarkSold(s.id)} disabled={actionLoading === `shop_${s.id}`}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                          style={{ background: 'rgba(234,179,8,0.12)', border: '1px solid rgba(234,179,8,0.3)', color: '#eab308' }}>
+                          {actionLoading === `shop_${s.id}` ? <Loader2 size={11} /> : <CheckCircle2 size={11} />} Mark Sold
+                        </motion.button>
+                      ) : (
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          onClick={() => handleReactivateShop(s.id)} disabled={actionLoading === `shop_${s.id}`}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                          style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                          {actionLoading === `shop_${s.id}` ? <Loader2 size={11} /> : <RotateCcw size={11} />} Reactivate
+                        </motion.button>
+                      )}
+                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDeleteShopItem(s.id)} disabled={actionLoading === `delshop_${s.id}`}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-semibold"
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                        {actionLoading === `delshop_${s.id}` ? <Loader2 size={11} /> : <Trash2 size={11} />} Delete
+                      </motion.button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 

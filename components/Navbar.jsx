@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Film, Inbox, Plus, Heart, Gamepad2, Home, Mail, LogIn, User, Shield, Menu, X, Search } from 'lucide-react';
+import { Film, Inbox, Upload, Heart, Gamepad2, Home, Mail, LogIn, User, Shield, Menu, X, Search, Newspaper, ShoppingBag } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,6 +19,8 @@ export default function Navbar() {
     { href: '/',         label: 'Explore',  icon: Home     },
     { href: '/games',    label: 'Exclusive', icon: Gamepad2 },
     { href: '/requests', label: 'Requests', icon: Inbox    },
+    { href: '/news',     label: 'Amakuru',  icon: Newspaper },
+    { href: '/shop',     label: 'Shop',     icon: ShoppingBag },
   ];
 
   const ProButton = () => (
@@ -93,7 +95,7 @@ export default function Navbar() {
           </Link>
           <div className="hidden sm:flex items-center gap-1">
             {links.map(({ href, label, icon }) => navItem(href, label, icon, router.pathname === href))}
-            {/* Add Agasobanuye */}
+            {/* Add Movies */}
             <Link href="/submit">
               <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.95 }}
                 className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold overflow-hidden"
@@ -106,8 +108,8 @@ export default function Navbar() {
                   style={{ background: 'linear-gradient(105deg,transparent 30%,rgba(201,168,76,0.06) 50%,transparent 70%)' }}
                   animate={{ x: ['-200%', '300%'] }}
                   transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }} />
-                <Plus size={13} style={{ color: '#c9a84c' }} />
-                <span className="hidden sm:block tracking-wide" style={{ color: '#c9a84c' }}>Add Agasobanuye</span>
+                <Upload size={13} style={{ color: '#c9a84c' }} />
+                <span className="hidden sm:block tracking-wide" style={{ color: '#c9a84c' }}>Upload</span>
               </motion.div>
             </Link>
           </div>
@@ -280,7 +282,7 @@ export default function Navbar() {
               <Link href="/submit" onClick={() => setMobileOpen(false)}>
                 <motion.div whileTap={{ scale: 0.97 }}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm" style={{ color: '#8a8778' }}>
-                  <Plus size={16} /> Add
+                  <Upload size={16} /> Upload
                 </motion.div>
               </Link>
               <Link href="/contact" onClick={() => setMobileOpen(false)}>

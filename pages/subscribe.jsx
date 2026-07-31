@@ -16,7 +16,6 @@ const PRO_BENEFITS = [
   'Exclusive Pro badge on your profile',
 ];
 
-const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
 const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 
 export default function Subscribe() {
@@ -26,7 +25,7 @@ export default function Subscribe() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [phone, setPhone] = useState('');
-  const [copiedNumber, setCopiedNumber] = useState(false);
+  const [copiedUssd, setCopiedUssd] = useState(false);
 
   const handleSubscribe = async () => {
     if (!user) { router.push('/auth/login?redirect=/subscribe'); return; }
@@ -121,33 +120,25 @@ export default function Subscribe() {
 
             <div className="p-4 rounded-xl mb-4 text-center"
               style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,204,0,0.2)' }}>
-              <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Send Mobile Money to:</p>
-              <p className="text-3xl font-bold tracking-wider mb-3" style={{ color: '#FFCC00', fontFamily: 'monospace' }}>
-                {MOMO_NUMBER}
+              <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Dial USSD code to pay:</p>
+              <p className="text-2xl font-bold tracking-wider mb-3" style={{ color: '#FFCC00', fontFamily: 'monospace' }}>
+                {USSD_CODE}
               </p>
               <p className="text-sm font-bold mb-3" style={{ color: '#FFCC00' }}>
                 Amount: 2,000 RWF
               </p>
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => { navigator.clipboard?.writeText(MOMO_NUMBER); setCopiedNumber(true); setTimeout(() => setCopiedNumber(false), 2000); }}
+                onClick={() => { navigator.clipboard?.writeText(USSD_CODE); setCopiedUssd(true); setTimeout(() => setCopiedUssd(false), 2000); }}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
                 style={{
-                  background: copiedNumber ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
-                  border: `1px solid ${copiedNumber ? 'rgba(34,197,94,0.4)' : 'rgba(255,204,0,0.3)'}`,
-                  color: copiedNumber ? '#22c55e' : '#FFCC00'
+                  background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
+                  border: `1px solid ${copiedUssd ? 'rgba(34,197,94,0.4)' : 'rgba(255,204,0,0.3)'}`,
+                  color: copiedUssd ? '#22c55e' : '#FFCC00'
                 }}>
-                {copiedNumber ? <Check size={16} /> : <Copy size={16} />}
-                {copiedNumber ? 'Copied!' : 'Copy MoMo Number'}
+                {copiedUssd ? <Check size={16} /> : <Copy size={16} />}
+                {copiedUssd ? 'Copied!' : 'Copy USSD Code'}
               </motion.button>
-            </div>
-
-            <div className="p-4 rounded-xl mb-4 text-center"
-              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,204,0,0.2)' }}>
-              <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Or dial USSD code:</p>
-              <p className="text-lg font-bold tracking-wider" style={{ color: '#FFCC00', fontFamily: 'monospace' }}>
-                {USSD_CODE}
-              </p>
             </div>
 
             <div className="p-4 rounded-xl mb-4 text-center"

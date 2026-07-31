@@ -17,7 +17,7 @@ export default function SEOHead({
   keywords,
 }) {
   const t = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Rwanda's Home for Agasobanuye Movies & Entertainment`;
-  const d = description || 'Rwanda\'s home for Agasobanuye movies, series & anime. Discover, download and watch your favourites — completely free.';
+  const d = description || 'Rwanda\'s home for Agasobanuye movies, series & anime. Watch Agasobanuye Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim, Gashya 2026 Netflix, Mujyosi Store — and latest Amakuru Agezweho, Igihe Amakuru Mashya, Amazina Agezweho & M23 updates — completely free.';
   const ogT = ogTitle || title || SITE_NAME;
   const ogD = ogDescription || d;
   const ogI = ogImage || DEFAULT_IMAGE;

@@ -4,6 +4,17 @@ import Link from 'next/link';
 import { Star, Download, Tv2, Heart } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 
+const PLATFORM_COLORS = {
+  Netflix: '#E50914',
+  Amazon: '#00A8E1',
+  YouTube: '#FF0000',
+  JioCinema: '#6B4DE6',
+  Hotstar: '#1F80E0',
+  SonyLIV: '#0057A8',
+  ZEE5: '#7B2FBE',
+  MXPlayer: '#FF6C00',
+};
+
 export default function MovieCard({ movie, index = 0 }) {
   const ref = useRef(null);
   const x = useMotionValue(0);
@@ -109,6 +120,22 @@ export default function MovieCard({ movie, index = 0 }) {
                 <span className={`badge ${movie.type==='Series'?'badge-blue':movie.type==='Anime'?'badge-purple':'badge-muted'}`}>
                   {movie.type}
                 </span>
+              </div>
+            )}
+
+            {/* Platform badges */}
+            {movie.platforms && movie.platforms.length > 0 && (
+              <div className="absolute bottom-2 left-2 z-10 flex gap-1">
+                {movie.platforms.slice(0, 3).map(p => (
+                  <span key={p} className="text-[8px] px-1.5 py-0.5 rounded font-semibold"
+                    style={{
+                      background: `${PLATFORM_COLORS[p] || '#c9a84c'}25`,
+                      color: PLATFORM_COLORS[p] || '#c9a84c',
+                      border: `1px solid ${PLATFORM_COLORS[p] || '#c9a84c'}40`,
+                    }}>
+                    {p}
+                  </span>
+                ))}
               </div>
             )}
 

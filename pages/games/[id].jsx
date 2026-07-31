@@ -11,7 +11,6 @@ import { ArrowLeft, Download, ExternalLink, Package, Star, Shield, Zap, Lock, Ch
 
 const UNLOCK_KEY = 'agezweho_unlocked_games';
 const GAME_TX_KEY = 'agezweho_game_transactions';
-const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
 const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 
 export default function GameDetail({ game }) {
@@ -405,7 +404,7 @@ export default function GameDetail({ game }) {
                         </p>
                         <div className="p-3 rounded-xl mb-3" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
                           <p className="text-[11px] text-center" style={{ color: '#c9a84c' }}>
-                            Send <strong>{donateAmount} RWF</strong> via MTN MoMo to <strong style={{ color: '#fbbf24' }}>{MOMO_NUMBER}</strong> or USSD <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
+                            Send <strong>{donateAmount} RWF</strong> via MTN MoMo USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
                           </p>
                         </div>
                         <Link href="/subscribe">
@@ -440,7 +439,7 @@ export default function GameDetail({ game }) {
                         <CheckCircle2 size={40} style={{ color: '#22c55e', margin: '0 auto 12px', display: 'block' }} />
                         <h3 className="font-cinzel text-lg mb-1" style={{ fontFamily: 'Cinzel,serif', color: '#22c55e' }}>Request Submitted!</h3>
                         <p className="text-xs mb-2" style={{ color: '#8a8060' }}>
-                          Send <strong>{donateAmount} RWF</strong> to <strong style={{ color: '#fbbf24' }}>{MOMO_NUMBER}</strong> via MTN MoMo.
+                          Send <strong>{donateAmount} RWF</strong> via MTN MoMo USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
                         </p>
                         <p className="text-xs mb-4" style={{ color: '#6b6b8a' }}>
                           Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong> was sent to admin. They&apos;ll confirm and unlock the download links once payment is verified.

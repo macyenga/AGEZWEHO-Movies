@@ -48,13 +48,11 @@ const SHARE_PLATFORMS = [
 const SITE_URL = 'https://agezweho.com';
 const SHARE_TEXT = '🎬 Agezweho Movies — Rwanda\'s home for Agasobanuye movies, series & anime! Free forever.';
 
-const MOMO_NUMBER = process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247';
 const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'macyenga@gmail.com';
 
 export default function BuyMB() {
   const [copiedUssd, setCopiedUssd] = useState(false);
-  const [copiedNumber, setCopiedNumber] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const handleShare = (p) => {
@@ -68,10 +66,7 @@ export default function BuyMB() {
 
   const copyToClipboard = (text, type) => {
     navigator.clipboard?.writeText(text);
-    if (type === 'number') {
-      setCopiedNumber(true);
-      setTimeout(() => setCopiedNumber(false), 2000);
-    } else if (type === 'ussd') {
+    if (type === 'ussd') {
       setCopiedUssd(true);
       setTimeout(() => setCopiedUssd(false), 2000);
     } else {
@@ -151,41 +146,23 @@ export default function BuyMB() {
 
             <div className="p-4 rounded-xl mb-4 text-center"
               style={{ background:'rgba(0,0,0,0.3)', border:'1px solid rgba(56,189,248,0.2)' }}>
-              <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Send Mobile Money to:</p>
-              <p className="text-3xl font-bold tracking-wider mb-3" style={{ color:'#38bdf8', fontFamily:'monospace' }}>
-                {MOMO_NUMBER}
+              <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Dial this USSD code to send:</p>
+              <p className="text-2xl font-bold tracking-wider mb-3" style={{ color:'#38bdf8', fontFamily:'monospace' }}>
+                {USSD_CODE}
               </p>
               <motion.button
                 whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                onClick={() => copyToClipboard(MOMO_NUMBER, 'number')}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium mb-4"
+                onClick={() => copyToClipboard(USSD_CODE, 'ussd')}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
                 style={{ 
-                  background: copiedNumber ? 'rgba(34,197,94,0.15)' : 'rgba(56,189,248,0.1)',
-                  border: `1px solid ${copiedNumber ? 'rgba(34,197,94,0.4)' : 'rgba(56,189,248,0.3)'}`,
-                  color: copiedNumber ? '#22c55e' : '#38bdf8'
+                  background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(56,189,248,0.1)',
+                  border: `1px solid ${copiedUssd ? 'rgba(34,197,94,0.4)' : 'rgba(56,189,248,0.3)'}`,
+                  color: copiedUssd ? '#22c55e' : '#38bdf8'
                 }}>
-                {copiedNumber ? <Check size={16} /> : <Copy size={16} />}
-                {copiedNumber ? 'Copied!' : 'Copy MoMo Number'}
+                {copiedUssd ? <Check size={16} /> : <Copy size={16} />}
+                {copiedUssd ? 'Copied!' : 'Copy USSD Code'}
               </motion.button>
-
-              <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Or dial this USSD code:</p>
-              <p className="text-2xl font-bold tracking-wider" style={{ color:'#38bdf8', fontFamily:'monospace' }}>
-                {USSD_CODE}
-              </p>
             </div>
-
-            <motion.button
-              whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-              onClick={() => copyToClipboard(USSD_CODE, 'ussd')}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
-              style={{ 
-                background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(56,189,248,0.1)',
-                border: `1px solid ${copiedUssd ? 'rgba(34,197,94,0.4)' : 'rgba(56,189,248,0.3)'}`,
-                color: copiedUssd ? '#22c55e' : '#38bdf8'
-              }}>
-              {copiedUssd ? <Check size={16} /> : <Copy size={16} />}
-              {copiedUssd ? 'Copied!' : 'Copy USSD Code'}
-            </motion.button>
 
             <p className="text-center text-[10px] mt-3" style={{ color:'#6a6a5a' }}>
               Every MB helps us serve you better. Murakoze cyane!

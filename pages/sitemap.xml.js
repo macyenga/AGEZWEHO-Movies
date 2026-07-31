@@ -9,10 +9,12 @@ function url(loc, priority = '0.5', changefreq = 'monthly', lastmod = '') {
 export async function getServerSideProps({ res }) {
   const staticPages = [
     url('/', '1.0', 'daily'),
+    url('/finder', '0.7', 'weekly'),
+    url('/news', '0.9', 'daily'),
     url('/requests', '0.9', 'daily'),
     url('/games', '0.9', 'daily'),
-    url('/finder', '0.7', 'weekly'),
     url('/live', '0.8', 'daily'),
+    url('/shop', '0.7', 'weekly'),
     url('/subscribe', '0.7', 'weekly'),
     url('/support', '0.5', 'monthly'),
     url('/collection', '0.6', 'monthly'),
@@ -20,10 +22,12 @@ export async function getServerSideProps({ res }) {
     url('/submit', '0.6', 'weekly'),
   ];
 
-  const [{ data: movies }, { data: games }, { data: requests }] = await Promise.all([
+  const [{ data: movies }, { data: games }, { data: requests }, { data: news }, { data: shop }] = await Promise.all([
     supabaseAdmin.from('movies').select('id, created_at').eq('status', 'approved').limit(1000),
     supabaseAdmin.from('games').select('id, created_at').eq('status', 'approved').limit(1000),
     supabaseAdmin.from('requests').select('id, created_at').limit(500),
+    supabaseAdmin.from('news').select('id, created_at').eq('status', 'approved').limit(1000),
+    supabaseAdmin.from('shop').select('id, created_at').limit(500),
   ]);
 
   const movieUrls = (movies || []).map(m =>
@@ -33,8 +37,14 @@ export async function getServerSideProps({ res }) {
     url(`/games/${g.id}`, '0.8', 'weekly', g.created_at || '')
   );
   const requestUrls = (requests || []).map(() => url('/requests', '0.7', 'daily'));
+  const newsUrls = (news || []).map(n =>
+    url(`/news/${n.id}`, '0.8', 'daily', n.created_at || '')
+  );
+  const shopUrls = (shop || []).map(s =>
+    url(`/shop/${s.id}`, '0.6', 'weekly', s.created_at || '')
+  );
 
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...staticPages, ...movieUrls, ...gameUrls, ...requestUrls].join('')}</urlset>`;
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...staticPages, ...movieUrls, ...gameUrls, ...requestUrls, ...newsUrls, ...shopUrls].join('')}</urlset>`;
 
   res.setHeader('Content-Type', 'application/xml');
   res.write(sitemap);

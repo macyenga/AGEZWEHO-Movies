@@ -23,13 +23,8 @@ export default function DonationFloat() {
             </div>
           </div>
 
-          <div className="rounded-xl px-3 py-3 mb-3 text-center" style={{ background: 'rgba(0,0,0,0.28)', border: '1px solid rgba(56,189,248,0.18)' }}>
-            <p className="text-[10px] mb-1" style={{ color: '#8a8778' }}>MoMo Number</p>
-            <p className="font-bold tracking-wider" style={{ color: '#38bdf8', fontFamily: 'monospace', fontSize: '16px' }}>{process.env.NEXT_PUBLIC_MOMO_NUMBER || '0789690247'}</p>
-          </div>
-
           <div className="rounded-xl px-3 py-3 mb-4 text-center" style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.18)' }}>
-            <p className="text-[10px] mb-1" style={{ color: '#8a8778' }}>Or dial USSD Pay Code</p>
+            <p className="text-[10px] mb-1" style={{ color: '#8a8778' }}>Dial USSD Pay Code</p>
             <p className="font-bold tracking-wider text-sm" style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#'}</p>
           </div>
 
