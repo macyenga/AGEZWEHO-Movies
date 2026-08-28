@@ -1,9 +1,6 @@
 import { supabaseAdmin } from '../../../lib/server/supabase-admin';
 import { generateTxRef, initiatePayment } from '../../../lib/server/payments';
 
-const MOMO_NUMBER = process.env.MOMO_NUMBER || '0789690247';
-const USSD_CODE = process.env.USSD_CODE || '*182*8*1*156833#';
-
 const RATE_LIMIT_MAP = new Map();
 const RATE_LIMIT_WINDOW = 60_000;
 const RATE_LIMIT_MAX = 5;
@@ -28,7 +25,7 @@ export default async function handler(req, res) {
 
   const amount = Number(req.body?.amount);
   const { request_id, game_id, movie_id, phone } = req.body || {};
-  if (!Number.isInteger(amount) || amount < 50) return res.status(400).json({ error: 'Minimum amount is 50 RWF' });
+  if (!Number.isInteger(amount) || amount < 100) return res.status(400).json({ error: 'Minimum amount is 100 RWF' });
 
   let userId = req.body?.user_id || null;
   const authHeader = req.headers.authorization || '';
@@ -55,16 +52,22 @@ export default async function handler(req, res) {
 
   const payment = await initiatePayment({ amount, tx_ref, phone });
 
+  if (payment.provider === 'rwandapay' && payment.reference) {
+    await supabaseAdmin
+      .from('transactions')
+      .update({ provider_reference: String(payment.reference) })
+      .eq('tx_ref', tx_ref);
+  }
+
+  if (!payment.payment_url) {
+    return res.status(502).json({ error: 'Payment provider did not return a payment link' });
+  }
+
   return res.status(200).json({
     tx_ref,
     success: true,
-    provider: payment.provider || 'local',
+    provider: payment.provider || 'rwandapay',
+    payment_url: payment.payment_url,
     message: payment.message || 'Payment started',
-    payment_instructions: payment.payment_instructions || {
-      momo_number: MOMO_NUMBER,
-      ussd_code: USSD_CODE,
-      amount,
-      note: `Send ${amount} RWF to ${MOMO_NUMBER} via MTN MoMo. Admin will confirm your vote after verifying payment.`,
-    },
   });
 }

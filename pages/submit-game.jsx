@@ -303,7 +303,7 @@ export default function SubmitGame() {
             <label className="block text-[11px] font-semibold mb-1.5 tracking-[2px] uppercase" style={{ color:'#fbbf24' }}>
               <DollarSign size={12} className="inline mr-1" />Unlock Price (RWF) — min 50
             </label>
-            <input type="number" min="50" step="10" className="input-dark w-full px-3 py-2 rounded-lg text-sm"
+            <input type="number" min="100" step="50" className="input-dark w-full px-3 py-2 rounded-lg text-sm"
               value={form.price} onChange={e => set('price', parseInt(e.target.value) || 50)}
               placeholder="50" />
             <p className="text-[10px] mt-1.5" style={{ color:'#4a4a3a' }}>

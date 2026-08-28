@@ -1,9 +1,14 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
-import { ArrowLeft, Wifi, Share2, Smartphone, Mail, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import {
+  ArrowLeft, HeartHandshake, Mail, Copy, Check, Share2,
+  Loader2, Users, TrendingUp
+} from 'lucide-react';
+
+const GOLD = '#c9a84c';
 
 const SHARE_PLATFORMS = [
   {
@@ -48,38 +53,80 @@ const SHARE_PLATFORMS = [
 const SITE_URL = 'https://agezweho.com';
 const SHARE_TEXT = '🎬 Agezweho Movies — Rwanda\'s home for Agasobanuye movies, series & anime! Free forever.';
 
-const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'macyenga@gmail.com';
 
-export default function BuyMB() {
-  const [copiedUssd, setCopiedUssd] = useState(false);
+const TIERS = [
+  { amount: 500,   label: 'A coffee for the server' },
+  { amount: 1000,  label: 'Funds an episode upload' },
+  { amount: 2000,  label: 'A full day of hosting' },
+  { amount: 5000,  label: 'Supports an uploader' },
+];
+
+export default function Support() {
+  const [stats, setStats] = useState(null);
+  const [selected, setSelected] = useState(1000);
+  const [customAmount, setCustomAmount] = useState('');
+  const [phone, setPhone] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const handleShare = (p) => {
+  useEffect(() => {
+    fetch('/api/donations/stats').then(r => r.json()).then(setStats).catch(() => {});
+  }, []);
+
+  const amount = selected === 'custom' ? parseInt(customAmount, 10) : selected;
+
+  const handleDonate = async () => {
+    setError('');
+    if (!amount || Number.isNaN(amount) || amount < 100) {
+      setError('Minimum donation is 100 RWF.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, phone: phone || null }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (data.payment_url) {
+        window.location.assign(data.payment_url);
+        return;
+      }
+      setError(data.error || data.message || 'Could not start the payment. Please try again.');
+    } catch {
+      setError('Something went wrong. Please try again.');
+    }
+    setSubmitting(false);
+  };
+
+  const handleShare = (p, text) => {
     if (p.url === null) {
       navigator.clipboard?.writeText(SITE_URL);
       alert('Link copied!');
       return;
     }
-    window.open(p.url(SITE_URL, SHARE_TEXT), '_blank');
+    window.open(p.url(SITE_URL, text), '_blank');
   };
 
-  const copyToClipboard = (text, type) => {
-    navigator.clipboard?.writeText(text);
-    if (type === 'ussd') {
-      setCopiedUssd(true);
-      setTimeout(() => setCopiedUssd(false), 2000);
-    } else {
-      setCopiedEmail(true);
-      setTimeout(() => setCopiedEmail(false), 2000);
-    }
+  const copyEmail = () => {
+    navigator.clipboard?.writeText(CONTACT_EMAIL);
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
   };
+
+  const pct = stats && stats.monthlyGoal > 0
+    ? Math.min(100, Math.round((stats.monthlyTotal / stats.monthlyGoal) * 100))
+    : 0;
 
   return (
     <div className="min-h-screen bg-deep">
       <SEOHead
-        title="Buy us MB"
-        description="Buy us MB/data bundles to support Agezweho Movies — Rwanda's home for Agasobanuye movies, series & anime"
+        title="Support Agezweho Movies"
+        description="Donate via MTN MoMo or Airtel Money to keep Agezweho Movies free — Rwanda's home for Agasobanuye movies, series & anime"
         canonical="https://agezweho.com/support"
       />
       <CinematicBackground />
@@ -91,7 +138,7 @@ export default function BuyMB() {
           <Link href="/">
             <motion.div whileHover={{ x:-3 }} className="inline-flex items-center gap-1.5 text-xs transition-colors"
               style={{ color:'#6a6a5a' }}
-              onMouseEnter={e=>e.currentTarget.style.color='#c9a84c'}
+              onMouseEnter={e=>e.currentTarget.style.color=GOLD}
               onMouseLeave={e=>e.currentTarget.style.color='#6a6a5a'}>
               <ArrowLeft size={13} /> Back
             </motion.div>
@@ -104,114 +151,169 @@ export default function BuyMB() {
             animate={{ scale:[1,1.12,1] }}
             transition={{ repeat:Infinity, duration:2.5, ease:'easeInOut' }}
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background:'rgba(56,189,248,0.1)', border:'1px solid rgba(56,189,248,0.3)' }}>
-            <Wifi size={28} style={{ color:'#38bdf8' }} />
+            style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.3)' }}>
+            <HeartHandshake size={28} style={{ color:GOLD }} />
           </motion.div>
           <h1 className="font-cinzel font-bold text-2xl sm:text-3xl mb-3"
             style={{ fontFamily:'Cinzel,serif',
-              background:'linear-gradient(135deg,#7dd3fc,#38bdf8)',
+              background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
               WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-            Buy us MB
+            Support Agezweho
           </h1>
           <div className="divider-gold w-20 mx-auto mb-4" />
           <p className="text-sm leading-relaxed" style={{ color:'#8a8778' }}>
-            Help us stay connected! Send us MB/data bundles via MTN MoMo
-            <br />and we'll use it to keep Agezweho Movies running smoothly.
+            Agezweho Movies is free because of kind viewers like you.
+            <br />A small MoMo donation pays for hosting, uploads & bandwidth.
           </p>
         </motion.div>
 
-        {/* MTN MoMo Card */}
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
+        {/* Impact meter */}
+        {stats && (
+          <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
+            className="p-5 rounded-2xl mb-6"
+            style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.16)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] uppercase tracking-wider" style={{ color:'#6a6a5a' }}>This month</span>
+              <span className="flex items-center gap-1 text-[10px]" style={{ color:'#e8c87a' }}>
+                <TrendingUp size={10} /> {pct}% of goal
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="text-2xl font-bold" style={{ color:GOLD }}>{stats.monthlyTotal.toLocaleString()}</span>
+              <span className="text-xs" style={{ color:'#6a6a5a' }}>/ {stats.monthlyGoal.toLocaleString()} RWF</span>
+            </div>
+            <div className="h-2.5 rounded-full overflow-hidden mb-3" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(201,168,76,0.12)' }}>
+              <motion.div initial={{ width:0 }} animate={{ width:`${pct}%` }} transition={{ duration:1, ease:'easeOut' }}
+                className="h-full rounded-full" style={{ background:'linear-gradient(90deg,#a07828,#e8c87a)' }} />
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5 text-[10px]" style={{ color:'#8a8778' }}>
+                <Users size={10} style={{ color:GOLD }} /> {(stats.totalDonors || 0).toLocaleString()} supporters
+              </span>
+              {stats.topDonors && stats.topDonors.length > 0 && (
+                <span className="text-[10px] truncate" style={{ color:'#6a6a5a' }}>
+                  Top: {stats.topDonors[0].name} · {stats.topDonors[0].total.toLocaleString()} RWF
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Donate card */}
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }}
           className="p-6 rounded-2xl mb-6 relative overflow-hidden"
-          style={{ background:'rgba(56,189,248,0.06)', border:'1px solid rgba(56,189,248,0.25)' }}>
+          style={{ background:'rgba(14,14,22,0.85)', border:'1px solid rgba(201,168,76,0.22)', backdropFilter:'blur(20px)' }}>
           <motion.div className="absolute inset-0 pointer-events-none"
-            style={{ background:'linear-gradient(105deg,transparent 30%,rgba(56,189,248,0.08) 50%,transparent 70%)' }}
+            style={{ background:'linear-gradient(105deg,transparent 30%,rgba(201,168,76,0.06) 50%,transparent 70%)' }}
             animate={{ x:['-100%','200%'] }}
             transition={{ repeat:Infinity, duration:4, ease:'easeInOut', repeatDelay:2 }}
           />
-          
+
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background:'rgba(56,189,248,0.15)', border:'1px solid rgba(56,189,248,0.3)' }}>
-                <Smartphone size={24} style={{ color:'#38bdf8' }} />
-              </div>
-              <div>
-                <h2 className="font-cinzel font-semibold text-lg" style={{ fontFamily:'Cinzel,serif', color:'#38bdf8' }}>
-                  Send via MTN MoMo
-                </h2>
-                <p className="text-xs" style={{ color:'#8a8060' }}>Your support buys us data to keep the site alive</p>
-              </div>
+            <h2 className="font-cinzel font-semibold text-lg mb-1" style={{ fontFamily:'Cinzel,serif', color:'#e8c87a' }}>
+              Donate with MTN MoMo / Airtel
+            </h2>
+            <p className="text-[11px] mb-5" style={{ color:'#6a6a5a' }}>
+              Choose an amount — you&apos;ll get a secure RwandaPay prompt on your phone.
+            </p>
+
+            {/* Amount tiers */}
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {TIERS.map(t => {
+                const active = selected === t.amount;
+                return (
+                  <motion.button key={t.amount} whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
+                    onClick={() => { setSelected(t.amount); setCustomAmount(''); }}
+                    className="rounded-xl px-3 py-3 text-left relative overflow-hidden"
+                    style={active
+                      ? { background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.45)' }
+                      : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)' }}>
+                    <div className="text-sm font-bold" style={{ color: active ? '#e8c87a' : '#e8e6f0' }}>
+                      {t.amount.toLocaleString()} <span style={{ color:'#6a6a5a', fontWeight:400, fontSize:10 }}>RWF</span>
+                    </div>
+                    <div className="text-[9px] mt-0.5" style={{ color: active ? '#c9a84c' : '#6a6a5a' }}>{t.label}</div>
+                  </motion.button>
+                );
+              })}
             </div>
 
-            <div className="p-4 rounded-xl mb-4 text-center"
-              style={{ background:'rgba(0,0,0,0.3)', border:'1px solid rgba(56,189,248,0.2)' }}>
-              <p className="text-xs mb-2" style={{ color:'#8a8060' }}>Dial this USSD code to send:</p>
-              <p className="text-2xl font-bold tracking-wider mb-3" style={{ color:'#38bdf8', fontFamily:'monospace' }}>
-                {USSD_CODE}
-              </p>
-              <motion.button
-                whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                onClick={() => copyToClipboard(USSD_CODE, 'ussd')}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
-                style={{ 
-                  background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(56,189,248,0.1)',
-                  border: `1px solid ${copiedUssd ? 'rgba(34,197,94,0.4)' : 'rgba(56,189,248,0.3)'}`,
-                  color: copiedUssd ? '#22c55e' : '#38bdf8'
-                }}>
-                {copiedUssd ? <Check size={16} /> : <Copy size={16} />}
-                {copiedUssd ? 'Copied!' : 'Copy USSD Code'}
+            {/* Custom amount */}
+            <div className="flex items-center gap-2 mb-4">
+              <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
+                onClick={() => setSelected('custom')}
+                className="px-3 py-2.5 rounded-xl text-[11px] font-semibold flex-shrink-0"
+                style={selected === 'custom'
+                  ? { background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.45)', color:'#e8c87a' }
+                  : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', color:'#8a8778' }}>
+                Custom
               </motion.button>
+              <input
+                type="number" min="100" step="100" placeholder="Your amount"
+                value={customAmount}
+                onChange={e => { setCustomAmount(e.target.value); setSelected('custom'); }}
+                className="flex-1 rounded-xl px-3 py-2.5 text-xs w-full outline-none"
+                style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', color:'#e8e6f0' }}
+              />
             </div>
 
-            <p className="text-center text-[10px] mt-3" style={{ color:'#6a6a5a' }}>
-              Every MB helps us serve you better. Murakoze cyane!
+            {/* Phone */}
+            <div className="mb-5">
+              <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color:'#6a6a5a' }}>
+                Your MoMo number <span style={{ color:'#4a4a3a' }}>(optional)</span>
+              </label>
+              <input
+                type="tel" placeholder="07XXXXXXXX"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-xs outline-none mb-4"
+                style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', color:'#e8e6f0' }}
+              />
+            </div>
+
+            {error && (
+              <div className="mb-3 px-3 py-2.5 rounded-xl text-[11px]" style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.25)', color:'#f87171' }}>
+                {error}
+              </div>
+            )}
+
+            <motion.button
+              whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
+              disabled={submitting}
+              onClick={handleDonate}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold disabled:opacity-60"
+              style={{ background:'linear-gradient(135deg, rgba(201,168,76,0.95), rgba(160,120,40,0.95))', color:'#0a0808', boxShadow:'0 12px 30px rgba(201,168,76,0.18)' }}>
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <HeartHandshake size={16} />}
+              {submitting ? 'Starting…' : `Donate ${(amount || 0).toLocaleString()} RWF`}
+            </motion.button>
+
+            <p className="text-center text-[9px] mt-3" style={{ color:'#4a4a3a' }}>
+              Powered by RwandaPay — secure MTN MoMo & Airtel Money payments. Murakoze cyane!
             </p>
           </div>
         </motion.div>
 
-        {/* Contact Email Card */}
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }}
-          className="p-6 rounded-2xl mb-6 relative overflow-hidden"
-          style={{ background:'rgba(59,130,246,0.06)', border:'1px solid rgba(59,130,246,0.2)' }}>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background:'rgba(59,130,246,0.15)', border:'1px solid rgba(59,130,246,0.3)' }}>
-                <Mail size={24} style={{ color:'#3b82f6' }} />
-              </div>
-              <div>
-                <h2 className="font-cinzel font-semibold text-lg" style={{ fontFamily:'Cinzel,serif', color:'#3b82f6' }}>
-                  Contact Us
-                </h2>
-                <p className="text-xs" style={{ color:'#8a8060' }}>For partnerships & inquiries</p>
-              </div>
+        {/* Top supporters */}
+        {stats && stats.topDonors && stats.topDonors.length > 0 && (
+          <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }}
+            className="p-5 rounded-2xl mb-6"
+            style={{ background:'rgba(14,14,22,0.8)', border:'1px solid rgba(255,255,255,0.07)', backdropFilter:'blur(20px)' }}>
+            <div className="section-tag mb-3">Top Supporters</div>
+            <div className="space-y-2">
+              {stats.topDonors.slice(0, 5).map((d, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="w-6 text-[11px] font-bold text-center" style={{ color: i < 3 ? GOLD : '#4a4a3a' }}>{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-medium truncate" style={{ color:'#e8e6f0' }}>{d.name}</div>
+                  </div>
+                  <span className="text-[10px] flex-shrink-0" style={{ color:'#e8c87a' }}>{d.total.toLocaleString()} RWF</span>
+                </div>
+              ))}
             </div>
-
-            <div className="p-4 rounded-xl mb-4 text-center"
-              style={{ background:'rgba(0,0,0,0.3)', border:'1px solid rgba(59,130,246,0.2)' }}>
-              <p className="text-sm" style={{ color:'#3b82f6' }}>
-                {CONTACT_EMAIL}
-              </p>
-            </div>
-
-            <motion.button
-              whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-              onClick={() => copyToClipboard(CONTACT_EMAIL, 'email')}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
-              style={{ 
-                background: copiedEmail ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.1)',
-                border: `1px solid ${copiedEmail ? 'rgba(34,197,94,0.4)' : 'rgba(59,130,246,0.3)'}`,
-                color: copiedEmail ? '#22c55e' : '#3b82f6'
-              }}>
-              {copiedEmail ? <Check size={16} /> : <Copy size={16} />}
-              {copiedEmail ? 'Copied!' : 'Copy Email'}
-            </motion.button>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Share card */}
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }}
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.3 }}
           className="p-6 rounded-2xl mb-6"
           style={{ background:'rgba(14,14,22,0.8)', border:'1px solid rgba(255,255,255,0.07)', backdropFilter:'blur(20px)' }}>
 
@@ -223,16 +325,11 @@ export default function BuyMB() {
             {SHARE_PLATFORMS.map((p, i) => (
               <motion.button key={i}
                 initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
-                transition={{ delay: 0.25 + i*0.05 }}
+                transition={{ delay: 0.35 + i*0.05 }}
                 whileHover={{ scale:1.04, y:-2 }} whileTap={{ scale:0.96 }}
-                onClick={() => handleShare(p)}
+                onClick={() => handleShare(p, SHARE_TEXT)}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium text-left relative overflow-hidden"
                 style={{ background:`${p.color}12`, border:`1px solid ${p.color}30`, color:p.color, cursor:'pointer' }}>
-                <motion.div className="absolute inset-0 pointer-events-none"
-                  style={{ background:`linear-gradient(105deg,transparent 30%,${p.color}10 50%,transparent 70%)` }}
-                  animate={{ x:['-100%','200%'] }}
-                  transition={{ repeat:Infinity, duration:3, ease:'easeInOut', repeatDelay: 1 + i*0.3 }}
-                />
                 <span className="text-base flex-shrink-0">{p.icon}</span>
                 <div className="relative z-10">
                   <div className="font-semibold">{p.name}</div>
@@ -243,11 +340,44 @@ export default function BuyMB() {
           </div>
         </motion.div>
 
+        {/* Contact */}
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.35 }}
+          className="p-6 rounded-2xl mb-6"
+          style={{ background:'rgba(59,130,246,0.06)', border:'1px solid rgba(59,130,246,0.2)' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background:'rgba(59,130,246,0.15)', border:'1px solid rgba(59,130,246,0.3)' }}>
+              <Mail size={24} style={{ color:'#3b82f6' }} />
+            </div>
+            <div>
+              <h2 className="font-cinzel font-semibold text-lg" style={{ fontFamily:'Cinzel,serif', color:'#3b82f6' }}>
+                Contact Us
+              </h2>
+              <p className="text-xs" style={{ color:'#8a8060' }}>For partnerships & inquiries</p>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl mb-3 text-center" style={{ background:'rgba(0,0,0,0.3)', border:'1px solid rgba(59,130,246,0.2)' }}>
+            <p className="text-sm" style={{ color:'#3b82f6' }}>{CONTACT_EMAIL}</p>
+          </div>
+          <motion.button
+            whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
+            onClick={copyEmail}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
+            style={{
+              background: copiedEmail ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.1)',
+              border: `1px solid ${copiedEmail ? 'rgba(34,197,94,0.4)' : 'rgba(59,130,246,0.3)'}`,
+              color: copiedEmail ? '#22c55e' : '#3b82f6'
+            }}>
+            {copiedEmail ? <Check size={16} /> : <Copy size={16} />}
+            {copiedEmail ? 'Copied!' : 'Copy Email'}
+          </motion.button>
+        </motion.div>
+
         {/* Thank you */}
         <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
           className="text-center mt-6">
           <p className="text-xs" style={{ color:'#4a4a3a' }}>
-            Murakoze! Your MB keeps Agezweho Movies alive. — Agezweho Movies Team
+            Donated? Share it — every share brings another supporter. Murakoze ku mutima! — Agezweho Movies Team
           </p>
         </motion.div>
       </div>

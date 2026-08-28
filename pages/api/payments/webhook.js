@@ -1,10 +1,12 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Buffer } from 'buffer';
 import { completeTransaction } from '../../../lib/server/transactions';
+import { supabaseAdmin } from '../../../lib/server/supabase-admin';
+import { getRwandaPayCollectionStatus } from '../../../lib/server/payments';
 
 export const config = { api: { bodyParser: false } };
 
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://agezweho.com';
+const RWANDA_PAY_WEBHOOK_SECRET = process.env.RWANDA_PAY_WEBHOOK_SECRET;
 
 async function parseBody(req) {
   const chunks = [];
@@ -12,9 +14,50 @@ async function parseBody(req) {
   return Buffer.concat(chunks).toString();
 }
 
-function isValidOrigin(req) {
-  const origin = req.headers['origin'] || req.headers['referer'] || '';
-  return !origin || origin.startsWith(SITE_URL) || origin.startsWith('http://localhost');
+function verifyHmac(rawBody, signature, secret) {
+  if (!secret || !signature) return false;
+  try {
+    const expected = createHmac('sha256', secret).update(rawBody).digest('base64');
+    const a = Buffer.from(expected);
+    const b = Buffer.from(String(signature).trim());
+    return a.length === b.length && timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
+// Find the pending transaction behind a RwandaPay webhook notification.
+// The webhook carries the provider-side paypack_reference; our transactions store the
+// collection reference (provider_reference). We poll each recent candidate collection
+// and confirm the paypack_reference matches before completing it.
+async function findTransactionForWebhook({ paypackReference, amount }) {
+  if (!paypackReference) return null;
+
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from('transactions')
+    .select('*')
+    .eq('status', 'pending')
+    .not('provider_reference', 'is', null)
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error || !data || data.length === 0) return null;
+
+  const amountCandidates = amount ? data.filter(t => Number(t.amount) === Number(amount)) : [];
+  const candidates = amountCandidates.length > 0 ? amountCandidates : data;
+
+  for (const tx of candidates) {
+    const status = await getRwandaPayCollectionStatus(tx.provider_reference);
+    if (
+      status &&
+      (status.paypack_reference === paypackReference || status.reference === paypackReference)
+    ) {
+      return tx;
+    }
+  }
+  return null;
 }
 
 export default async function handler(req, res) {
@@ -28,30 +71,41 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  if (body.event === 'payment.completed' || body.status === 'completed') {
-    if (!WEBHOOK_SECRET || req.headers['x-webhook-secret'] !== WEBHOOK_SECRET) {
-      return res.status(401).json({ error: 'unauthorized' });
-    }
+  // ── RwandaPay webhook (HMAC-SHA256 signed, X-Webhook-Signature header) ──
+  const isRwandaPayHook = body.event_kind === 'transaction:processed' || body.paypack_reference || body.event === 'payment.successful';
 
-    const txRef = body.tx_ref || body.reference || body.transaction_id;
-    const providerId = String(body.id || body.transaction_id || txRef);
-    if (txRef) await completeTransaction(txRef, providerId);
-
-    return res.status(200).json({ status: 'success' });
+  if (!isRwandaPayHook) {
+    return res.status(200).json({ status: 'received' });
   }
 
-  if (body.event === 'local.confirm') {
-    if (!WEBHOOK_SECRET || req.headers['x-webhook-secret'] !== WEBHOOK_SECRET) {
-      return res.status(401).json({ error: 'unauthorized' });
-    }
-
-    if (!isValidOrigin(req)) return res.status(403).json({ error: 'invalid origin' });
-
-    if (!body.tx_ref) return res.status(400).json({ error: 'tx_ref required' });
-    await completeTransaction(body.tx_ref, `local_${body.tx_ref}`);
-
-    return res.status(200).json({ status: 'success' });
+  if (!verifyHmac(rawBody, req.headers['x-webhook-signature'], RWANDA_PAY_WEBHOOK_SECRET)) {
+    return res.status(401).json({ error: 'invalid signature' });
   }
 
-  return res.status(200).json({ status: 'received' });
+  const { status } = body;
+  const paypackReference = body.paypack_reference;
+  const amount = Number(body.amount) || undefined;
+
+  if (status === 'successful') {
+    try {
+      const tx = await findTransactionForWebhook({ paypackReference, amount });
+      if (tx?.tx_ref) await completeTransaction(tx.tx_ref, paypackReference);
+    } catch (err) {
+      console.error('RwandaPay webhook processing error:', err);
+    }
+  } else if (status === 'failed' && paypackReference) {
+    try {
+      const tx = await findTransactionForWebhook({ paypackReference, amount });
+      if (tx?.id) {
+        await supabaseAdmin
+          .from('transactions')
+          .update({ status: 'failed', provider_reference: tx.provider_reference })
+          .eq('id', tx.id);
+      }
+    } catch {
+      // best-effort housekeeping
+    }
+  }
+
+  return res.status(200).json({ status: 'success' });
 }

@@ -11,7 +11,6 @@ import { ArrowLeft, Download, ExternalLink, Package, Star, Shield, Zap, Lock, Ch
 
 const UNLOCK_KEY = 'agezweho_unlocked_games';
 const GAME_TX_KEY = 'agezweho_game_transactions';
-const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
 
 export default function GameDetail({ game }) {
   const { user, isPro } = useAuth();
@@ -23,7 +22,7 @@ export default function GameDetail({ game }) {
   const [downloadLinks, setDownloadLinks] = useState(Array.isArray(game?.links) ? game.links : []);
   const [pendingTxRef, setPendingTxRef] = useState('');
   const [paymentError, setPaymentError] = useState('');
-  const donateAmount = game?.price || 50;
+  const donateAmount = game?.price || 100;
 
   const loadUnlockedLinks = useCallback(async () => {
     if (!game?.id || !user) return false;
@@ -103,6 +102,9 @@ export default function GameDetail({ game }) {
       localStorage.setItem(GAME_TX_KEY, JSON.stringify({ ...txRefs, [game.id]: data.tx_ref }));
       setPendingTxRef(data.tx_ref);
       setDonateStep('submitted');
+      if (!data.payment_url) throw new Error('RwandaPay is not configured yet. Please try again later.');
+      window.location.assign(data.payment_url);
+      return;
     } catch (err) {
       setPaymentError(err.message || 'Could not start payment');
       setDonateStep('confirm');
@@ -402,11 +404,6 @@ export default function GameDetail({ game }) {
                         <p className="text-xs text-center mb-3" style={{ color: '#8a8060' }}>
                           Donate <strong>{donateAmount} RWF</strong> to unlock download links for this content.
                         </p>
-                        <div className="p-3 rounded-xl mb-3" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
-                          <p className="text-[11px] text-center" style={{ color: '#c9a84c' }}>
-                            Send <strong>{donateAmount} RWF</strong> via MTN MoMo USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
-                          </p>
-                        </div>
                         <Link href="/subscribe">
                           <div className="p-2 rounded-xl mb-4 text-center cursor-pointer" style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.1)' }}>
                             <p className="text-[10px]" style={{ color: '#b8a060' }}>
@@ -437,12 +434,12 @@ export default function GameDetail({ game }) {
                     {donateStep === 'submitted' && (
                       <div className="text-center py-4">
                         <CheckCircle2 size={40} style={{ color: '#22c55e', margin: '0 auto 12px', display: 'block' }} />
-                        <h3 className="font-cinzel text-lg mb-1" style={{ fontFamily: 'Cinzel,serif', color: '#22c55e' }}>Request Submitted!</h3>
+                        <h3 className="font-cinzel text-lg mb-1" style={{ fontFamily: 'Cinzel,serif', color: '#22c55e' }}>Payment Started!</h3>
                         <p className="text-xs mb-2" style={{ color: '#8a8060' }}>
-                          Send <strong>{donateAmount} RWF</strong> via MTN MoMo USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
+                          Complete your <strong>{donateAmount} RWF</strong> payment in the RwandaPay prompt on your phone.
                         </p>
                         <p className="text-xs mb-4" style={{ color: '#6b6b8a' }}>
-                          Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong> was sent to admin. They&apos;ll confirm and unlock the download links once payment is verified.
+                          Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong> helps us link the payment to you.
                         </p>
                         {pendingTxRef && (
                           <p className="text-[10px] mb-3 break-all" style={{ color: '#6a6a5a' }}>

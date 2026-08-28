@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { supabaseAdmin } from '../../lib/server/supabase-admin';
 import SEOHead from '../../components/SEOHead';
 import CinematicBackground from '../../components/CinematicBackground';
-import { ArrowLeft, Heart, MessageCircle, Clock, Share2, Smartphone, Copy, Check, Crown } from 'lucide-react';
-
-const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
+import { ArrowLeft, Heart, MessageCircle, Clock, Share2, Smartphone, Crown, HeartHandshake } from 'lucide-react';
 
 function timeAgo(date) {
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -20,7 +18,6 @@ function timeAgo(date) {
 export default function NewsDetail({ news }) {
   const [likes, setLikes] = useState(news?.likes || 0);
   const [showTip, setShowTip] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   if (!news) return (
     <div className="min-h-screen flex items-center justify-center bg-deep">
@@ -144,35 +141,26 @@ export default function NewsDetail({ news }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
-            onClick={() => { setShowTip(false); setCopied(false); }}>
+            onClick={() => { setShowTip(false); }}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               onClick={e => e.stopPropagation()}
               className="w-full max-w-sm rounded-2xl p-6"
-              style={{ background: 'rgba(12,12,24,0.95)', border: '1px solid rgba(34,197,94,0.2)' }}>
-              <Smartphone size={36} style={{ color: '#22c55e', margin: '0 auto 12px', display: 'block' }} />
-              <h3 className="font-cinzel text-lg mb-1 text-center" style={{ fontFamily: 'Cinzel,serif', color: '#22c55e' }}>Tip Publisher</h3>
+              style={{ background: 'rgba(12,12,24,0.95)', border: '1px solid rgba(201,168,76,0.2)' }}>
+              <HeartHandshake size={36} style={{ color: '#c9a84c', margin: '0 auto 12px', display: 'block' }} />
+              <h3 className="font-cinzel text-lg mb-1 text-center" style={{ fontFamily: 'Cinzel,serif', color: '#c9a84c' }}>Tip Publisher</h3>
               <p className="text-xs text-center mb-4" style={{ color: '#8a8060' }}>
                 Support <strong style={{ color: '#38bdf8' }}>{news.author_name}</strong> for their news post
               </p>
-              <div className="p-4 rounded-xl mb-4 text-center"
-                style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                <p className="text-[10px] mb-1.5" style={{ color: '#8a8060' }}>Send tip via USSD:</p>
-                <p className="text-2xl font-bold tracking-wider mb-3" style={{ color: '#22c55e', fontFamily: 'monospace' }}>{USSD_CODE}</p>
-                <p className="text-[10px] leading-relaxed" style={{ color: '#6a6a5a' }}>
-                  Admin will receive and manually send to {news.author_name}.
-                </p>
-              </div>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => { navigator.clipboard?.writeText(USSD_CODE); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium mb-2"
-                style={{
-                  background: copied ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.08)',
-                  border: `1px solid ${copied ? 'rgba(34,197,94,0.4)' : 'rgba(34,197,94,0.2)'}`,
-                  color: copied ? '#22c55e' : '#22c55e',
-                }}>
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? 'Copied!' : 'Copy USSD Code'}
-              </motion.button>
+              <p className="text-[10px] leading-relaxed mb-4 text-center" style={{ color: '#6a6a5a' }}>
+                Tip via a secure MTN MoMo / Airtel Money donation — funds reach the publisher automatically.
+              </p>
+              <Link href="/support">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium mb-2"
+                  style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: '#e8c87a' }}>
+                  <Smartphone size={16} /> Donate via MTN MoMo / Airtel
+                  </motion.div>
+              </Link>
               <Link href="/subscribe">
                 <div className="p-2 rounded-xl text-center cursor-pointer"
                   style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.1)' }}>

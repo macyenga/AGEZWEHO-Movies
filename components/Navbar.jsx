@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Film, Inbox, Upload, Heart, Gamepad2, Home, Mail, LogIn, User, Shield, Menu, X, Search, Newspaper, ShoppingBag } from 'lucide-react';
+import { Film, Inbox, Upload, Heart, Gamepad2, Home, Mail, LogIn, User, Shield, Menu, X, Search, Newspaper, ShoppingBag, HeartHandshake } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -150,6 +150,20 @@ export default function Navbar() {
             </motion.div>
           </Link>
 
+          {/* Support */}
+          <Link href="/support">
+            <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.95 }}
+              className="relative flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold overflow-hidden"
+              style={router.pathname === '/support' ? {
+                color: '#e8c87a', background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
+              } : {
+                color: '#e8c87a', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
+              }}>
+              <HeartHandshake size={13} style={{ color: '#c9a84c' }} />
+              <span className="hidden sm:block tracking-wide">Support</span>
+            </motion.div>
+          </Link>
+
           {/* Go Pro */}
           <ProButton />
 
@@ -277,6 +291,13 @@ export default function Navbar() {
                 <motion.div whileTap={{ scale: 0.97 }}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm" style={{ color: '#fbbf24' }}>
                   <Crown size={16} /> Go Pro
+                </motion.div>
+              </Link>
+              <Link href="/support" onClick={() => setMobileOpen(false)}>
+                <motion.div whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+                  style={{ background: 'rgba(201,168,76,0.08)', color: '#e8c87a' }}>
+                  <HeartHandshake size={16} /> Support Us
                 </motion.div>
               </Link>
               <Link href="/submit" onClick={() => setMobileOpen(false)}>

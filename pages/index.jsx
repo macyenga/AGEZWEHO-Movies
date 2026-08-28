@@ -7,6 +7,7 @@ import CinematicBackground from '../components/CinematicBackground';
 import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
 import AdBanner, { NativeBanner } from '../components/ads/AdBanner';
+import SupportCTA from '../components/SupportCTA';
 import {
   Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart, Upload,
   Newspaper, ShoppingBag, Gamepad2, Search, TrendingUp, Sparkles,
@@ -600,6 +601,9 @@ export default function Home({ movies: initial }) {
 
         {/* ══ HERO SPOTLIGHT ══ */}
         {heroMovie && <HeroMovieSpotlight movie={heroMovie} />}
+
+        {/* ══ SUPPORT / KEEP US FREE ══ */}
+        <SupportCTA />
 
         {/* ══ GENRE NAV (sticky) ══ */}
         <GenreNav active={genreFilter || 'All'} onSelect={handleGenreBrowse} />

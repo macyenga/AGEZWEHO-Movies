@@ -11,8 +11,6 @@ import {
   ArrowLeft, Inbox, Search, TrendingUp, Clock,
 } from 'lucide-react';
 
-const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
-
 export default function Requests({ requests: initial }) {
   const { user, isPro } = useAuth();
   const [requests, setRequests] = useState(initial || []);
@@ -26,7 +24,7 @@ export default function Requests({ requests: initial }) {
   const [donateStep, setDonateStep] = useState('pay');
   const [processing, setProcessing] = useState(false);
   const [donorPhone, setDonorPhone] = useState('');
-  const [voteAmount, setVoteAmount] = useState(50);
+  const [voteAmount, setVoteAmount] = useState(100);
   const voteBoost = Math.max(1, Math.floor(voteAmount / 50));
 
   useEffect(() => {
@@ -44,7 +42,7 @@ export default function Requests({ requests: initial }) {
     setDonateModal(req);
     setDonateStep('pay');
     setDonorPhone('');
-    setVoteAmount(50);
+    setVoteAmount(100);
   };
 
   const handleProVote = async (req) => {
@@ -85,6 +83,9 @@ export default function Requests({ requests: initial }) {
       if (!res.ok) throw new Error(data.error);
       setDonateStep('submitted');
       setVoted(prev => ({ ...prev, [donateModal.id]: true }));
+      if (data.payment_url) {
+        window.location.assign(data.payment_url);
+      }
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -178,7 +179,7 @@ export default function Requests({ requests: initial }) {
           </p>
           <p className="text-[10px] leading-relaxed" style={{ color: '#8a8778' }}>
             Fill all details accurately — exact title, year, language. Incomplete info delays processing.
-            <span style={{ color: '#fbbf24' }}> Upvote is 50 RWF via USSD.</span>
+            <span style={{ color: '#fbbf24' }}> Upvote is 100 RWF via MoMo.</span>
           </p>
         </motion.div>
 
@@ -309,7 +310,7 @@ export default function Requests({ requests: initial }) {
                     {r.votes}
                   </span>
                   <span className="text-[8px]" style={{ color: voted[r.id] ? '#c9a84c' : isPro ? '#fbbf24' : '#4a4a3a' }}>
-                    {isPro ? 'Pro' : '50 RWF'}
+                    {isPro ? 'Pro' : '100 RWF'}
                   </span>
                 </motion.button>
 
@@ -367,7 +368,7 @@ export default function Requests({ requests: initial }) {
                       </div>
                       <div className="flex items-center gap-2 justify-center">
                         <input type="number" value={voteAmount} onChange={e => setVoteAmount(Math.max(50, parseInt(e.target.value) || 50))}
-                          min="50" step="10"
+                          min="100" step="50"
                           className="w-24 text-center px-2 py-1.5 rounded-lg text-sm font-bold outline-none"
                           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24', fontFamily: 'Cinzel,serif' }} />
                         <span className="text-xs" style={{ color: '#4a4a3a' }}>RWF</span>
@@ -410,15 +411,14 @@ export default function Requests({ requests: initial }) {
                 {donateStep === 'submitted' && (
                   <div className="p-6 text-center">
                     <CheckCircle2 size={48} style={{ color: '#22c55e', margin: '0 auto 12px' }} />
-                    <h3 className="text-lg font-semibold mb-2" style={{ color: '#22c55e' }}>Vote Submitted!</h3>
+                    <h3 className="text-lg font-semibold mb-2" style={{ color: '#22c55e' }}>Payment Started!</h3>
                     <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>
-                      Send <strong>{voteAmount} RWF</strong> via USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong>
+                      Complete your <strong>{voteAmount} RWF</strong> payment in the RwandaPay prompt on your phone.
                     </p>
                     <div className="p-3 rounded-xl mb-4 text-xs" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
-                      <p style={{ color: '#6a6a5a' }}>USSD: <strong style={{ color: '#fbbf24' }}>{USSD_CODE}</strong></p>
-                      <p className="mt-1" style={{ color: '#6a6a5a' }}>Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong></p>
+                      <p style={{ color: '#6a6a5a' }}>Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong></p>
                     </div>
-                    <p className="text-[10px] mb-5" style={{ color: '#4a4a3a' }}>Vote appears after payment confirmation.</p>
+                    <p className="text-[10px] mb-5" style={{ color: '#4a4a3a' }}>Votes appear automatically once RwandaPay confirms the payment.</p>
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                       onClick={() => { setDonateModal(null); getRequests().then(d => setRequests(d)); }}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold"

@@ -16,8 +16,6 @@ const PRO_BENEFITS = [
   'Exclusive Pro badge on your profile',
 ];
 
-const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE || '*182*8*1*156833#';
-
 export default function Subscribe() {
   const { user, isPro, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -25,7 +23,6 @@ export default function Subscribe() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [phone, setPhone] = useState('');
-  const [copiedUssd, setCopiedUssd] = useState(false);
 
   const handleSubscribe = async () => {
     if (!user) { router.push('/auth/login?redirect=/subscribe'); return; }
@@ -41,6 +38,10 @@ export default function Subscribe() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong'); setState('idle'); return; }
       setResult(data);
+      if (data.payment_url) {
+        window.location.assign(data.payment_url);
+        return;
+      }
       setState('done');
     } catch {
       setError('Network error. Please try again.');
@@ -105,52 +106,6 @@ export default function Subscribe() {
             </h2>
             <p className="text-xs" style={{ color: '#8a8778' }}>
               You have an active Pro membership. Enjoy an ad-free experience.
-            </p>
-          </motion.div>
-        ) : state === 'done' && result ? (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            className="p-6 rounded-2xl"
-            style={{ background: 'rgba(255,204,0,0.06)', border: '1px solid rgba(255,204,0,0.25)' }}>
-            <div className="text-center mb-4">
-              <Smartphone size={36} style={{ color: '#FFCC00' }} className="mx-auto mb-2" />
-              <h2 className="font-cinzel font-semibold text-lg" style={{ fontFamily: 'Cinzel,serif', color: '#FFCC00' }}>
-                Payment Instructions
-              </h2>
-            </div>
-
-            <div className="p-4 rounded-xl mb-4 text-center"
-              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,204,0,0.2)' }}>
-              <p className="text-xs mb-2" style={{ color: '#8a8060' }}>Dial USSD code to pay:</p>
-              <p className="text-2xl font-bold tracking-wider mb-3" style={{ color: '#FFCC00', fontFamily: 'monospace' }}>
-                {USSD_CODE}
-              </p>
-              <p className="text-sm font-bold mb-3" style={{ color: '#FFCC00' }}>
-                Amount: 2,000 RWF
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => { navigator.clipboard?.writeText(USSD_CODE); setCopiedUssd(true); setTimeout(() => setCopiedUssd(false), 2000); }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium"
-                style={{
-                  background: copiedUssd ? 'rgba(34,197,94,0.15)' : 'rgba(255,204,0,0.1)',
-                  border: `1px solid ${copiedUssd ? 'rgba(34,197,94,0.4)' : 'rgba(255,204,0,0.3)'}`,
-                  color: copiedUssd ? '#22c55e' : '#FFCC00'
-                }}>
-                {copiedUssd ? <Check size={16} /> : <Copy size={16} />}
-                {copiedUssd ? 'Copied!' : 'Copy USSD Code'}
-              </motion.button>
-            </div>
-
-            <div className="p-4 rounded-xl mb-4 text-center"
-              style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}>
-              <p className="text-xs" style={{ color: '#8a8778' }}>
-                Your number: <strong style={{ color: '#22c55e' }}>{result?.phone || phone}</strong>
-              </p>
-            </div>
-
-            <p className="text-center text-[10px]" style={{ color: '#6a6a5a' }}>
-              Admin will check for your payment at the number above and approve your Pro membership.
-              <br />This usually takes a few minutes.
             </p>
           </motion.div>
         ) : (
@@ -229,7 +184,7 @@ export default function Subscribe() {
                         autoComplete="tel" />
                     </div>
                     <p className="text-[10px] mt-1.5" style={{ color: '#6a6a5a' }}>
-                      Admin needs your MoMo number to verify your payment and approve membership.
+                      RwandaPay sends you a payment prompt on this number — your Pro is activated automatically.
                     </p>
                   </div>
 

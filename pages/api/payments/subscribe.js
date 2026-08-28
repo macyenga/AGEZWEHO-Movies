@@ -2,8 +2,6 @@ import { supabaseAdmin } from '../../../lib/server/supabase-admin';
 import { generateTxRef, initiatePayment } from '../../../lib/server/payments';
 
 const SUBSCRIPTION_PRICE = process.env.SUBSCRIPTION_PRICE ? parseInt(process.env.SUBSCRIPTION_PRICE) : 2000;
-const MOMO_NUMBER = process.env.MOMO_NUMBER || '0789690247';
-const USSD_CODE = process.env.USSD_CODE || '*182*8*1*156833#';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -34,7 +32,7 @@ export default async function handler(req, res) {
     status: 'pending',
     tx_ref,
     phone: req.body?.phone || null,
-    payment_method: req.body?.phone ? 'mtn-momo' : null,
+    payment_method: 'rwandapay',
     amount,
     months: 1,
   }]);
@@ -43,17 +41,23 @@ export default async function handler(req, res) {
 
   const payment = await initiatePayment({ amount, tx_ref, phone: req.body?.phone });
 
+  if (payment.provider === 'rwandapay' && payment.reference) {
+    await supabaseAdmin
+      .from('transactions')
+      .update({ provider_reference: String(payment.reference) })
+      .eq('tx_ref', tx_ref);
+  }
+
+  if (!payment.payment_url) {
+    return res.status(502).json({ error: 'Payment provider did not return a payment link' });
+  }
+
   return res.status(200).json({
     tx_ref,
     phone: req.body?.phone || null,
     success: true,
-    provider: payment.provider || 'local',
+    provider: 'rwandapay',
+    payment_url: payment.payment_url,
     message: payment.message || 'Payment started',
-    payment_instructions: payment.payment_instructions || {
-      momo_number: MOMO_NUMBER,
-      ussd_code: USSD_CODE,
-      amount,
-      note: `Send ${amount} RWF to ${MOMO_NUMBER} via MTN MoMo for Pro subscription. Admin will approve after verification.`,
-    },
   });
 }

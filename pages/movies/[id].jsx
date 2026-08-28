@@ -60,6 +60,9 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
       if (!res.ok) { setDonateError(data.error || 'Something went wrong'); setDonateState('error'); return; }
       setDonateResult(data);
       setDonateState('done');
+      if (data.payment_url) {
+        window.location.assign(data.payment_url);
+      }
     } catch {
       setDonateError('Network error. Please try again.');
       setDonateState('error');
@@ -223,7 +226,7 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
             <div className="p-5 space-y-4">
             <p className="text-xs" style={{ color:'#8a8778' }}>
               Gurira MB <span className="font-semibold" style={{ color:'#e8c87a' }}>{movie.uploaded_by}</span>.
-              Pay admin, admin will send the money to uploader manually.
+              Your donation pays via RwandaPay — 50% goes to the uploader automatically.
             </p>
 
               {/* Phone Number */}
@@ -238,7 +241,7 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
                     className="flex-1 bg-transparent text-sm outline-none" style={{ color:'#e8e6f0' }} />
                 </div>
                 <p className="text-[10px] mt-1" style={{ color:'#4a4a3a' }}>
-                  Admin uses this to verify your payment and credit the uploader.
+                  Your number links the RwandaPay payment to your donation.
                 </p>
               </div>
 
@@ -251,11 +254,9 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
               <div className="p-3 rounded-xl text-left" style={{ background:'rgba(14,14,22,0.8)', border:'1px solid rgba(255,255,255,0.06)' }}>
               <div className="text-[10px] mb-1" style={{ color:'#6a6a5a' }}>Reference:</div>
               <div className="text-xs font-mono font-bold" style={{ color:'#e8c87a' }}>{donateResult.tx_ref}</div>
-              <div className="text-[10px] mt-3 mb-1" style={{ color:'#6a6a5a' }}>Send via MTN MoMo:</div>
-              <div className="text-xs font-bold" style={{ color:'#e8c87a' }}>{donateResult.payment_instructions?.momo_number}</div>
-              <div className="text-xs font-bold mt-1" style={{ color:'#fbbf24' }}>{donateResult.amount?.toLocaleString()} RWF</div>
-              <div className="text-[10px] mt-2 p-2 rounded-lg" style={{ background:'rgba(251,191,36,0.08)', color:'#fbbf24' }}>
-              Send the exact amount and your reference. Admin will confirm your payment manually.
+              <div className="text-xs font-bold mt-1" style={{ color:'#fbbf24' }}>{(donateResult.amount || donateAmount).toLocaleString()} RWF</div>
+              <div className="text-[10px] mt-2 p-2 rounded-lg" style={{ background:'rgba(56,189,248,0.08)', color:'#4fc3f7' }}>
+              Complete your payment in the RwandaPay prompt on your phone. No manual confirmation needed — the uploader gets 50% automatically.
               </div>
               </div>
               <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
@@ -291,8 +292,8 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
 
               <div className="p-3 rounded-xl text-[10px] leading-relaxed"
                 style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.1)', color:'#8a8778' }}>
-                You pay <span className="font-semibold" style={{ color:'#fbbf24' }}>{donateAmount.toLocaleString()} RWF</span> to admin.
-                Admin will send the money to <span style={{ color:'#22c55e' }}>{movie.uploaded_by}</span> manually.
+                You pay <span className="font-semibold" style={{ color:'#fbbf24' }}>{donateAmount.toLocaleString()} RWF</span> via RwandaPay.
+                <span style={{ color:'#22c55e' }}>{movie.uploaded_by}</span> receives 50% automatically.
               </div>
 
               {donateState === 'error' && (
