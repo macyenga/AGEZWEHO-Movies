@@ -50,7 +50,17 @@ export default async function handler(req, res) {
 
   if (txError) return res.status(500).json({ error: txError.message });
 
-  const payment = await initiatePayment({ amount, tx_ref, phone });
+  let payment;
+  try {
+    payment = await initiatePayment({ amount, tx_ref, phone });
+  } catch (e) {
+    console.error('RwandaPay initiate failed:', e.message, e.data || '');
+    // clean up the pending row so it doesn't linger forever
+    await supabaseAdmin.from('transactions').delete().eq('tx_ref', tx_ref);
+    const msg = e.message || 'Payment provider error';
+    const status = e.status === 422 || e.status === 400 ? 400 : 502;
+    return res.status(status).json({ error: msg });
+  }
 
   if (payment.provider === 'rwandapay' && payment.reference) {
     await supabaseAdmin

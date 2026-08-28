@@ -39,7 +39,18 @@ export default async function handler(req, res) {
 
   if (subError) return res.status(500).json({ error: subError.message });
 
-  const payment = await initiatePayment({ amount, tx_ref, phone: req.body?.phone });
+  let payment;
+  try {
+    payment = await initiatePayment({ amount, tx_ref, phone: req.body?.phone });
+  } catch (e) {
+    console.error('RwandaPay subscribe failed:', e.message, e.data || '');
+    // clean up pending rows
+    await supabaseAdmin.from('transactions').delete().eq('tx_ref', tx_ref);
+    await supabaseAdmin.from('subscriptions').delete().eq('tx_ref', tx_ref);
+    const msg = e.message || 'Payment provider error';
+    const status = e.status === 422 || e.status === 400 ? 400 : 502;
+    return res.status(status).json({ error: msg });
+  }
 
   if (payment.provider === 'rwandapay' && payment.reference) {
     await supabaseAdmin
