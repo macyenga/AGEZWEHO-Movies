@@ -52,7 +52,7 @@ export default function DonationFloat() {
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold" style={{ color: '#e8c87a' }}>Support Agezweho</div>
               <div className="text-[11px] leading-relaxed" style={{ color: '#8a8778' }}>
-                Keep the movies free with a quick MoMo donation.
+                Pay with MTN MoMo or Airtel Money via RwandaPay.
               </div>
             </div>
             <button onClick={() => setOpen(false)} className="flex-shrink-0 -mr-1 -mt-1"
@@ -74,7 +74,7 @@ export default function DonationFloat() {
           </div>
 
           <input
-            type="tel" placeholder="MoMo number (optional)"
+            type="tel" placeholder="07XXXXXXXX (MTN/Airtel)"
             value={phone}
             onChange={e => setPhone(e.target.value)}
             className="w-full rounded-xl px-3 py-2 text-xs outline-none mb-3"
@@ -98,7 +98,7 @@ export default function DonationFloat() {
             <Link href="/support">
               <span className="text-[10px] underline" style={{ color: '#6a6a5a' }}>More ways to support</span>
             </Link>
-            <span className="text-[9px]" style={{ color: '#4a4a3a' }}>Powered by RwandaPay</span>
+            <span className="text-[9px]" style={{ color: '#4a4a3a' }}>Pay with MTN MoMo or Airtel Money via RwandaPay</span>
           </div>
         </div>
       )}

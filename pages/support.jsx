@@ -211,10 +211,10 @@ export default function Support() {
 
           <div className="relative z-10">
             <h2 className="font-cinzel font-semibold text-lg mb-1" style={{ fontFamily:'Cinzel,serif', color:'#e8c87a' }}>
-              Donate with MTN MoMo / Airtel
+              Pay with MTN MoMo or Airtel Money via RwandaPay
             </h2>
             <p className="text-[11px] mb-5" style={{ color:'#6a6a5a' }}>
-              Choose an amount — you&apos;ll get a secure RwandaPay prompt on your phone.
+              Choose an amount — you&apos;ll get a secure RwandaPay prompt on your phone. <a href="https://rwandapay.rw" target="_blank" rel="noreferrer" style={{ color:'#c9a84c' }}>rwandapay.rw</a>
             </p>
 
             {/* Amount tiers */}
@@ -259,7 +259,7 @@ export default function Support() {
             {/* Phone */}
             <div className="mb-5">
               <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color:'#6a6a5a' }}>
-                Your MoMo number <span style={{ color:'#4a4a3a' }}>(optional)</span>
+                Your MoMo / Airtel number <span style={{ color:'#4a4a3a' }}>(optional)</span>
               </label>
               <input
                 type="tel" placeholder="07XXXXXXXX"
@@ -287,7 +287,7 @@ export default function Support() {
             </motion.button>
 
             <p className="text-center text-[9px] mt-3" style={{ color:'#4a4a3a' }}>
-              Powered by RwandaPay — secure MTN MoMo & Airtel Money payments. Murakoze cyane!
+              Pay with MTN MoMo or Airtel Money via RwandaPay — secure, instant. Murakoze cyane! · rwandapay.rw
             </p>
           </div>
         </motion.div>

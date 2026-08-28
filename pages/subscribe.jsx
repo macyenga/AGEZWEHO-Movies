@@ -137,10 +137,10 @@ export default function Subscribe() {
                   <Smartphone size={24} style={{ color: '#FFCC00' }} />
                 </div>
                 <div>
-                  <h2 className="font-cinzel font-semibold text-lg" style={{ fontFamily: 'Cinzel,serif', color: '#FFCC00' }}>
-                    MTN Mobile Money
+                  <h2 className="font-cinzel font-semibold text-lg leading-tight" style={{ fontFamily: 'Cinzel,serif', color: '#FFCC00' }}>
+                    Pay with MTN MoMo or Airtel Money via RwandaPay
                   </h2>
-                  <p className="text-xs" style={{ color: '#8a8060' }}>Pay 2,000 RWF for 1 month of Pro</p>
+                  <p className="text-xs" style={{ color: '#8a8060' }}>Pay 2,000 RWF for 1 month of Pro — https://rwandapay.rw</p>
                 </div>
               </div>
 
@@ -171,7 +171,7 @@ export default function Subscribe() {
 
                   <div className="mb-4">
                     <label className="text-xs mb-2 block" style={{ color: '#8a8060' }}>
-                      Your MoMo number <span style={{ color: '#f87171' }}>*</span>
+                      Your MoMo / Airtel number <span style={{ color: '#f87171' }}>*</span>
                     </label>
                     <div className="flex items-center gap-2 p-3 rounded-xl"
                       style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -184,7 +184,7 @@ export default function Subscribe() {
                         autoComplete="tel" />
                     </div>
                     <p className="text-[10px] mt-1.5" style={{ color: '#6a6a5a' }}>
-                      RwandaPay sends you a payment prompt on this number — your Pro is activated automatically.
+                      Pay with MTN MoMo or Airtel Money via RwandaPay — you&apos;ll get a prompt on this number and Pro activates automatically.
                     </p>
                   </div>
 
