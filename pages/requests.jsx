@@ -127,9 +127,9 @@ export default function Requests({ requests: initial }) {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Movie Requests — Agasobanuye Rocky 2026, Agent Kim & More"
-        description="Request agasobanuye movies, series, and anime on Agezweho — vote for Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim reactivated, Gashya 2026 Netflix, Fey, Junior Giti, Yanga episodes you want added next"
+        description="Request agasobanuye movies, series, and anime on Agasobanuye.rw — vote for Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim reactivated, Gashya 2026 Netflix, Fey, Junior Giti, Yanga episodes you want added next"
         keywords="agasobanuye request, agasobanuye rocky 2026, agasobanuye by rocky kimomo, agasobanuye sankara 2026, agasobanuye agent kim, agent kim reactivated, agasobanuye gashya 2026 netflix, agasobanuye by fey 2025, agasobanuye by junior giti, agasobanuye by yanga, agahinde agasobanuye na rocky, movie requests Rwanda, Kinyarwanda movies"
-        canonical="https://agezweho.com/requests"
+        canonical="https://agasobanuye.rw/requests"
       />
       <CinematicBackground />
 
@@ -234,7 +234,7 @@ export default function Requests({ requests: initial }) {
             </div>
             <div>
               <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color:'#6a6a5a' }}>
-                Where did you hear about Agezweho? <span style={{ color:'#e05c3a' }}>*</span>
+                Where did you hear about Agasobanuye.rw? <span style={{ color:'#e05c3a' }}>*</span>
               </label>
               <select className={`input-dark w-full px-3 py-2 rounded-lg text-sm cursor-pointer ${errors.source ? 'border-red-500/40' : ''}`}
                 value={form.source || ''} onChange={e => { setForm(f => ({ ...f, source: e.target.value })); setErrors({}); }}

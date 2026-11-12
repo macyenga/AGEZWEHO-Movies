@@ -40,9 +40,9 @@ export default function Games() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Premium Content"
-        description="Download premium games, modded apps, and exclusive content on Agezweho Movies — Rwanda's home for Agasobanuye entertainment."
-        keywords="premium games Rwanda, modded apps, game download Rwanda, Agezweho premium, Android games, PC games Rwanda"
-        canonical="https://agezweho.com/games"
+        description="Download premium games, modded apps, and exclusive content on Agasobanuye.rw — Rwanda's home for Agasobanuye entertainment."
+        keywords="premium games Rwanda, modded apps, game download Rwanda, Agasobanuye premium, Android games, PC games Rwanda"
+        canonical="https://agasobanuye.rw/games"
       />
       <CinematicBackground />
 

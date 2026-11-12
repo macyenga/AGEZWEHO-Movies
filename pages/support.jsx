@@ -50,8 +50,8 @@ const SHARE_PLATFORMS = [
   },
 ];
 
-const SITE_URL = 'https://agezweho.com';
-const SHARE_TEXT = '🎬 Agezweho Movies — Rwanda\'s home for Agasobanuye movies, series & anime! Free forever.';
+const SITE_URL = 'https://agasobanuye.rw';
+const SHARE_TEXT = '🎬 Agasobanuye.rw — Rwanda\'s home for Agasobanuye movies, series & anime! Free forever.';
 
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'macyenga@gmail.com';
 
@@ -125,9 +125,9 @@ export default function Support() {
   return (
     <div className="min-h-screen bg-deep">
       <SEOHead
-        title="Support Agezweho Movies"
-        description="Donate via MTN MoMo or Airtel Money to keep Agezweho Movies free — Rwanda's home for Agasobanuye movies, series & anime"
-        canonical="https://agezweho.com/support"
+        title="Support Agasobanuye.rw"
+        description="Donate via MTN MoMo or Airtel Money to keep Agasobanuye.rw free — Rwanda's home for Agasobanuye movies, series & anime"
+        canonical="https://agasobanuye.rw/support"
       />
       <CinematicBackground />
 
@@ -158,11 +158,11 @@ export default function Support() {
             style={{ fontFamily:'Cinzel,serif',
               background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
               WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-            Support Agezweho
+            Support Agasobanuye.rw
           </h1>
           <div className="divider-gold w-20 mx-auto mb-4" />
           <p className="text-sm leading-relaxed" style={{ color:'#8a8778' }}>
-            Agezweho Movies is free because of kind viewers like you.
+            Agasobanuye.rw is free because of kind viewers like you.
             <br />A small MoMo donation pays for hosting, uploads & bandwidth.
           </p>
         </motion.div>
@@ -377,7 +377,7 @@ export default function Support() {
         <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
           className="text-center mt-6">
           <p className="text-xs" style={{ color:'#4a4a3a' }}>
-            Donated? Share it — every share brings another supporter. Murakoze ku mutima! — Agezweho Movies Team
+            Donated? Share it — every share brings another supporter. Murakoze ku mutima! — Agasobanuye.rw Team
           </p>
         </motion.div>
       </div>

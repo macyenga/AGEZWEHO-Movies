@@ -8,8 +8,8 @@ export default function Custom404() {
     <div className="min-h-screen bg-deep flex items-center justify-center">
       <SEOHead
         title="404 — Page Not Found"
-        description="The page you are looking for does not exist. Return to Agezweho Movies — Rwanda's home for Agasobanuye entertainment."
-        canonical="https://agezweho.com/404"
+        description="The page you are looking for does not exist. Return to Agasobanuye.rw — Rwanda's home for Agasobanuye entertainment."
+        canonical="https://agasobanuye.rw/404"
       />
       <CinematicBackground />
       <div className="relative z-10 text-center px-6 max-w-md">

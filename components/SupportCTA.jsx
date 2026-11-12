@@ -34,7 +34,7 @@ export default function SupportCTA() {
               <HeartHandshake size={11} style={{ color: GOLD }} /> Keep Us Free
             </div>
             <p className="text-xs leading-relaxed mb-1" style={{ color: '#8a8778' }}>
-              Agezweho is <span className="font-semibold" style={{ color: '#e8c87a' }}>100% free</span> to watch because of viewers like you.
+              Agasobanuye.rw is <span className="font-semibold" style={{ color: '#e8c87a' }}>100% free</span> to watch because of viewers like you.
             </p>
             <p className="text-[11px] mb-4" style={{ color: '#6a6a5a' }}>
               A tiny MoMo donation covers hosting, uploads & bandwidth for the month.

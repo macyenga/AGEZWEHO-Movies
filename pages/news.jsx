@@ -71,7 +71,7 @@ export default function NewsPage() {
         title="Amakuru Agezweho — Igihe Amakuru Mashya, M23, Kigali Today"
         description="Latest Amakuru Agezweho news — igihe amakuru mashya, amakuru agezweho akakanya, M23 updates, amazina agezweho, kigali today, amaribaya agezweho, amakanzu agezweho. Community news from Rwanda and Burundi."
         keywords="amakuru agezweho, igihe amakuru mashya, igihe amakuru, amakuru igihe, amakuru agezweho akakanya, amakuru agezweho mu rwanda, amazina agezweho, amazina agezweho y'abakobwa, M23 Rwanda, kigali today, amaribaya agezweho, amakanzu agezweho, igihe.com amakuru agezweho, amakuru mashya, bwiza amakuru, Rwanda news, Burundi news"
-        canonical="https://agezweho.com/news"
+        canonical="https://agasobanuye.rw/news"
       />
       <CinematicBackground />
 

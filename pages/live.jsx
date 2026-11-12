@@ -149,9 +149,9 @@ export default function Live() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Live TV — Agasobanuye Live &amp; Rwanda Channels"
-        description="Watch live Sports and Rwanda TV channels on Agezweho Movies — B+ TV, BTN, Isibo TV, KC2, Rwanda TV, TV10. Agasobanuye live.com — also trending amakuru agezweho, igihe amakuru mashya, amazina updates."
-        keywords="agasobanuye live.com, agasobanuye live, live TV Rwanda, Rwanda TV channels, B+ TV live, BTN TV, Isibo TV, agasobanuye live, igihe amakuru mashya, amazina agezweho, M23 Rwanda, watch live sports Rwanda, IPTV Rwanda"
-        canonical="https://agezweho.com/live"
+        description="Watch live Sports and Rwanda TV channels on Agasobanuye.rw — B+ TV, BTN, Isibo TV, KC2, Rwanda TV, TV10. Agasobanuye live streaming and Rwanda channels."
+        keywords="agasobanuye live, live TV Rwanda, Rwanda TV channels, B+ TV live, BTN TV, Isibo TV, agasobanuye live stream, Rwanda live sports, IPTV Rwanda"
+        canonical="https://agasobanuye.rw/live"
       />
       <CinematicBackground />
 

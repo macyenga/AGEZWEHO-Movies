@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { getMovieById } from '../../lib/supabase';
@@ -7,7 +7,7 @@ import CinematicBackground from '../../components/CinematicBackground';
 import AdBanner from '../../components/ads/AdBanner';
 import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Heart, Phone, X } from 'lucide-react';
 
-const SITE_URL = 'https://agezweho.com';
+const SITE_URL = 'https://agasobanuye.rw';
 
 const sharePlatforms = [
   { name: 'WhatsApp', color: '#25D366', url: (u, t) => `https://wa.me/?text=${encodeURIComponent(`${t} ${u}`)}` },
@@ -24,6 +24,21 @@ export default function MovieDetail({ movie }) {
   const [donateResult, setDonateResult] = useState(null);
   const [donateError, setDonateError] = useState('');
   const [donorPhone, setDonorPhone] = useState('');
+
+  useEffect(() => {
+    if (!movie?.genre && !movie?.title) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem('agezweho_viewed_genres') || '[]');
+      const genres = (movie.genre || '')
+        .split(',')
+        .map(g => g.trim())
+        .filter(Boolean);
+      const updated = [...new Set([...genres, ...stored])].slice(0, 10);
+      localStorage.setItem('agezweho_viewed_genres', JSON.stringify(updated));
+    } catch {
+      // LocalStorage unavailable
+    }
+  }, [movie?.id, movie?.genre, movie?.title]);
 
   if (!movie) return (
     <div className="min-h-screen flex items-center justify-center bg-deep">
@@ -42,10 +57,10 @@ export default function MovieDetail({ movie }) {
   const primaryDownload = links[0];
   const stars = movie.rating ? Math.round(parseFloat(movie.rating) / 2) : 0;
   const ratingValue = Number.parseFloat(movie.rating);
-const seoTitle = `${movie.title} ${movie.year || ''} - Agasobanuye Watch, Download | Agezweho Movies Rwanda`;
-const seoDescription = movie.overview || `Watch and download ${movie.title} — Agasobanuye — on Agezweho Movies, Rwanda's home for Agasobanuye entertainment, Rocky 2026, Sankara 2026, Agent Kim, Gashya 2026 Netflix and more.`;
+const seoTitle = `${movie.title} ${movie.year || ''} - Agasobanuye Watch, Download | Agasobanuye.rw`;
+const seoDescription = movie.overview || `Watch and download ${movie.title} — Agasobanuye — on Agasobanuye.rw, Rwanda's home for Agasobanuye entertainment, Rocky 2026, Sankara 2026, Agent Kim, Gashya 2026 Netflix and more.`;
 const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}, agasobanuye, agasobanuye rocky 2026, agasobanuye sankara 2026, agasobanuye agent kim, agasobanuye gashya 2026 netflix, agasobanuye by rocky kimomo, ${movie.title} 1080p download, ${movie.title} 4k download, ${movie.title} netflix, ${movie.genre || ''} movies download free`;
-  const shareText = `${movie.title} on Agezweho Movies Rwanda`;
+  const shareText = `${movie.title} on Agasobanuye.rw`;
   const handleDonate = async () => {
     setDonateState('loading');
     setDonateError('');
@@ -87,7 +102,7 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
       inLanguage: movie.language || 'rw',
       genre: movie.genre || undefined,
       countryOfOrigin: { '@type': 'Country', name: 'Rwanda' },
-      provider: { '@type': 'Organization', name: 'Agezweho Movies', url: SITE_URL },
+      provider: { '@type': 'Organization', name: 'Agasobanuye.rw', url: SITE_URL },
       aggregateRating: Number.isFinite(ratingValue)
         ? { '@type': 'AggregateRating', ratingValue, bestRating: 10, worstRating: 1, ratingCount: 1 }
         : undefined,
@@ -106,7 +121,7 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
     {
       '@context': 'https://schema.org',
       '@type': 'VideoObject',
-      name: `${movie.title} - Watch on Agezweho Movies`,
+      name: `${movie.title} - Watch on Agasobanuye.rw`,
       description: seoDescription,
       thumbnailUrl: movie.poster_url ? [movie.poster_url] : [`${SITE_URL}/favicon.svg`],
       uploadDate: movie.created_at || undefined,
@@ -114,13 +129,13 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
       embedUrl: primaryWatch?.url || undefined,
       inLanguage: movie.language || 'rw',
       regionsAllowed: 'RW',
-      publisher: { '@type': 'Organization', name: 'Agezweho Movies', url: SITE_URL },
+      publisher: { '@type': 'Organization', name: 'Agasobanuye.rw', url: SITE_URL },
     },
     {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Agezweho Movies', item: SITE_URL },
+        { '@type': 'ListItem', position: 1, name: 'Agasobanuye.rw', item: SITE_URL },
         { '@type': 'ListItem', position: 2, name: movie.title, item: pageUrl },
       ],
     },
@@ -132,8 +147,8 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
       title={seoTitle}
       description={seoDescription}
       keywords={seoKeywords}
-      ogTitle={`${movie.title} — Agezweho Movies`}
-      ogDescription={movie.overview || 'Watch on Agezweho Movies'}
+      ogTitle={`${movie.title} — Agasobanuye.rw`}
+      ogDescription={movie.overview || 'Watch on Agasobanuye.rw'}
       ogImage={movie.poster_url || undefined}
       ogType="video.movie"
       canonical={pageUrl}

@@ -84,12 +84,21 @@ export default function Navbar() {
       <div className="relative max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
 
         {/* Logo + main nav links */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <Link href="/">
-            <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }} className="relative cursor-pointer">
-              <div className="relative w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.05))', border: '1px solid rgba(201,168,76,0.4)' }}>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }} className="relative cursor-pointer flex items-center gap-2 mr-2">
+              <div className="relative w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.08))', border: '1px solid rgba(201,168,76,0.45)' }}>
                 <Film size={17} style={{ color: '#e8c87a' }} />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-cinzel font-bold text-sm tracking-wider leading-none"
+                  style={{ background: 'linear-gradient(135deg, #f5e4a8, #c9a84c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  AGASOBANUYE<span className="text-xs font-semibold text-amber-300">.RW</span>
+                </span>
+                <span className="text-[8px] uppercase tracking-widest leading-none mt-0.5" style={{ color: '#8a8778' }}>
+                  Rwanda Movies
+                </span>
               </div>
             </motion.div>
           </Link>

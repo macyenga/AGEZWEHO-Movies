@@ -47,7 +47,7 @@ export default function NewsDetail({ news }) {
 
   return (
     <div className="min-h-screen bg-deep">
-      <SEOHead title={news.title} description={news.content || news.title} canonical={`https://agezweho.com/news/${news.id}`} />
+      <SEOHead title={news.title} description={news.content || news.title} canonical={`https://agasobanuye.rw/news/${news.id}`} />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-20 pb-24">

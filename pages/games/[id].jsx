@@ -131,18 +131,18 @@ export default function GameDetail({ game }) {
   return (
     <div className="min-h-screen bg-deep">
       <SEOHead
-        title={game.title}
-        description={game.overview || `Download ${game.title} for free on Agezweho Movies — Rwanda's home for premium content and Agasobanuye entertainment.`}
+        title={`${game.title} — Agasobanuye.rw`}
+        description={game.overview || `Download ${game.title} for free on Agasobanuye.rw — Rwanda's home for exclusive content and Agasobanuye entertainment.`}
         keywords={`${game.title} download, ${game.title} ${game.version || ''}, ${game.category || ''} games, modded apps, premium content Rwanda`}
         ogImage={game.cover_url || undefined}
-        canonical={`https://agezweho.com/games/${game.id}`}
+        canonical={`https://agasobanuye.rw/games/${game.id}`}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'SoftwareApplication',
           name: game.title,
-          url: `https://agezweho.com/games/${game.id}`,
-          image: game.cover_url || 'https://agezweho.com/og-image.svg',
-          description: game.overview || `Download ${game.title} on Agezweho Movies`,
+          url: `https://agasobanuye.rw/games/${game.id}`,
+          image: game.cover_url || 'https://agasobanuye.rw/og-image.svg',
+          description: game.overview || `Download ${game.title} on Agasobanuye.rw`,
           applicationCategory: game.category || 'GameApplication',
           operatingSystem: 'Android, Windows',
           offers: {

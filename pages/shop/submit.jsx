@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import SEOHead from '../../components/SEOHead';
 import CinematicBackground from '../../components/CinematicBackground';
-import { ArrowLeft, Send, Image, Loader2, Smartphone, CheckCircle2, ShoppingBag, AlertTriangle, MessageCircle, DollarSign, Info } from 'lucide-react';
+import { ArrowLeft, Send, Image as ImageIcon, Loader2, Smartphone, CheckCircle2, ShoppingBag, AlertTriangle, MessageCircle, DollarSign, Info } from 'lucide-react';
 
 const CATEGORIES = [
   'Electronics', 'Fashion', 'Phones & Tablets', 'Vehicles',
@@ -204,7 +204,7 @@ export default function SubmitShop() {
           {/* Image URL */}
           <div>
             <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color: '#6a6a5a' }}>
-              <Image size={10} className="inline mr-1" />Image URL <span style={{ color: '#3a3a2a' }}>(optional)</span>
+              <ImageIcon size={10} className="inline mr-1" />Image URL <span style={{ color: '#3a3a2a' }}>(optional)</span>
             </label>
             <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
               value={imageUrl} onChange={e => setImageUrl(e.target.value)}

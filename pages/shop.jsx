@@ -50,7 +50,7 @@ export default function Shop() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <SEOHead title="Shop" description="Buy and sell items on Agezweho Shop — connect via WhatsApp" canonical="https://agezweho.com/shop" />
+      <SEOHead title="Shop" description="Buy and sell items on Agasobanuye.rw Shop — connect via WhatsApp" canonical="https://agasobanuye.rw/shop" />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-24">

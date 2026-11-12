@@ -6,8 +6,8 @@ import SEOHead from '../../../components/SEOHead';
 import CinematicBackground from '../../../components/CinematicBackground';
 import { CheckCircle2, XCircle, Clock, Loader2, Home, Film, Gamepad2, Crown, Share2 } from 'lucide-react';
 
-const DONATE_SHARE_TEXT = '🎬 I just supported Agezweho Movies — keep the movies FREE, one MoMo tap at a time. Join me:';
-const SITE_URL = 'https://agezweho.com';
+const DONATE_SHARE_TEXT = '🎬 I just supported Agasobanuye.rw — keep the movies FREE, one MoMo tap at a time. Join me:';
+const SITE_URL = 'https://agasobanuye.rw';
 
 export default function PaymentReturn() {
   const router = useRouter();
@@ -66,8 +66,8 @@ export default function PaymentReturn() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Payment Status"
-        description="Payment confirmation for your Agezweho Movies donation or Pro membership."
-        canonical="https://agezweho.com/payment/return"
+        description="Payment confirmation for your Agasobanuye.rw donation or Pro membership."
+        canonical="https://agasobanuye.rw/payment/return"
       />
       <CinematicBackground />
 

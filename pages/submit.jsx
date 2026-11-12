@@ -144,8 +144,8 @@ export default function Submit() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Add Agasobanuye"
-        description="Submit a new Agasobanuye movie, series, or anime to Agezweho Movies"
-        canonical="https://agezweho.com/submit"
+        description="Submit a new Agasobanuye movie, series, or anime to Agasobanuye.rw"
+        canonical="https://agasobanuye.rw/submit"
       />
       <CinematicBackground />
 
@@ -427,7 +427,7 @@ export default function Submit() {
             {loading
               ? <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor:'#c9a84c', borderTopColor:'transparent' }} />
               : <Upload size={15} />}
-            {loading ? 'Adding...' : 'Add to Agezweho Movies'}
+            {loading ? 'Adding...' : 'Add to Agasobanuye.rw'}
           </motion.button>
         </motion.div>
 

@@ -1,0 +1,6 @@
+{
+  "name": "Agezweho Movies",
+  "description": "Rwanda's home for Agasobanuye movies, series, news, shop deals and requests.",
+  "permissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

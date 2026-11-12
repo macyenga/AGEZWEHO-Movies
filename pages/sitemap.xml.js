@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../lib/server/supabase-admin';
 
-const SITE_URL = 'https://agezweho.com';
+const SITE_URL = 'https://agasobanuye.rw';
 
 function url(loc, priority = '0.5', changefreq = 'monthly', lastmod = '') {
   return `<url><loc>${SITE_URL}${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}<changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;

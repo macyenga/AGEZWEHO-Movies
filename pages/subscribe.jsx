@@ -11,7 +11,7 @@ import { ArrowLeft, Crown, CheckCircle2, XCircle, Loader2, Copy, Check, Shield, 
 const PRO_BENEFITS = [
   'No ads on the entire site',
   'Faster content loading',
-  'Support Agezweho Movies development',
+  'Support Agasobanuye.rw development',
   'Priority for movie requests',
   'Exclusive Pro badge on your profile',
 ];
@@ -54,10 +54,10 @@ export default function Subscribe() {
   return (
     <div className="min-h-screen bg-deep">
       <SEOHead
-        title="Pro Membership"
-        description="Subscribe to Agezweho Movies Pro — remove all ads, get free votes, and unlock premium content on Rwanda's home for Agasobanuye entertainment."
-        keywords="Agezweho Pro, membership Rwanda, remove ads, premium movies, ad-free streaming Rwanda"
-        canonical="https://agezweho.com/subscribe"
+        title="Pro Membership — Agasobanuye.rw"
+        description="Subscribe to Agasobanuye.rw Pro — remove all ads, get free votes, and unlock premium content on Rwanda's home for Agasobanuye entertainment."
+        keywords="Agasobanuye.rw Pro, membership Rwanda, remove ads, premium movies, ad-free streaming Rwanda"
+        canonical="https://agasobanuye.rw/subscribe"
       />
       <CinematicBackground />
 
@@ -91,7 +91,7 @@ export default function Subscribe() {
           </h1>
           <div className="divider-gold w-20 mx-auto mb-4" />
           <p className="text-sm leading-relaxed" style={{ color: '#8a8778' }}>
-            Go Pro and remove all ads from Agezweho Movies.
+            Go Pro and remove all ads from Agasobanuye.rw.
             <br />Support the platform and enjoy an ad-free experience.
           </p>
         </motion.div>

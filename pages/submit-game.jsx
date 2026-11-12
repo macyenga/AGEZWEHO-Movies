@@ -4,7 +4,7 @@ import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { CATEGORY_GROUPS } from '../lib/categories';
-import { Plus, Trash2, Save, ArrowLeft, CheckCircle2, Package, Lock, Loader2, AlertTriangle, Image, Globe, DollarSign, Phone, FileText, Hash, Star, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, CheckCircle2, Package, Lock, Loader2, AlertTriangle, Image as ImageIcon, Globe, DollarSign, Phone, FileText, Hash, Star, ChevronDown } from 'lucide-react';
 
 const PLATFORMS = [
   { name: 'Google Drive', color: '#4285F4' },
@@ -244,7 +244,7 @@ export default function SubmitGame() {
           {/* Cover Image */}
           <div>
             <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-              <Image size={10} className="inline mr-1" />Cover Image URL <span style={{ color:'#3a3a2a' }}>optional</span>
+              <ImageIcon size={10} className="inline mr-1" />Cover Image URL <span style={{ color:'#3a3a2a' }}>optional</span>
             </label>
             <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
               value={form.cover_url} onChange={e => set('cover_url', e.target.value)}

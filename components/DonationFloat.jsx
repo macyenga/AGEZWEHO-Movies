@@ -50,7 +50,7 @@ export default function DonationFloat() {
               <HeartHandshake size={19} style={{ color: GOLD }} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold" style={{ color: '#e8c87a' }}>Support Agezweho</div>
+              <div className="text-sm font-semibold" style={{ color: '#e8c87a' }}>Support Agasobanuye.rw</div>
               <div className="text-[11px] leading-relaxed" style={{ color: '#8a8778' }}>
                 Pay with MTN MoMo or Airtel Money via RwandaPay.
               </div>

@@ -8,11 +8,12 @@ import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
 import AdBanner, { NativeBanner } from '../components/ads/AdBanner';
 import SupportCTA from '../components/SupportCTA';
+import RecommendedForYou from '../components/RecommendedForYou';
 import {
   Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart, Upload,
   Newspaper, ShoppingBag, Gamepad2, Search, TrendingUp, Sparkles,
   Star, Play, Eye, Tv, BookOpen, Compass, Swords, Theater, Laugh, Zap,
-  Ghost, Rocket, Wand2, Siren
+  Ghost, Rocket, Wand2, Siren, MessageSquare
 } from 'lucide-react';
 
 const GOLD = '#c9a84c';
@@ -417,6 +418,15 @@ export default function Home({ movies: initial }) {
   );
 
   const handleGenreBrowse = (genre) => {
+    if (genre !== 'All') {
+      try {
+        const stored = JSON.parse(localStorage.getItem('agezweho_viewed_genres') || '[]');
+        const updated = [...new Set([genre, ...stored])].slice(0, 10);
+        localStorage.setItem('agezweho_viewed_genres', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+    }
     if (genre === 'All') {
       setGenreFilter('');
       setPage(1);
@@ -444,21 +454,21 @@ export default function Home({ movies: initial }) {
   return (
     <>
       <SEOHead
-        title="Agezweho Movies — Agasobanuye Rocky 2026, Sankara, Agent Kim & Amakuru Agezweho"
-        description="Rwanda's home for Agasobanuye movies — Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim, Gashya 2026 Netflix, Fey, Junior Giti, Mujyosi Store — and latest Amakuru Agezweho, Igihe Amakuru Mashya, Amazina Agezweho & M23 coverage. Watch, download, stream free."
-        keywords="agasobanuye rocky 2026, agasobanuye 2026, agasobanuye sankara 2026, agasobanuye gashya 2026 netflix, agasobanuye agent kim, agent kim reactivated, agasobanuye by rocky kimomo, agasobanuye by sankara, agasobanuye by fey 2025, agasobanuye by junior giti, mujyosi store download, agahinde agasobanuye na rocky, agasobanuye rocky new, amakuru agezweho, igihe amakuru mashya, igihe amakuru, amazina agezweho, M23 Rwanda, kigali today, amakuru agezweho akakanya, amakuru agezweho mu rwanda, Kinyarwanda movies, Rwanda movies"
-        canonical="https://agezweho.com"
+        title="Agasobanuye.rw — Agasobanuye Rocky 2026, Sankara, Agent Kim & Amakuru Mashya"
+        description="Agasobanuye.rw — Rwanda's #1 home for Agasobanuye movies — Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim, Gashya 2026 Netflix, Fey, Junior Giti, Mujyosi Store. Watch, download, stream free."
+        keywords="agasobanuye rocky 2026, agasobanuye 2026, agasobanuye sankara 2026, agasobanuye gashya 2026 netflix, agasobanuye agent kim, agent kim reactivated, agasobanuye by rocky kimomo, agasobanuye by sankara, agasobanuye by fey 2025, agasobanuye by junior giti, mujyosi store download, agahinde agasobanuye na rocky, agasobanuye rocky new, amakuru agezweho, igihe amakuru mashya, amazina agezweho, M23 Rwanda, kigali today, Kinyarwanda movies, Rwanda movies"
+        canonical="https://agasobanuye.rw"
         jsonLd={[
           {
             '@context': 'https://schema.org',
             '@type': 'WebSite',
-            name: 'Agezweho Movies',
-            url: 'https://agezweho.com',
-            description: "Rwanda's home for Agasobanuye movies and Amakuru Agezweho news — Rocky 2026, Sankara, Agent Kim, Gashya Netflix, Igihe Amakuru Mashya, Amazina Agezweho.",
+            name: 'Agasobanuye.rw',
+            url: 'https://agasobanuye.rw',
+            description: "Rwanda's home for Agasobanuye movies and news — Rocky 2026, Sankara, Agent Kim, Gashya Netflix, Igihe Amakuru Mashya.",
             inLanguage: 'rw-RW',
             potentialAction: {
               '@type': 'SearchAction',
-              target: { '@type': 'EntryPoint', urlTemplate: 'https://agezweho.com/finder?q={search_term_string}' },
+              target: { '@type': 'EntryPoint', urlTemplate: 'https://agasobanuye.rw/finder?q={search_term_string}' },
               'query-input': 'required name=search_term_string',
             },
           },
@@ -468,20 +478,20 @@ export default function Home({ movies: initial }) {
             name: 'Agasobanuye Movie Finder',
             numberOfItems: 14,
             itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'Agasobanuye Rocky 2026', url: 'https://agezweho.com/finder?q=agasobanuye%20rocky%202026' },
-              { '@type': 'ListItem', position: 2, name: 'Agasobanuye by Sankara', url: 'https://agezweho.com/finder?q=agasobanuye%20by%20sankara' },
-              { '@type': 'ListItem', position: 3, name: 'Agasobanuye Gashya 2026 Netflix', url: 'https://agezweho.com/finder?q=agasobanuye%20gashya%202026%20netflix' },
-              { '@type': 'ListItem', position: 4, name: 'Agasobanuye Agent Kim', url: 'https://agezweho.com/finder?q=agasobanuye%20agent%20kim' },
-              { '@type': 'ListItem', position: 5, name: 'Agasobanuye by Rocky Kimomo', url: 'https://agezweho.com/finder?q=agasobanuye%20by%20rocky%20kimomo' },
-              { '@type': 'ListItem', position: 6, name: 'Agasobanuye by Fey 2025', url: 'https://agezweho.com/finder?q=agasobanuye%20by%20fey%202025' },
-              { '@type': 'ListItem', position: 7, name: 'Agasobanuye by Junior Giti', url: 'https://agezweho.com/finder?q=agasobanuye%20by%20junior%20giti' },
-              { '@type': 'ListItem', position: 8, name: 'Agasobanuye by Yanga', url: 'https://agezweho.com/finder?q=agasobanuye%20by%20yanga' },
-              { '@type': 'ListItem', position: 9, name: 'Agahinde Agasobanuye na Rocky', url: 'https://agezweho.com/finder?q=agahinde%20agasobanuye%20na%20rocky' },
-              { '@type': 'ListItem', position: 10, name: 'Mujyosi Store Download', url: 'https://agezweho.com/finder?q=mujyosi%20store%20download' },
-              { '@type': 'ListItem', position: 11, name: 'Amakuru Agezweho', url: 'https://agezweho.com/news' },
-              { '@type': 'ListItem', position: 12, name: 'Igihe Amakuru Mashya', url: 'https://agezweho.com/news' },
-              { '@type': 'ListItem', position: 13, name: 'Amazina Agezweho', url: 'https://agezweho.com/news' },
-              { '@type': 'ListItem', position: 14, name: 'Kigali Today', url: 'https://agezweho.com/news' },
+              { '@type': 'ListItem', position: 1, name: 'Agasobanuye Rocky 2026', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20rocky%202026' },
+              { '@type': 'ListItem', position: 2, name: 'Agasobanuye by Sankara', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20by%20sankara' },
+              { '@type': 'ListItem', position: 3, name: 'Agasobanuye Gashya 2026 Netflix', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20gashya%202026%20netflix' },
+              { '@type': 'ListItem', position: 4, name: 'Agasobanuye Agent Kim', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20agent%20kim' },
+              { '@type': 'ListItem', position: 5, name: 'Agasobanuye by Rocky Kimomo', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20by%20rocky%20kimomo' },
+              { '@type': 'ListItem', position: 6, name: 'Agasobanuye by Fey 2025', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20by%20fey%202025' },
+              { '@type': 'ListItem', position: 7, name: 'Agasobanuye by Junior Giti', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20by%20junior%20giti' },
+              { '@type': 'ListItem', position: 8, name: 'Agasobanuye by Yanga', url: 'https://agasobanuye.rw/finder?q=agasobanuye%20by%20yanga' },
+              { '@type': 'ListItem', position: 9, name: 'Agahinde Agasobanuye na Rocky', url: 'https://agasobanuye.rw/finder?q=agahinde%20agasobanuye%20na%20rocky' },
+              { '@type': 'ListItem', position: 10, name: 'Mujyosi Store Download', url: 'https://agasobanuye.rw/finder?q=mujyosi%20store%20download' },
+              { '@type': 'ListItem', position: 11, name: 'Amakuru Agezweho', url: 'https://agasobanuye.rw/news' },
+              { '@type': 'ListItem', position: 12, name: 'Igihe Amakuru Mashya', url: 'https://agasobanuye.rw/news' },
+              { '@type': 'ListItem', position: 13, name: 'Amazina Agezweho', url: 'https://agasobanuye.rw/news' },
+              { '@type': 'ListItem', position: 14, name: 'Kigali Today', url: 'https://agasobanuye.rw/news' },
             ],
           },
         ]}
@@ -500,15 +510,15 @@ export default function Home({ movies: initial }) {
             className="relative z-10 text-center w-full max-w-3xl mx-auto">
 
             <motion.div className="mb-3" initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.1, duration:0.8 }}>
-              <motion.h1 className="font-cinzel font-bold tracking-[0.2em] leading-none select-none"
-                style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(2.6rem,7vw,4.8rem)',
+              <motion.h1 className="font-cinzel font-bold tracking-[0.16em] leading-none select-none"
+                style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(2.4rem,6.5vw,4.4rem)',
                   background:'linear-gradient(135deg,#f5e4a8 0%,#c9a84c 40%,#e8c87a 65%,#a07828 100%)',
                   WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
                   filter:'drop-shadow(0 0 30px rgba(201,168,76,0.4))',
                 }}
                 animate={{ filter:['drop-shadow(0 0 20px rgba(201,168,76,0.3))','drop-shadow(0 0 50px rgba(201,168,76,0.6))','drop-shadow(0 0 20px rgba(201,168,76,0.3))'] }}
                 transition={{ repeat:Infinity, duration:3.5, ease:'easeInOut' }}>
-                AGEZWEHO
+                AGASOBANUYE.RW
               </motion.h1>
               <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }}
                 transition={{ delay:0.5, duration:1.2, ease:'easeOut' }}
@@ -630,6 +640,9 @@ export default function Home({ movies: initial }) {
             </div>
           </section>
         )}
+
+        {/* ══ RECOMMENDED FOR YOU (OMDB API) ══ */}
+        <RecommendedForYou />
 
         {/* ══ TRENDING ROW ══ */}
         {trending.length > 0 && (

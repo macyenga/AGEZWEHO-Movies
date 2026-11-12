@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
-const SITE_URL = 'https://agezweho.com';
-const SITE_NAME = 'Agezweho Movies';
+const SITE_URL = 'https://agasobanuye.rw';
+const SITE_NAME = 'Agasobanuye.rw';
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.svg`;
 
 export default function SEOHead({
@@ -17,7 +17,7 @@ export default function SEOHead({
   keywords,
 }) {
   const t = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Rwanda's Home for Agasobanuye Movies & Entertainment`;
-  const d = description || 'Rwanda\'s home for Agasobanuye movies, series & anime. Watch Agasobanuye Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim, Gashya 2026 Netflix, Mujyosi Store — and latest Amakuru Agezweho, Igihe Amakuru Mashya, Amazina Agezweho & M23 updates — completely free.';
+  const d = description || 'Rwanda\'s #1 home for Agasobanuye movies, series & anime. Watch Agasobanuye Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim, Gashya 2026 Netflix, Mujyosi Store — completely free.';
   const ogT = ogTitle || title || SITE_NAME;
   const ogD = ogDescription || d;
   const ogI = ogImage || DEFAULT_IMAGE;
@@ -43,7 +43,7 @@ export default function SEOHead({
       <meta name="twitter:title" content={ogT} />
       <meta name="twitter:description" content={ogD} />
       <meta name="twitter:image" content={ogI} />
-      <meta name="twitter:site" content="@agezweho" />
+      <meta name="twitter:site" content="@agasobanuyerw" />
 
       <link rel="alternate" hrefLang="rw" href={c} />
       <link rel="alternate" hrefLang="en" href={c} />

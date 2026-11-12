@@ -62,8 +62,8 @@ export default function PaymentReturn() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Payment Status"
-        description="Payment confirmation for your Agezweho Movies donation or Pro membership."
-        canonical="https://agezweho.com/payment/return"
+        description="Payment confirmation for your Agasobanuye.rw donation or Pro membership."
+        canonical="https://agasobanuye.rw/payment/return"
       />
       <CinematicBackground />
 
