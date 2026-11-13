@@ -197,7 +197,7 @@ export default async function handler(req, res) {
                       item.Poster && item.Poster !== 'N/A'
                         ? item.Poster
                         : 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=500&auto=format&fit=crop&q=80',
-                    overview: `Similar ${genre} title discovered on OMDB. Watch or request Agasobanuye translation on Agezweho.`,
+                    overview: `Similar ${genre} title discovered on OMDB. Watch or request Agasobanuye translation on Agasobanuye.rw.`,
                     rating: '7.8',
                     source: 'omdb',
                   });

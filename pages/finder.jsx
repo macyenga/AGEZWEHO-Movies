@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import AdBanner from '../components/ads/AdBanner';
 import { TOP_QUERIES, RISING_QUERIES, getQueryUrl } from '../lib/trending';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const SITES = [
   { name: 'NCDTV',             color: '#22c55e', icon: '📺', badge: 'Very Active', url: q => `https://www.ncdtv.net/search?q=${encodeURIComponent(q)}` },
@@ -44,6 +45,7 @@ const RESULT_CONFIG = {
 };
 
 export default function Finder() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState('site');
@@ -116,8 +118,10 @@ export default function Finder() {
                 fontFamily: 'Cinzel,serif',
                 background: 'linear-gradient(135deg,#f5e4a8,#c9a84c)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>Finder</h1>
-              <p className="text-[10px]" style={{ color: '#6a6a5a' }}>Search everything on Agezweho + 15 movie sites</p>
+              }}>
+                {t.pages.finder.heading}
+              </h1>
+              <p className="text-[10px]" style={{ color: '#6a6a5a' }}>{t.pages.finder.subheading}</p>
             </div>
           </div>
           <div className="divider-gold w-16" />
@@ -188,7 +192,7 @@ export default function Finder() {
                   style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.12)' }}>
                   <AlertTriangle size={28} style={{ color: '#4a4a3a' }} />
                 </div>
-                <p className="text-sm" style={{ color: '#6a6a5a' }}>No results on Agezweho</p>
+                <p className="text-sm" style={{ color: '#6a6a5a' }}>No results on Agasobanuye.rw</p>
                 <p className="text-[10px] mt-1" style={{ color: '#3a3a2a' }}>Try the Movie Finder tab to search external sites</p>
               </motion.div>
             ) : results && sections.length > 0 ? (
@@ -220,8 +224,8 @@ export default function Finder() {
                             <motion.div whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.04)' }}
                               className="flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer"
                               style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                              {item.cover_url || item.image_url ? (
-                                <img src={item.cover_url || item.image_url} alt=""
+                              {item.poster_url || item.cover_url || item.image_url ? (
+                                <img src={item.poster_url || item.cover_url || item.image_url} alt=""
                                   className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                                   onError={e => e.target.style.display = 'none'} />
                               ) : (

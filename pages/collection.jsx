@@ -6,17 +6,19 @@ import CinematicBackground from '../components/CinematicBackground';
 import { useCollection } from '../hooks/useCollection';
 import { Heart, Trash2, Film, ArrowRight, Star, BookOpen } from 'lucide-react';
 import AdBanner from '../components/ads/AdBanner';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Collection() {
+  const { t } = useLanguage();
   const { collection, removeFromCollection, clearCollection, loaded } = useCollection();
   const [confirmClear, setConfirmClear] = useState(false);
 
   return (
     <div className="min-h-screen bg-deep">
       <SEOHead
-        title="My Collection"
-        description="Your saved movie collection on Agezweho Movies — keep track of your favourite Agasobanuye movies, series, and anime."
-        canonical="https://agezweho.com/collection"
+        title="My Watchlist"
+        description="Your saved Watchlist on Agasobanuye.rw — keep track of your favourite Agasobanuye movies, series, and anime."
+        canonical="https://agasobanuye.rw/collection"
       />
       <CinematicBackground />
 
@@ -52,10 +54,10 @@ export default function Collection() {
                   style={{ fontFamily: 'Cinzel,serif',
                     background: 'linear-gradient(135deg,#f5e4a8,#c9a84c)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  My Collection
+                  {t.pages.collection.title}
                 </h1>
                 <p className="text-xs mt-0.5" style={{ color: '#4a4a3a' }}>
-                  Saved in your browser · {collection.length} title{collection.length !== 1 ? 's' : ''}
+                  {t.pages.collection.savedBrowser} · {collection.length} {collection.length === 1 ? t.homeSections.titleSingular : t.homeSections.titlePlural}
                 </p>
               </div>
             </div>
@@ -66,7 +68,7 @@ export default function Collection() {
                 onClick={() => setConfirmClear(true)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs"
                 style={{ background: 'rgba(192,57,43,0.08)', border: '1px solid rgba(192,57,43,0.2)', color: '#e57373' }}>
-                <Trash2 size={12} /> Clear All
+                <Trash2 size={12} /> {t.pages.collection.clearAll}
               </motion.button>
             )}
           </div>
@@ -77,8 +79,7 @@ export default function Collection() {
             style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.12)' }}>
             <BookOpen size={13} style={{ color: '#c9a84c', flexShrink: 0, marginTop: 1 }} />
             <span style={{ color: '#6a6a5a' }}>
-              Your collection is saved in <span style={{ color: '#c9a84c' }}>this browser only</span> — it stays even after you close the tab.
-              Heart any Agasobanuye to add it here.
+              {t.pages.collection.bannerPrefix} <span style={{ color: '#c9a84c' }}>{t.pages.collection.bannerHighlight}</span> {t.pages.collection.bannerSuffix}
             </span>
           </motion.div>
         </motion.div>
@@ -95,16 +96,16 @@ export default function Collection() {
                 className="max-w-sm w-full p-6 rounded-2xl text-center"
                 style={{ background: 'rgba(14,14,22,0.95)', border: '1px solid rgba(192,57,43,0.3)' }}>
                 <Trash2 size={36} className="mx-auto mb-3" style={{ color: '#e57373' }} />
-                <h3 className="font-cinzel text-base mb-2" style={{ fontFamily: 'Cinzel,serif', color: '#f0eee8' }}>Clear collection?</h3>
-                <p className="text-xs mb-6" style={{ color: '#6a6a5a' }}>All {collection.length} saved titles will be removed.</p>
+                <h3 className="font-cinzel text-base mb-2" style={{ fontFamily: 'Cinzel,serif', color: '#f0eee8' }}>{t.pages.collection.clearConfirmTitle}</h3>
+                <p className="text-xs mb-6" style={{ color: '#6a6a5a' }}>{collection.length}</p>
                 <div className="flex gap-3 justify-center">
                   <motion.button whileHover={{ scale: 1.03 }} onClick={() => { clearCollection(); setConfirmClear(false); }}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm"
                     style={{ background: 'rgba(192,57,43,0.15)', border: '1px solid rgba(192,57,43,0.35)', color: '#e57373' }}>
-                    <Trash2 size={13} /> Clear All
+                    <Trash2 size={13} /> {t.pages.collection.clearAll}
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.03 }} onClick={() => setConfirmClear(false)}
-                    className="btn-ghost px-5 py-2.5 rounded-xl text-sm">Cancel</motion.button>
+                    className="btn-ghost px-5 py-2.5 rounded-xl text-sm">{t.pages.collection.cancel}</motion.button>
                 </div>
               </motion.div>
             </motion.div>
@@ -123,15 +124,15 @@ export default function Collection() {
               <Heart size={32} style={{ color: 'rgba(201,168,76,0.4)' }} />
             </motion.div>
             <h3 className="font-cinzel text-xl mb-2" style={{ fontFamily: 'Cinzel,serif', color: '#6a6a5a' }}>
-              Nothing saved yet
+              {t.pages.collection.emptyTitle}
             </h3>
             <p className="text-sm mb-6" style={{ color: '#4a4a3a' }}>
-              Heart any Agasobanuye movie or series to save it here.
+              {t.pages.collection.emptyDesc}
             </p>
             <Link href="/">
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm">
-                <Film size={14} /> Browse Agasobanuye <ArrowRight size={13} />
+                <Film size={14} /> {t.pages.collection.browseBtn} <ArrowRight size={13} />
               </motion.div>
             </Link>
           </motion.div>

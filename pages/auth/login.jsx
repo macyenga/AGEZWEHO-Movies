@@ -41,8 +41,8 @@ export default function Login() {
     <div className="min-h-screen bg-deep flex items-center justify-center">
       <SEOHead
         title="Login"
-        description="Sign in to your Agezweho Movies account to vote, request movies, and manage your collection."
-        canonical="https://agezweho.com/auth/login"
+        description="Sign in to your Agasobanuye.rw account to vote, request movies, and manage your collection."
+        canonical="https://agasobanuye.rw/auth/login"
       />
       <CinematicBackground />
       <div className="relative z-10 w-full max-w-md px-4">

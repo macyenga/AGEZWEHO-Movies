@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { getMovieById } from '../../lib/supabase';
 import SEOHead from '../../components/SEOHead';
 import CinematicBackground from '../../components/CinematicBackground';
 import AdBanner from '../../components/ads/AdBanner';
-import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Heart, Phone, X } from 'lucide-react';
+import { useDonate } from '../../contexts/DonateContext';
+import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign } from 'lucide-react';
 
 const SITE_URL = 'https://agasobanuye.rw';
 
@@ -18,12 +19,7 @@ const sharePlatforms = [
 
 export default function MovieDetail({ movie }) {
   const [copiedShare, setCopiedShare] = useState(false);
-  const [showDonate, setShowDonate] = useState(false);
-  const [donateAmount, setDonateAmount] = useState(1000);
-  const [donateState, setDonateState] = useState('idle'); // idle | loading | done | error
-  const [donateResult, setDonateResult] = useState(null);
-  const [donateError, setDonateError] = useState('');
-  const [donorPhone, setDonorPhone] = useState('');
+  const { openDonate } = useDonate();
 
   useEffect(() => {
     if (!movie?.genre && !movie?.title) return;
@@ -61,28 +57,6 @@ const seoTitle = `${movie.title} ${movie.year || ''} - Agasobanuye Watch, Downlo
 const seoDescription = movie.overview || `Watch and download ${movie.title} — Agasobanuye — on Agasobanuye.rw, Rwanda's home for Agasobanuye entertainment, Rocky 2026, Sankara 2026, Agent Kim, Gashya 2026 Netflix and more.`;
 const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}, agasobanuye, agasobanuye rocky 2026, agasobanuye sankara 2026, agasobanuye agent kim, agasobanuye gashya 2026 netflix, agasobanuye by rocky kimomo, ${movie.title} 1080p download, ${movie.title} 4k download, ${movie.title} netflix, ${movie.genre || ''} movies download free`;
   const shareText = `${movie.title} on Agasobanuye.rw`;
-  const handleDonate = async () => {
-    setDonateState('loading');
-    setDonateError('');
-    setDonateResult(null);
-    try {
-      const res = await fetch('/api/payments/initialize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: donateAmount, movie_id: movie.id, phone: donorPhone.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setDonateError(data.error || 'Something went wrong'); setDonateState('error'); return; }
-      setDonateResult(data);
-      setDonateState('done');
-      if (data.payment_url) {
-        window.location.assign(data.payment_url);
-      }
-    } catch {
-      setDonateError('Network error. Please try again.');
-      setDonateState('error');
-    }
-  };
 
   const copyShare = () => {
     navigator.clipboard?.writeText(pageUrl);
@@ -209,131 +183,17 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
         </div>
       )}
       <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-        onClick={() => { setDonateAmount(1000); setDonateState('idle'); setDonateResult(null); setDonorPhone(''); setShowDonate(true); }}
-        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold"
+        onClick={() => openDonate({
+          title: `Support ${movie.uploaded_by || movie.title}`,
+          subtitle: `Select a donation amount for "${movie.title}" (50% supports uploader ${movie.uploaded_by}).`,
+          purpose: `Movie Support: ${movie.title}`,
+          movieId: movie.id,
+          defaultAmount: 1000,
+        })}
+        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold cursor-pointer"
         style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:'#e8c87a' }}>
         🤝 Gurira MB {movie.uploaded_by}
       </motion.button>
-
-      {/* Donate Modal */}
-      <AnimatePresence>
-      {showDonate && (
-        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background:'rgba(0,0,0,0.85)', backdropFilter:'blur(8px)' }}
-          onClick={() => setShowDonate(false)}>
-          <motion.div initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ scale:0.9, opacity:0 }}
-            transition={{ type:'spring', damping:25, stiffness:300 }}
-            className="relative w-full max-w-sm rounded-2xl overflow-hidden"
-            style={{ background:'rgba(14,14,22,0.95)', border:'1px solid rgba(201,168,76,0.2)' }}
-            onClick={e => e.stopPropagation()}>
-
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom:'1px solid rgba(201,168,76,0.1)' }}>
-            <span className="text-sm font-semibold" style={{ color:'#e8e0d0' }}>🤝 Gurira MB</span>
-            <button onClick={() => setShowDonate(false)} className="p-1 rounded-lg transition-colors"
-              style={{ color:'#6a6a5a' }}
-              onMouseEnter={e=>e.currentTarget.style.color='#c9a84c'}
-              onMouseLeave={e=>e.currentTarget.style.color='#6a6a5a'}>
-              <X size={18} />
-            </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-            <p className="text-xs" style={{ color:'#8a8778' }}>
-              Gurira MB <span className="font-semibold" style={{ color:'#e8c87a' }}>{movie.uploaded_by}</span>.
-              Your donation pays via RwandaPay — 50% goes to the uploader automatically.
-            </p>
-
-              {/* Phone Number */}
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color:'#6b6b8a' }}>
-                  Your Phone Number <span style={{ color:'#e05c3a' }}>*</span>
-                </label>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
-                  <Phone size={14} style={{ color:'#6b6b8a' }} />
-                  <input type="tel" value={donorPhone} onChange={e => setDonorPhone(e.target.value)}
-                    placeholder="078XXXXXXX"
-                    className="flex-1 bg-transparent text-sm outline-none" style={{ color:'#e8e6f0' }} />
-                </div>
-                <p className="text-[10px] mt-1" style={{ color:'#4a4a3a' }}>
-                  Your number links the RwandaPay payment to your donation.
-                </p>
-              </div>
-
-            {donateState === 'done' && donateResult ? (
-              <div className="space-y-3 text-center">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto" style={{ background:'rgba(34,197,94,0.1)' }}>
-              <Check size={24} style={{ color:'#22c55e' }} />
-              </div>
-              <p className="text-sm font-semibold" style={{ color:'#22c55e' }}>Donation Initiated!</p>
-              <div className="p-3 rounded-xl text-left" style={{ background:'rgba(14,14,22,0.8)', border:'1px solid rgba(255,255,255,0.06)' }}>
-              <div className="text-[10px] mb-1" style={{ color:'#6a6a5a' }}>Reference:</div>
-              <div className="text-xs font-mono font-bold" style={{ color:'#e8c87a' }}>{donateResult.tx_ref}</div>
-              <div className="text-xs font-bold mt-1" style={{ color:'#fbbf24' }}>{(donateResult.amount || donateAmount).toLocaleString()} RWF</div>
-              <div className="text-[10px] mt-2 p-2 rounded-lg" style={{ background:'rgba(56,189,248,0.08)', color:'#4fc3f7' }}>
-              Complete your payment in the RwandaPay prompt on your phone. No manual confirmation needed — the uploader gets 50% automatically.
-              </div>
-              </div>
-              <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                onClick={() => setShowDonate(false)}
-                className="w-full py-2.5 rounded-xl text-xs font-semibold"
-                style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:'#e8c87a' }}>
-                Done
-              </motion.button>
-              </div>
-            ) : (
-              <>
-              <div>
-              <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color:'#6b6b8a' }}>Amount (RWF)</label>
-              <div className="flex gap-2 mb-2">
-              {[500, 1000, 2000, 5000].map(a => (
-                <motion.button key={a} whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-                  onClick={() => setDonateAmount(a)}
-                  className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
-                  style={donateAmount === a
-                    ? { background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.4)', color:'#e8c87a' }
-                    : { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#6a6a5a' }
-                  }>
-                  {a.toLocaleString()}
-                </motion.button>
-              ))}
-              </div>
-              <input type="number" value={donateAmount} min={500} step={100}
-                onChange={e => setDonateAmount(Number(e.target.value) || 0)}
-                className="w-full px-3 py-2.5 rounded-lg text-sm"
-                style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', color:'#e8e6f0' }}
-                placeholder="Custom amount" />
-              </div>
-
-              <div className="p-3 rounded-xl text-[10px] leading-relaxed"
-                style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.1)', color:'#8a8778' }}>
-                You pay <span className="font-semibold" style={{ color:'#fbbf24' }}>{donateAmount.toLocaleString()} RWF</span> via RwandaPay.
-                <span style={{ color:'#22c55e' }}>{movie.uploaded_by}</span> receives 50% automatically.
-              </div>
-
-              {donateState === 'error' && (
-                <div className="p-3 rounded-lg text-xs" style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.25)', color:'#f87171' }}>
-                {donateError}
-                </div>
-              )}
-
-              <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                onClick={handleDonate} disabled={donateState === 'loading' || donateAmount < 500 || !donorPhone.trim()}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
-                style={{ background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.4)', color:'#e8c87a' }}>
-                {donateState === 'loading' ? (
-                  <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:1, ease:'linear' }} className="w-4 h-4 rounded-full" style={{ border:'2px solid rgba(201,168,76,0.3)', borderTopColor:'#e8c87a' }} />
-                ) : (
-                  <><Heart size={15} /> Gurira MB — {donateAmount.toLocaleString()} RWF</>
-                )}
-              </motion.button>
-              </>
-            )}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-      </AnimatePresence>
       </motion.div>
     )}
 

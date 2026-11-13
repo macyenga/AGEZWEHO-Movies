@@ -66,8 +66,8 @@ export default function Signup() {
     <div className="min-h-screen bg-deep flex items-center justify-center">
       <SEOHead
         title="Sign Up"
-        description="Create your Agezweho Movies account — vote for movie requests, build your collection, and unlock premium content."
-        canonical="https://agezweho.com/auth/signup"
+        description="Create your Agasobanuye.rw account — vote for movie requests, build your collection, and unlock premium content."
+        canonical="https://agasobanuye.rw/auth/signup"
       />
       <CinematicBackground />
       <div className="relative z-10 w-full max-w-md px-4">

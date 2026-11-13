@@ -6,10 +6,12 @@ import CinematicBackground from '../components/CinematicBackground';
 import { submitContact } from '../lib/supabase';
 import { ArrowLeft, Send, CheckCircle2, Mail, MessageSquare, User, MessageCircle, Sparkles } from 'lucide-react';
 import AdBanner from '../components/ads/AdBanner';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const EMPTY = { name:'', email:'', subject:'', message:'' };
 
 export default function Contact() {
+  const { t } = useLanguage();
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -43,8 +45,8 @@ export default function Contact() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Contact Us"
-        description="Get in touch with Agezweho — send us a message, ask questions, or report issues"
-        canonical="https://agezweho.com/contact"
+        description="Get in touch with Agasobanuye.rw — send us a message, ask questions, or report issues"
+        canonical="https://agasobanuye.rw/contact"
       />
       <CinematicBackground />
 
@@ -66,8 +68,10 @@ export default function Contact() {
                 fontFamily:'Cinzel,serif',
                 background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
                 WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-              }}>Contact Us</h1>
-              <p className="text-[10px]" style={{ color:'#6a6a5a' }}>We'd love to hear from you</p>
+              }}>
+                {t.pages.contact.heading}
+              </h1>
+              <p className="text-[10px]" style={{ color:'#6a6a5a' }}>{t.pages.contact.subheading}</p>
             </div>
           </div>
           <div className="divider-gold w-16" />

@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     return res.status(status).json({ error: msg });
   }
 
-  if (payment.provider === 'rwandapay' && payment.reference) {
+  if (payment.reference) {
     await supabaseAdmin
       .from('transactions')
       .update({ provider_reference: String(payment.reference) })

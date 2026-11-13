@@ -9,9 +9,15 @@ import MovieCard from '../components/MovieCard';
 import AdBanner, { NativeBanner } from '../components/ads/AdBanner';
 import SupportCTA from '../components/SupportCTA';
 import RecommendedForYou from '../components/RecommendedForYou';
+import ComingSoonSection from '../components/ComingSoonSection';
+import TrendingNowSection from '../components/TrendingNowSection';
+import CategoryFilterBar from '../components/CategoryFilterBar';
+import { MOVIE_CATEGORIES, filterMovies, getCategoryCounts } from '../lib/movie-filters';
+import { useLanguage } from '../contexts/LanguageContext';
+import { getCategoryLabel, getMediaTypeLabel } from '../lib/i18n';
 import {
   Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart, Upload,
-  Newspaper, ShoppingBag, Gamepad2, Search, TrendingUp, Sparkles,
+  Newspaper, ShoppingBag, Gamepad2, Search, Sparkles,
   Star, Play, Eye, Tv, BookOpen, Compass, Swords, Theater, Laugh, Zap,
   Ghost, Rocket, Wand2, Siren, MessageSquare
 } from 'lucide-react';
@@ -25,6 +31,7 @@ const BORDER = 'rgba(255,255,255,0.06)';
 
 function NoticeBoard() {
   const [visible, setVisible] = useState(true);
+  const { t } = useLanguage();
   if (!visible) return null;
   return (
     <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
@@ -37,12 +44,13 @@ function NoticeBoard() {
           transition={{ repeat:Infinity, duration:5, ease:'easeInOut', repeatDelay:3 }} />
         <span className="text-sm flex-shrink-0">📢</span>
         <p className="text-[10px] leading-relaxed flex-1" style={{ color:'#8a8778' }}>
-          Only requested movies and series are added. Head to{' '}
-          <Link href="/requests"><span className="underline cursor-pointer" style={{ color:GOLD }}>Requests</span></Link>
-          {' '}to submit — added within 24 hours.
+          {t.notice.prefix}{' '}
+          <Link href="/requests"><span className="underline cursor-pointer" style={{ color:GOLD }}>{t.notice.link}</span></Link>
+          {' '}{t.notice.suffix}
         </p>
         <motion.button whileHover={{ scale:1.1, rotate:90 }} whileTap={{ scale:0.9 }}
           onClick={() => setVisible(false)}
+          aria-label={t.notice.dismissAria}
           className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
           style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', color:'#6a6a5a' }}>✕</motion.button>
       </div>
@@ -56,7 +64,7 @@ const CATEGORIES = [
   { key:'Documentary', label:'Documentary', icon:BookOpen, count:0 },
 ];
 
-const GENRES = ['Action','Drama','Comedy','Thriller','Horror','Romance','Sci-Fi','Fantasy','Animation','Adventure','Crime','Mystery'];
+const GENRES = MOVIE_CATEGORIES;
 
 const GENRE_ROWS = [
   { name: 'Action',    icon: Swords,   color: '#ef4444' },
@@ -77,6 +85,7 @@ const PER_PAGE = 24;
 
 function ScrollRow({ title, icon:Icon, color, movies, link, onViewAll, id }) {
   const rowRef = useRef(null);
+  const { t } = useLanguage();
   const scroll = (dir) => {
     if (rowRef.current) rowRef.current.scrollBy({ left: dir * 320, behavior:'smooth' });
   };
@@ -88,13 +97,13 @@ function ScrollRow({ title, icon:Icon, color, movies, link, onViewAll, id }) {
         <div className="flex-1 divider-soft" />
         {link && (
           <Link href={link}>
-            <span className="text-[10px] cursor-pointer hover:underline" style={{ color: MUTED }}>View all →</span>
+            <span className="text-[10px] cursor-pointer hover:underline" style={{ color: MUTED }}>{t.homeSections.viewAll}</span>
           </Link>
         )}
         {!link && onViewAll && (
           <motion.button onClick={onViewAll} whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
             className="text-[10px] cursor-pointer hover:underline" style={{ color: MUTED }}>
-            View all →
+            {t.homeSections.viewAll}
           </motion.button>
         )}
       </div>
@@ -128,15 +137,13 @@ function ScrollRow({ title, icon:Icon, color, movies, link, onViewAll, id }) {
 
 function GenreNav({ active, onSelect }) {
   const navRef = useRef(null);
-  const scroll = (dir) => {
-    if (navRef.current) navRef.current.scrollBy({ left: dir * 200, behavior:'smooth' });
-  };
+  const { language } = useLanguage();
   return (
     <motion.div
       initial={{ opacity:0, y:-8 }}
       animate={{ opacity:1, y:0 }}
       transition={{ delay:0.1, duration:0.4 }}
-      className="sticky top-[64px] z-40 mb-2"
+      className="sticky top-[110px] md:top-[64px] z-40 mb-2"
       style={{ background:'rgba(10,10,16,0.92)', backdropFilter:'blur(16px)', borderBottom:'1px solid rgba(255,255,255,0.06)' }}
     >
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
@@ -148,7 +155,7 @@ function GenreNav({ active, onSelect }) {
             style={active === 'All'
               ? { background:'rgba(201,168,76,0.18)', border:'1px solid rgba(201,168,76,0.5)', color:'#e8c87a' }
               : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:MUTED }}>
-            <Compass size={10} /> All
+            <Compass size={10} /> {getCategoryLabel('All', language)}
           </motion.button>
           {GENRES.map(g => (
             <motion.button key={g} onClick={() => onSelect(g)}
@@ -157,7 +164,7 @@ function GenreNav({ active, onSelect }) {
               style={active === g
                 ? { background:'rgba(201,168,76,0.18)', border:'1px solid rgba(201,168,76,0.5)', color:'#e8c87a' }
                 : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:MUTED }
-              }>{g}</motion.button>
+              }>{getCategoryLabel(g, language)}</motion.button>
           ))}
         </div>
       </div>
@@ -252,6 +259,7 @@ function ShopRowCard({ item, index }) {
 }
 
 function HeroMovieSpotlight({ movie }) {
+  const { language, t } = useLanguage();
   if (!movie) return null;
   return (
     <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
@@ -278,7 +286,7 @@ function HeroMovieSpotlight({ movie }) {
           <motion.div initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} transition={{ delay:0.25 }}
             className="flex-1 min-w-0 text-center sm:text-left">
             <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-2">
-              <span className="badge badge-gold text-[10px]">{movie.type || 'Movie'}</span>
+              <span className="badge badge-gold text-[10px]">{getMediaTypeLabel(movie.type || 'Movie', language)}</span>
               {movie.year && <span className="text-[11px]" style={{ color:MUTED }}>{movie.year}</span>}
               {movie.rating && (
                 <span className="flex items-center gap-1 text-[11px]" style={{ color:GOLD }}>
@@ -308,7 +316,7 @@ function HeroMovieSpotlight({ movie }) {
                 {movie.genre.split(',').map(g => (
                   <span key={g.trim()} className="text-[10px] px-2 py-0.5 rounded-md"
                     style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', color:'#b8b4a8' }}>
-                    {g.trim()}
+                    {getCategoryLabel(g.trim(), language)}
                   </span>
                 ))}
               </div>
@@ -321,16 +329,20 @@ function HeroMovieSpotlight({ movie }) {
             )}
 
             <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-              <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
-                style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
-                <Play size={13} /> Watch Now
-              </motion.div>
-              <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer"
-                style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }}>
-                <Download size={13} /> Download
-              </motion.div>
+              <Link href={`/movies/${movie.id}`}>
+                <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
+                  style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
+                  <Play size={13} /> {t.spotlight.watchNow}
+                </motion.div>
+              </Link>
+              <Link href={`/movies/${movie.id}`}>
+                <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer"
+                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }}>
+                  <Download size={13} /> {t.spotlight.download}
+                </motion.div>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -340,6 +352,7 @@ function HeroMovieSpotlight({ movie }) {
 }
 
 export default function Home({ movies: initial }) {
+  const { language, t, tr } = useLanguage();
   const [movies, setMovies] = useState(initial || []);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
@@ -382,18 +395,15 @@ export default function Home({ movies: initial }) {
 
   const types = ['All', 'Movie', 'Series', 'Anime', 'Documentary'];
 
-  const filtered = movies.filter(m => {
-    const q = query.toLowerCase().trim();
-    const mQ = !q
-      || m.title?.toLowerCase().includes(q)
-      || m.genre?.toLowerCase().includes(q)
-      || m.language?.toLowerCase().includes(q);
-    const mT = filter === 'All' || m.type === filter;
-    const mG = !genreFilter || m.genre?.toLowerCase().includes(genreFilter.toLowerCase());
-    return mQ && mT && mG;
+  const filtered = filterMovies(movies, {
+    query,
+    type: filter,
+    category: genreFilter || 'All',
   });
 
-  const noResult = query && filtered.length === 0;
+  const categoryCounts = getCategoryCounts(movies, GENRES, { query, type: filter });
+
+  const noResult = movies.length > 0 && filtered.length === 0;
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
@@ -449,8 +459,6 @@ export default function Home({ movies: initial }) {
     }
   };
 
-  const trending = movies.slice(0, 8);
-
   return (
     <>
       <SEOHead
@@ -501,17 +509,17 @@ export default function Home({ movies: initial }) {
         <CinematicBackground />
 
         {/* ══ HERO ══ */}
-        <section className="relative flex flex-col items-center justify-center px-4 pt-20 pb-10 overflow-hidden">
+        <section className="relative flex flex-col items-center justify-center px-4 pt-32 md:pt-24 pb-10 overflow-hidden">
           <div className="orb absolute -top-40 left-0 w-[500px] h-[500px]" style={{ background:'rgba(201,168,76,0.06)' }} />
           <div className="orb absolute top-0 right-0 w-[350px] h-[350px]" style={{ background:'rgba(168,85,247,0.04)' }} />
 
           <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
             transition={{ duration:0.7, ease:[0.16,1,0.3,1] }}
-            className="relative z-10 text-center w-full max-w-3xl mx-auto">
+            className="relative z-10 text-center w-full max-w-5xl mx-auto">
 
             <motion.div className="mb-3" initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.1, duration:0.8 }}>
-              <motion.h1 className="font-cinzel font-bold tracking-[0.16em] leading-none select-none"
-                style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(2.4rem,6.5vw,4.4rem)',
+              <motion.h1 className="font-cinzel font-bold tracking-[0.06em] sm:tracking-[0.12em] leading-none select-none whitespace-nowrap"
+                style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(1.35rem,4.9vw,3.5rem)',
                   background:'linear-gradient(135deg,#f5e4a8 0%,#c9a84c 40%,#e8c87a 65%,#a07828 100%)',
                   WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
                   filter:'drop-shadow(0 0 30px rgba(201,168,76,0.4))',
@@ -526,21 +534,22 @@ export default function Home({ movies: initial }) {
             </motion.div>
 
             <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.4 }}
+              data-testid="hero-description"
               className="text-sm sm:text-base font-light mb-5 leading-relaxed max-w-lg mx-auto"
               style={{ color:'#8a8778' }}>
-              Rwanda&apos;s home for Agasobanuye movies — Discover, stream, and download the latest episodes of Rocky, Sankara, Gashya, Agent Kim, and more.
+              {t.hero.description}
             </motion.p>
 
             {/* Stats */}
             <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.3 }}
               className="flex justify-center gap-3 mb-5 flex-wrap">
               {[
-                { label: 'movies', value: movies.length, color: GOLD, icon: Film },
-                { label: 'news', value: stats?.news || 0, color: '#38bdf8', icon: Newspaper },
-                { label: 'shop', value: stats?.shop || 0, color: '#fbbf24', icon: ShoppingBag },
-                { label: 'games', value: stats?.games || 0, color: '#a855f7', icon: Gamepad2 },
+                { key: 'movies', label: t.hero.statsMovies, value: movies.length, color: GOLD, icon: Film },
+                { key: 'news', label: t.hero.statsNews, value: stats?.news || 0, color: '#38bdf8', icon: Newspaper },
+                { key: 'shop', label: t.hero.statsShop, value: stats?.shop || 0, color: '#fbbf24', icon: ShoppingBag },
+                { key: 'games', label: t.hero.statsGames, value: stats?.games || 0, color: '#a855f7', icon: Gamepad2 },
               ].map(s => (
-                <div key={s.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                <div key={s.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
                   style={{ background:`${s.color}0A`, border:`1px solid ${s.color}18` }}>
                   <s.icon size={9} style={{ color:s.color }} />
                   <span className="text-[9px]" style={{ color:MUTED }}><span style={{ color:'#e8e6f0', fontWeight:600 }}>{s.value}</span> {s.label}</span>
@@ -551,21 +560,21 @@ export default function Home({ movies: initial }) {
             {/* Search */}
             <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.45 }}
               className="max-w-md mx-auto mb-5">
-              <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} placeholder="Search movies, series, anime..." />
+              <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} placeholder={t.search.heroPlaceholder} />
             </motion.div>
 
             {/* Filter pills — cleaner */}
             <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.55 }}
               className="flex items-center justify-center gap-1.5 flex-wrap mb-5">
-              {types.map(t => (
-                <motion.button key={t} onClick={() => setFilter(t)}
+              {types.map(typeKey => (
+                <motion.button key={typeKey} onClick={() => setFilter(typeKey)}
                   whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
                   className="px-3 py-1.5 rounded-full text-[10px] font-medium transition-all"
-                  style={filter === t
+                  style={filter === typeKey
                     ? { background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.4)', color:'#e8c87a' }
                     : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:MUTED }
                   }>
-                  {t}{t === 'Anime' && <span className="ml-0.5">✦</span>}
+                  {getMediaTypeLabel(typeKey, language)}{typeKey === 'Anime' && <span className="ml-0.5">✦</span>}
                 </motion.button>
               ))}
             </motion.div>
@@ -577,14 +586,14 @@ export default function Home({ movies: initial }) {
                 <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
                   style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
-                  <Upload size={12} /> Add Movie
+                  <Upload size={12} /> {t.hero.addMovie}
                 </motion.div>
               </Link>
               <Link href="/requests">
                 <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
                   style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }}>
-                  <Inbox size={12} /> Request
+                  <Inbox size={12} /> {t.hero.request}
                 </motion.div>
               </Link>
               <Link href="/live">
@@ -593,18 +602,21 @@ export default function Home({ movies: initial }) {
                   style={{ background:'rgba(200,0,0,0.1)', border:'1px solid rgba(220,0,0,0.35)', color:'#ff4444' }}>
                   <motion.div className="w-1.5 h-1.5 rounded-full" style={{ background:'#ef4444' }}
                     animate={{ opacity:[1,0.2,1] }} transition={{ repeat:Infinity, duration:1 }} />
-                  Live Sports
+                  {t.hero.liveSports}
                 </motion.div>
               </Link>
               <motion.a href="https://t.me/+n3etNnm3RxI5NGZl" target="_blank" rel="noopener noreferrer"
                 whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-medium"
                 style={{ background:'rgba(34,158,217,0.1)', border:'1px solid rgba(34,158,217,0.3)', color:'#4fc3f7' }}>
-                <Send size={10} /> Telegram
+                <Send size={10} /> {t.hero.telegram}
               </motion.a>
             </motion.div>
           </motion.div>
         </section>
+
+        {/* ══ TRENDING NOW (Top 5 Most Viewed) ══ */}
+        <TrendingNowSection movies={movies} />
 
         {/* Notice */}
         <NoticeBoard />
@@ -629,9 +641,9 @@ export default function Home({ movies: initial }) {
           <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
             <div className="flex items-center gap-3 mb-4">
               <Newspaper size={13} style={{ color:BLUE }} />
-              <span className="section-tag" style={{ color:BLUE }}>Latest News</span>
+              <span className="section-tag" style={{ color:BLUE }}>{t.homeSections.latestNews}</span>
               <div className="flex-1 divider-soft" />
-              <Link href="/news"><span className="text-[10px] cursor-pointer hover:underline" style={{ color:MUTED }}>View all →</span></Link>
+              <Link href="/news"><span className="text-[10px] cursor-pointer hover:underline" style={{ color:MUTED }}>{t.homeSections.viewAll}</span></Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {newsItems.slice(0, 4).map((item, i) => (
@@ -644,19 +656,17 @@ export default function Home({ movies: initial }) {
         {/* ══ RECOMMENDED FOR YOU (OMDB API) ══ */}
         <RecommendedForYou />
 
-        {/* ══ TRENDING ROW ══ */}
-        {trending.length > 0 && (
-          <ScrollRow title="Trending Now" icon={TrendingUp} color="#ef4444" movies={trending} link="/finder" />
-        )}
+        {/* ══ COMING SOON ══ */}
+        <ComingSoonSection />
 
         {/* ══ SHOP ROW ══ */}
         {shopItems.length > 0 && (
           <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
             <div className="flex items-center gap-3 mb-4">
               <ShoppingBag size={13} style={{ color:AMBER }} />
-              <span className="section-tag" style={{ color:AMBER }}>Shop Deals</span>
+              <span className="section-tag" style={{ color:AMBER }}>{t.homeSections.shopDeals}</span>
               <div className="flex-1 divider-soft" />
-              <Link href="/shop"><span className="text-[10px] cursor-pointer hover:underline" style={{ color:MUTED }}>View all →</span></Link>
+              <Link href="/shop"><span className="text-[10px] cursor-pointer hover:underline" style={{ color:MUTED }}>{t.homeSections.viewAll}</span></Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {shopItems.slice(0, 4).map((item, i) => (
@@ -671,7 +681,7 @@ export default function Home({ movies: initial }) {
           const catMovies = moviesByType(cat.key);
           if (catMovies.length === 0) return null;
           return (
-            <ScrollRow key={cat.key} title={cat.label} icon={cat.icon} color={GOLD} movies={catMovies} />
+            <ScrollRow key={cat.key} title={getMediaTypeLabel(cat.key, language)} icon={cat.icon} color={GOLD} movies={catMovies} />
           );
         })}
 
@@ -680,42 +690,55 @@ export default function Home({ movies: initial }) {
           const genreMovies = moviesByGenre(g.name);
           if (genreMovies.length === 0) return null;
           return (
-            <ScrollRow key={g.name} id={`genre-row-${g.name}`} title={g.name} icon={g.icon} color={g.color}
+            <ScrollRow key={g.name} id={`genre-row-${g.name}`} title={getCategoryLabel(g.name, language)} icon={g.icon} color={g.color}
               movies={genreMovies.slice(0, 12)} onViewAll={() => handleGenreBrowse(g.name)} />
           );
         })}
 
         {/* ══ BROWSE ALL ══ */}
-        <section id="explore" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-24">
+        <section id="explore" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-24 scroll-mt-44 md:scroll-mt-32">
           <div className="flex items-center gap-3 mb-3">
             <Film size={13} style={{ color:GOLD }} />
-            <span className="section-tag">{filter === 'All' ? 'All Titles' : filter}</span>
+            <span className="section-tag">
+              {filter === 'All' ? t.homeSections.allTitles : getMediaTypeLabel(filter, language)}
+              {genreFilter ? ` · ${getCategoryLabel(genreFilter, language)}` : ''}
+            </span>
             <div className="flex-1 divider-soft" />
+            {(genreFilter || filter !== 'All' || query) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  setFilter('All');
+                  setGenreFilter('');
+                }}
+                className="text-[10px] font-medium px-2 py-0.5 rounded-md cursor-pointer transition-colors"
+                style={{
+                  background: 'rgba(201,168,76,0.1)',
+                  border: '1px solid rgba(201,168,76,0.25)',
+                  color: GOLD,
+                }}
+              >
+                {t.homeSections.reset}
+              </button>
+            )}
             <span className="text-[11px]" style={{ color:MUTED }}>
-              {filtered.length} title{filtered.length !== 1 && 's'}
+              {filtered.length} {filtered.length === 1 ? t.homeSections.titleSingular : t.homeSections.titlePlural}
               {totalPages > 1 && <span style={{ color:'#4a4a3a' }}> · p{page}/{totalPages}</span>}
             </span>
           </div>
 
-          {/* Genre chips */}
-          <div className="flex items-center gap-1.5 flex-wrap mb-5">
-            <motion.button onClick={() => setGenreFilter('')}
-              whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-              className="px-2.5 py-1 rounded-lg text-[9px] font-medium transition-all"
-              style={!genreFilter
-                ? { background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.25)', color:GOLD }
-                : { background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', color:DIM }
-              }>All</motion.button>
-            {GENRES.map(g => (
-              <motion.button key={g} onClick={() => setGenreFilter(genreFilter === g ? '' : g)}
-                whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-                className="px-2.5 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap"
-                style={genreFilter === g
-                  ? { background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.25)', color:GOLD }
-                  : { background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', color:DIM }
-                }>{g}</motion.button>
-            ))}
-          </div>
+          {/* Horizontal scrolling category filter */}
+          <CategoryFilterBar
+            categories={GENRES}
+            activeCategory={genreFilter || 'All'}
+            onSelectCategory={(cat) => {
+              setGenreFilter(cat === 'All' || cat === genreFilter ? '' : cat);
+              setPage(1);
+            }}
+            counts={categoryCounts}
+            label={t.homeSections.filterByCategoryAria}
+          />
 
           {loading && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
@@ -736,24 +759,48 @@ export default function Home({ movies: initial }) {
                 style={{ background:'rgba(201,168,76,0.06)', border:'1px solid rgba(201,168,76,0.12)' }}>
                 <Film size={28} style={{ color:'#4a4a3a' }} />
               </div>
-              <h3 className="font-cinzel text-base mb-2" style={{ fontFamily:'Cinzel,serif', color:GOLD }}>Not in the library</h3>
+              <h3 className="font-cinzel text-base mb-2" style={{ fontFamily:'Cinzel,serif', color:GOLD }}>
+                {query
+                  ? t.homeSections.notInLibrary
+                  : tr('homeSections.noCategoryTitles', {
+                      category: getCategoryLabel(genreFilter || filter, language),
+                    })}
+              </h3>
               <p className="text-xs mb-5" style={{ color:MUTED }}>
-                {query && <span>&ldquo;<span style={{ color:'#b8b4a8' }}>{query}</span>&rdquo; isn&apos;t added yet. </span>}
-                Request it or add it yourself.
+                {query ? (
+                  <>
+                    <span>&ldquo;<span style={{ color:'#b8b4a8' }}>{query}</span>&rdquo; — </span>
+                    {t.homeSections.requestIt}
+                  </>
+                ) : (
+                  t.homeSections.emptyFilterHint
+                )}
               </p>
               <div className="flex gap-3 justify-center flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    setFilter('All');
+                    setGenreFilter('');
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
+                  style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}
+                >
+                  {t.homeSections.showAllTitles}
+                </button>
                 <Link href="/requests">
                   <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
-                    style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
-                    <Inbox size={13} /> Request It
+                    style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#b8b4a8' }}>
+                    <Inbox size={13} /> {t.homeSections.requestIt}
                   </motion.div>
                 </Link>
                 <Link href="/submit">
                   <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
                     style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }}>
-                    <Upload size={13} /> Add It
+                    <Upload size={13} /> {t.homeSections.addIt}
                   </motion.div>
                 </Link>
               </div>
@@ -778,7 +825,7 @@ export default function Home({ movies: initial }) {
                       ? { background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', color:'#3a3a2a', cursor:'not-allowed' }
                       : { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', color:'#b8b4a8', cursor:'pointer' }
                     }>
-                    <ChevronLeft size={14} /> Prev
+                    <ChevronLeft size={14} /> {t.homeSections.prev}
                   </motion.button>
                   {getPageNumbers().map((p, i) => (
                     <motion.button key={i} onClick={() => p !== '...' && changePage(p)}
@@ -800,7 +847,7 @@ export default function Home({ movies: initial }) {
                       ? { background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', color:'#3a3a2a', cursor:'not-allowed' }
                       : { background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD, cursor:'pointer' }
                     }>
-                    Next <ChevronRight size={14} />
+                    {t.homeSections.next} <ChevronRight size={14} />
                   </motion.button>
                 </motion.div>
               )}
@@ -809,12 +856,12 @@ export default function Home({ movies: initial }) {
 
           {!loading && movies.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-sm mb-4" style={{ color:MUTED }}>No movies added yet.</p>
+              <p className="text-sm mb-4" style={{ color:MUTED }}>{t.homeSections.noMoviesAdded}</p>
               <Link href="/submit">
                 <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
                   style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
-                  <Upload size={14} /> Add First Movie
+                  <Upload size={14} /> {t.homeSections.addFirstMovie}
                 </motion.div>
               </Link>
             </div>

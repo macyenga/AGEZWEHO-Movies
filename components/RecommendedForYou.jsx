@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
   Sparkles, Star, ChevronLeft, ChevronRight, RefreshCw,
-  ExternalLink, Inbox, Search, Film, Check, Eye, HelpCircle, X
+  ExternalLink, Inbox, Search, Film, Eye, X
 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { getCategoryLabel } from '../lib/i18n';
 
 const GOLD = '#c9a84c';
 const GOLD_LIGHT = '#e8c87a';
@@ -12,6 +14,7 @@ const MUTED = '#8a8778';
 const DIM = '#4a4a3a';
 
 export default function RecommendedForYou() {
+  const { language, t } = useLanguage();
   const [recommendations, setRecommendations] = useState([]);
   const [recentGenres, setRecentGenres] = useState(['Action', 'Thriller']);
   const [activeGenre, setActiveGenre] = useState('All');
@@ -82,7 +85,7 @@ export default function RecommendedForYou() {
             <span className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
               <Sparkles size={13} className="text-amber-400" />
             </span>
-            <span className="section-tag" style={{ color: GOLD }}>Recommended for You</span>
+            <span className="section-tag" style={{ color: GOLD }}>{t.recommended.heading}</span>
             <span
               className="text-[9px] px-2 py-0.5 rounded-full font-medium"
               style={{
@@ -91,11 +94,11 @@ export default function RecommendedForYou() {
                 color: GOLD_LIGHT,
               }}
             >
-              OMDB & Similar Titles
+              {t.recommended.badge}
             </span>
           </div>
           <p className="text-xs" style={{ color: MUTED }}>
-            Personalized movie recommendations based on genres you&apos;ve recently viewed.
+            {t.recommended.subtitle}
           </p>
         </div>
 
@@ -111,10 +114,10 @@ export default function RecommendedForYou() {
               border: '1px solid rgba(255,255,255,0.08)',
               color: MUTED,
             }}
-            title="Refresh recommendations"
+            title={t.recommended.refresh}
           >
             <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
-            <span>Refresh</span>
+            <span>{t.recommended.refresh}</span>
           </motion.button>
         </div>
       </div>
@@ -122,7 +125,7 @@ export default function RecommendedForYou() {
       {/* Genre Filter Pills based on recent views */}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2.5 mb-4">
         <span className="text-[10px] uppercase font-semibold mr-1 flex-shrink-0" style={{ color: DIM }}>
-          Your Genres:
+          {t.recommended.yourGenres}
         </span>
         <motion.button
           whileHover={{ scale: 1.04 }}
@@ -135,7 +138,7 @@ export default function RecommendedForYou() {
               : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: MUTED }
           }
         >
-          All Recently Viewed
+          {t.recommended.allRecentlyViewed}
         </motion.button>
         {recentGenres.map((g) => (
           <motion.button
@@ -150,7 +153,7 @@ export default function RecommendedForYou() {
                 : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: MUTED }
             }
           >
-            {g}
+            {getCategoryLabel(g, language)}
           </motion.button>
         ))}
       </div>
@@ -193,7 +196,7 @@ export default function RecommendedForYou() {
           >
             <Film size={28} className="mx-auto mb-2" style={{ color: DIM }} />
             <p className="text-xs" style={{ color: MUTED }}>
-              Browse or view movies to build your personalized recommendations list.
+              {t.recommended.empty}
             </p>
           </div>
         ) : (
@@ -280,7 +283,7 @@ export default function RecommendedForYou() {
                         color: '#0a0a0f',
                       }}
                     >
-                      <Eye size={12} /> View Details
+                      <Eye size={12} /> {t.recommended.viewDetails}
                     </span>
                   </div>
                 </div>
@@ -333,7 +336,7 @@ export default function RecommendedForYou() {
                 <div className="flex items-center gap-2">
                   <Sparkles size={14} style={{ color: GOLD }} />
                   <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: GOLD_LIGHT }}>
-                    Recommended Title
+                    {t.recommended.modalTitle}
                   </span>
                 </div>
                 <button
@@ -395,7 +398,7 @@ export default function RecommendedForYou() {
                         textDecoration: 'none',
                       }}
                     >
-                      <Inbox size={13} /> Request Agasobanuye Translation
+                      <Inbox size={13} /> {t.recommended.requestTranslation}
                     </Link>
 
                     <div className="flex gap-2">
@@ -409,7 +412,7 @@ export default function RecommendedForYou() {
                           textDecoration: 'none',
                         }}
                       >
-                        <Search size={11} /> Search Library
+                        <Search size={11} /> {t.recommended.searchLibrary}
                       </Link>
 
                       {selectedMovie.imdbID && (

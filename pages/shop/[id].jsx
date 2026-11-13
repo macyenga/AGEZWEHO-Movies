@@ -33,7 +33,7 @@ export default function ShopDetail({ item }) {
     </div>
   );
 
-  const waLink = `https://wa.me/${formatWhatsApp(item.seller_whatsapp)}?text=${encodeURIComponent(`Hi, I'm interested in "${item.title}" listed on Agezweho Shop.`)}`;
+  const waLink = `https://wa.me/${formatWhatsApp(item.seller_whatsapp)}?text=${encodeURIComponent(`Hi, I'm interested in "${item.title}" listed on Agasobanuye.rw Shop.`)}`;
 
   const handleShare = () => {
     if (navigator.share) {
@@ -45,7 +45,7 @@ export default function ShopDetail({ item }) {
 
   return (
     <div className="min-h-screen bg-deep">
-      <SEOHead title={item.title} description={item.description || item.title} canonical={`https://agezweho.com/shop/${item.id}`} />
+      <SEOHead title={item.title} description={item.description || item.title} canonical={`https://agasobanuye.rw/shop/${item.id}`} />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-20 pb-24">
@@ -142,7 +142,7 @@ export default function ShopDetail({ item }) {
               Contact via WhatsApp
             </motion.a>
             <p className="text-[10px] text-center mt-2" style={{ color: '#4a4a3a' }}>
-              Deal directly with the seller. Agezweho is not responsible for transactions.
+              Deal directly with the seller. Agasobanuye.rw is not responsible for transactions.
             </p>
           </div>
         </motion.div>

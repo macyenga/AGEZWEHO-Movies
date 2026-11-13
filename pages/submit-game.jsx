@@ -103,8 +103,8 @@ export default function SubmitGame() {
     <div className="min-h-screen bg-deep">
       <SEOHead
         title="Add Game / Modded App"
-        description="Submit your game or modded app to Agezweho Movies premium content library and earn money."
-        canonical="https://agezweho.com/submit-game"
+        description="Submit your game or modded app to Agasobanuye.rw premium content library and earn money."
+        canonical="https://agasobanuye.rw/submit-game"
       />
       <CinematicBackground />
 

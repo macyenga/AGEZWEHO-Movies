@@ -84,7 +84,7 @@ export default function SubmitShop() {
 
   return (
     <div className="min-h-screen bg-deep">
-      <SEOHead title="Sell an Item" description="List an item for sale on Agezweho Shop" canonical="https://agezweho.com/shop/submit" />
+      <SEOHead title="Sell an Item" description="List an item for sale on Agasobanuye.rw Shop" canonical="https://agasobanuye.rw/shop/submit" />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-20 pb-24">

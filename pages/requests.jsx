@@ -6,12 +6,14 @@ import AdBanner from '../components/ads/AdBanner';
 import SearchBar from '../components/SearchBar';
 import SEOHead from '../components/SEOHead';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   Star, ChevronUp, Send, Sparkles, CheckCircle2, Smartphone, Heart, Loader2, Phone, Crown,
   ArrowLeft, Inbox, Search, TrendingUp, Clock,
 } from 'lucide-react';
 
 export default function Requests({ requests: initial }) {
+  const { t } = useLanguage();
   const { user, isPro } = useAuth();
   const [requests, setRequests] = useState(initial || []);
   const [query, setQuery] = useState('');
@@ -146,7 +148,9 @@ export default function Requests({ requests: initial }) {
                 fontFamily: 'Cinzel,serif',
                 background: 'linear-gradient(135deg,#f5e4a8,#c9a84c)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>Movie Requests</h1>
+              }}>
+                {t.pages.requests.heading}
+              </h1>
               <p className="text-[10px]" style={{ color: '#6a6a5a' }}>Request and vote for movies to be added</p>
             </div>
           </div>

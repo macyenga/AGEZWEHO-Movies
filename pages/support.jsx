@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import {
-  ArrowLeft, HeartHandshake, Mail, Copy, Check, Share2,
-  Loader2, Users, TrendingUp
+  ArrowLeft, HeartHandshake, Mail, Copy, Check, Share2, Users, TrendingUp
 } from 'lucide-react';
+import SupportUs from '../components/SupportUs';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const GOLD = '#c9a84c';
 
@@ -55,53 +56,14 @@ const SHARE_TEXT = '🎬 Agasobanuye.rw — Rwanda\'s home for Agasobanuye movie
 
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'macyenga@gmail.com';
 
-const TIERS = [
-  { amount: 500,   label: 'A coffee for the server' },
-  { amount: 1000,  label: 'Funds an episode upload' },
-  { amount: 2000,  label: 'A full day of hosting' },
-  { amount: 5000,  label: 'Supports an uploader' },
-];
-
 export default function Support() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState(null);
-  const [selected, setSelected] = useState(1000);
-  const [customAmount, setCustomAmount] = useState('');
-  const [phone, setPhone] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   useEffect(() => {
     fetch('/api/donations/stats').then(r => r.json()).then(setStats).catch(() => {});
   }, []);
-
-  const amount = selected === 'custom' ? parseInt(customAmount, 10) : selected;
-
-  const handleDonate = async () => {
-    setError('');
-    if (!amount || Number.isNaN(amount) || amount < 100) {
-      setError('Minimum donation is 100 RWF.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/payments/initialize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, phone: phone || null }),
-      });
-      const data = await res.json().catch(() => ({}));
-
-      if (data.payment_url) {
-        window.location.assign(data.payment_url);
-        return;
-      }
-      setError(data.error || data.message || 'Could not start the payment. Please try again.');
-    } catch {
-      setError('Something went wrong. Please try again.');
-    }
-    setSubmitting(false);
-  };
 
   const handleShare = (p, text) => {
     if (p.url === null) {
@@ -140,7 +102,7 @@ export default function Support() {
               style={{ color:'#6a6a5a' }}
               onMouseEnter={e=>e.currentTarget.style.color=GOLD}
               onMouseLeave={e=>e.currentTarget.style.color='#6a6a5a'}>
-              <ArrowLeft size={13} /> Back
+              <ArrowLeft size={13} /> {t.pages.support.back}
             </motion.div>
           </Link>
         </motion.div>
@@ -158,7 +120,7 @@ export default function Support() {
             style={{ fontFamily:'Cinzel,serif',
               background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
               WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-            Support Agasobanuye.rw
+            {t.pages.support.heading}
           </h1>
           <div className="divider-gold w-20 mx-auto mb-4" />
           <p className="text-sm leading-relaxed" style={{ color:'#8a8778' }}>
@@ -199,97 +161,13 @@ export default function Support() {
           </motion.div>
         )}
 
-        {/* Donate card */}
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }}
-          className="p-6 rounded-2xl mb-6 relative overflow-hidden"
-          style={{ background:'rgba(14,14,22,0.85)', border:'1px solid rgba(201,168,76,0.22)', backdropFilter:'blur(20px)' }}>
-          <motion.div className="absolute inset-0 pointer-events-none"
-            style={{ background:'linear-gradient(105deg,transparent 30%,rgba(201,168,76,0.06) 50%,transparent 70%)' }}
-            animate={{ x:['-100%','200%'] }}
-            transition={{ repeat:Infinity, duration:4, ease:'easeInOut', repeatDelay:2 }}
+        {/* Reusable Support Us Section with Paypack Rwanda & WhatsApp Confirmation */}
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
+          <SupportUs
+            variant="full"
+            defaultAmount={1000}
+            merchantName="Agasobanuye"
           />
-
-          <div className="relative z-10">
-            <h2 className="font-cinzel font-semibold text-lg mb-1" style={{ fontFamily:'Cinzel,serif', color:'#e8c87a' }}>
-              Pay with MTN MoMo or Airtel Money via RwandaPay
-            </h2>
-            <p className="text-[11px] mb-5" style={{ color:'#6a6a5a' }}>
-              Choose an amount — you&apos;ll get a secure RwandaPay prompt on your phone. <a href="https://rwandapay.rw" target="_blank" rel="noreferrer" style={{ color:'#c9a84c' }}>rwandapay.rw</a>
-            </p>
-
-            {/* Amount tiers */}
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              {TIERS.map(t => {
-                const active = selected === t.amount;
-                return (
-                  <motion.button key={t.amount} whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-                    onClick={() => { setSelected(t.amount); setCustomAmount(''); }}
-                    className="rounded-xl px-3 py-3 text-left relative overflow-hidden"
-                    style={active
-                      ? { background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.45)' }
-                      : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)' }}>
-                    <div className="text-sm font-bold" style={{ color: active ? '#e8c87a' : '#e8e6f0' }}>
-                      {t.amount.toLocaleString()} <span style={{ color:'#6a6a5a', fontWeight:400, fontSize:10 }}>RWF</span>
-                    </div>
-                    <div className="text-[9px] mt-0.5" style={{ color: active ? '#c9a84c' : '#6a6a5a' }}>{t.label}</div>
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            {/* Custom amount */}
-            <div className="flex items-center gap-2 mb-4">
-              <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-                onClick={() => setSelected('custom')}
-                className="px-3 py-2.5 rounded-xl text-[11px] font-semibold flex-shrink-0"
-                style={selected === 'custom'
-                  ? { background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.45)', color:'#e8c87a' }
-                  : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', color:'#8a8778' }}>
-                Custom
-              </motion.button>
-              <input
-                type="number" min="100" step="100" placeholder="Your amount"
-                value={customAmount}
-                onChange={e => { setCustomAmount(e.target.value); setSelected('custom'); }}
-                className="flex-1 rounded-xl px-3 py-2.5 text-xs w-full outline-none"
-                style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', color:'#e8e6f0' }}
-              />
-            </div>
-
-            {/* Phone */}
-            <div className="mb-5">
-              <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color:'#6a6a5a' }}>
-                Your MoMo / Airtel number <span style={{ color:'#4a4a3a' }}>(optional)</span>
-              </label>
-              <input
-                type="tel" placeholder="07XXXXXXXX"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                className="w-full rounded-xl px-3 py-2.5 text-xs outline-none mb-4"
-                style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', color:'#e8e6f0' }}
-              />
-            </div>
-
-            {error && (
-              <div className="mb-3 px-3 py-2.5 rounded-xl text-[11px]" style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.25)', color:'#f87171' }}>
-                {error}
-              </div>
-            )}
-
-            <motion.button
-              whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-              disabled={submitting}
-              onClick={handleDonate}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold disabled:opacity-60"
-              style={{ background:'linear-gradient(135deg, rgba(201,168,76,0.95), rgba(160,120,40,0.95))', color:'#0a0808', boxShadow:'0 12px 30px rgba(201,168,76,0.18)' }}>
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : <HeartHandshake size={16} />}
-              {submitting ? 'Starting…' : `Donate ${(amount || 0).toLocaleString()} RWF`}
-            </motion.button>
-
-            <p className="text-center text-[9px] mt-3" style={{ color:'#4a4a3a' }}>
-              Pay with MTN MoMo or Airtel Money via RwandaPay — secure, instant. Murakoze cyane! · rwandapay.rw
-            </p>
-          </div>
         </motion.div>
 
         {/* Top supporters */}

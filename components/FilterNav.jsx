@@ -13,7 +13,7 @@ export default function FilterNav({ items = [], active = '', onSelect = () => {}
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1, duration: 0.4 }}
-      className="sticky top-[64px] z-40"
+      className="sticky top-[110px] md:top-[64px] z-40"
       style={{ background: 'rgba(10,10,16,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
       <div className={`relative ${WIDTHS[maxWidth] || 'max-w-6xl'} mx-auto px-4 sm:px-6`}>

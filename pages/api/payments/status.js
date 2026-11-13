@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../../../lib/server/supabase-admin';
 import { completeTransaction } from '../../../lib/server/transactions';
 import { getRwandaPayCollectionStatus, verifyCheckoutPayment, isRwandaPayPaid } from '../../../lib/server/payments';
+import { getPaypackTransactionStatus } from '../../../lib/server/paypack';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -24,14 +25,27 @@ export default async function handler(req, res) {
   // Supports both Hosted Checkout (GET /checkout/{tx_ref}/verify, no auth) and Collections (GET /collections/{ref}/status)
   // per https://rwandapay.rw/docs
   if (status === 'pending' && data.provider_reference) {
-    // 1) Collection status (authenticated)
-    const gateway = await getRwandaPayCollectionStatus(data.provider_reference);
-    if (gateway) {
-      gatewayRaw = gateway;
-      provider_status = gateway.collection_status || gateway.paypack_status || gateway.status || null;
-      if (isRwandaPayPaid(gateway)) {
-        const { transaction } = await completeTransaction(data.tx_ref, gateway.paypack_reference || data.provider_reference);
+    // 0) Direct Paypack API check (https://payments.paypack.rw)
+    const paypackCheck = await getPaypackTransactionStatus(data.provider_reference);
+    if (paypackCheck) {
+      gatewayRaw = paypackCheck.raw;
+      provider_status = paypackCheck.status;
+      if (paypackCheck.paid) {
+        const { transaction } = await completeTransaction(data.tx_ref, data.provider_reference);
         status = transaction?.status || 'completed';
+      }
+    }
+
+    // 1) Collection status (authenticated)
+    if (status === 'pending') {
+      const gateway = await getRwandaPayCollectionStatus(data.provider_reference);
+      if (gateway) {
+        gatewayRaw = gateway;
+        provider_status = gateway.collection_status || gateway.paypack_status || gateway.status || null;
+        if (isRwandaPayPaid(gateway)) {
+          const { transaction } = await completeTransaction(data.tx_ref, gateway.paypack_reference || data.provider_reference);
+          status = transaction?.status || 'completed';
+        }
       }
     }
 

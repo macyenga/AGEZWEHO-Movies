@@ -9,9 +9,12 @@ export default async function handler(req, res) {
   const like = `%${q}%`;
 
   const [movies, games, news, shop] = await Promise.all([
-    supabaseAdmin.from('movies').select('id, title, year, cover_url, status, type')
-      .or(`title.ilike.${like},overview.ilike.${like}`)
-      .limit(10),
+    supabaseAdmin
+      .from('movies')
+      .select('id, title, year, poster_url, genre, rating, language, overview, status, type')
+      .eq('status', 'approved')
+      .or(`title.ilike.${like},genre.ilike.${like},overview.ilike.${like}`)
+      .limit(12),
     supabaseAdmin.from('games').select('id, title, category, cover_url, status, premium, price')
       .or(`title.ilike.${like},overview.ilike.${like}`)
       .limit(10),
