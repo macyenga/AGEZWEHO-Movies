@@ -17,6 +17,8 @@ const ALLOWED_FIELDS = [
   'trailer_url',
   'uploaded_by',
   'uploader_momo_number',
+  'uploader_earnings',
+  'views',
   'featured',
   'status',
 ];
@@ -32,9 +34,30 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     const body = req.body || {};
+
+    if (body.action === 'bulk' && Array.isArray(body.ids) && body.ids.length > 0) {
+      const ids = body.ids.filter(Boolean);
+      if (body.bulkAction === 'approve' || body.bulkAction === 'reject') {
+        const nextStatus = body.bulkAction === 'approve' ? 'approved' : 'rejected';
+        const { error } = await supabaseAdmin
+          .from('movies')
+          .update({ status: nextStatus })
+          .in('id', ids);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ success: true, count: ids.length, status: nextStatus });
+      }
+      if (body.bulkAction === 'delete') {
+        const { error } = await supabaseAdmin.from('movies').delete().in('id', ids);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ success: true, count: ids.length });
+      }
+      return res.status(400).json({ error: 'Invalid bulkAction' });
+    }
+
     const movie = pickMovieUpdates(body);
     if (!movie.title) return res.status(400).json({ error: 'Title is required' });
-    if (!movie.status) movie.status = 'pending';
+    if (!movie.status) movie.status = 'approved';
+    if (movie.views === undefined) movie.views = 0;
 
     const { data, error } = await supabaseAdmin
       .from('movies')

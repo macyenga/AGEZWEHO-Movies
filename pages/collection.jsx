@@ -7,9 +7,10 @@ import { useCollection } from '../hooks/useCollection';
 import { Heart, Trash2, Film, ArrowRight, Star, BookOpen } from 'lucide-react';
 import AdBanner from '../components/ads/AdBanner';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getMediaTypeLabel } from '../lib/i18n';
 
 export default function Collection() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const { collection, removeFromCollection, clearCollection, loaded } = useCollection();
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -148,9 +149,18 @@ export default function Collection() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
                   transition={{ duration: 0.35, delay: i * 0.05 }}
+                  whileHover={{
+                    scale: 1.035,
+                    y: -4,
+                    transition: { type: 'spring', stiffness: 280, damping: 22, mass: 0.75 },
+                  }}
+                  whileTap={{ scale: 0.98 }}
                   layout
+                  data-testid={`watchlist-card-${movie.id}`}
+                  className="relative hover:z-20"
+                  style={{ willChange: 'transform' }}
                 >
-                  <div className="group relative rounded-xl overflow-hidden"
+                  <div className="group relative rounded-xl overflow-hidden transition-[border-color,box-shadow] duration-300 ease-out hover:border-[#c9a84c]/40"
                     style={{
                       background: 'linear-gradient(160deg,rgba(26,26,40,0.9),rgba(15,15,22,0.95))',
                       border: '1px solid rgba(255,255,255,0.06)',
@@ -159,21 +169,22 @@ export default function Collection() {
 
                     {/* Remove button */}
                     <motion.button
-                      initial={{ opacity: 0, scale: 0.7 }}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => removeFromCollection(movie.id)}
-                      className="absolute top-2 left-2 z-20 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ background: 'rgba(192,57,43,0.8)', backdropFilter: 'blur(4px)' }}
-                      title="Remove from collection"
+                      data-testid={`remove-watchlist-${movie.id}`}
+                      aria-label={`Remove ${movie.title}`}
+                      className="absolute top-2 left-2 z-20 w-7 h-7 rounded-full flex items-center justify-center opacity-90 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+                      style={{ background: 'rgba(192,57,43,0.85)', backdropFilter: 'blur(4px)' }}
+                      title="Remove from watchlist"
                     >
                       <Trash2 size={11} color="#fff" />
                     </motion.button>
 
                     {/* Saved heart badge */}
-                    <div className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(201,168,76,0.2)', border: '1px solid rgba(201,168,76,0.4)' }}>
-                      <Heart size={10} fill="#c9a84c" style={{ color: '#c9a84c' }} />
+                    <div className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(10,10,16,0.82)', border: '1px solid rgba(201,168,76,0.6)', backdropFilter: 'blur(6px)' }}>
+                      <Heart size={11} fill="#c9a84c" style={{ color: '#f5e4a8' }} />
                     </div>
 
                     <Link href={`/movies/${movie.id}`}>
@@ -193,7 +204,7 @@ export default function Collection() {
                           {movie.type && (
                             <div className="absolute bottom-2 left-2 z-10">
                               <span className={`badge ${movie.type==='Series'?'badge-blue':movie.type==='Anime'?'badge-purple':'badge-muted'}`}>
-                                {movie.type}
+                                {getMediaTypeLabel(movie.type, language)}
                               </span>
                             </div>
                           )}

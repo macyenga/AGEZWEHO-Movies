@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
-import { getMovies } from '../lib/supabase';
+import { getMovies, getComingSoonMovies } from '../lib/supabase';
 import CinematicBackground from '../components/CinematicBackground';
 import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
@@ -12,14 +12,16 @@ import RecommendedForYou from '../components/RecommendedForYou';
 import ComingSoonSection from '../components/ComingSoonSection';
 import TrendingNowSection from '../components/TrendingNowSection';
 import CategoryFilterBar from '../components/CategoryFilterBar';
-import { MOVIE_CATEGORIES, filterMovies, getCategoryCounts } from '../lib/movie-filters';
+import MovieSearchFilter from '../components/MovieSearchFilter';
+import { MOVIE_CATEGORIES, filterMovies, getCategoryCounts, getMovieFilterYears } from '../lib/movie-filters';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCollection } from '../hooks/useCollection';
 import { getCategoryLabel, getMediaTypeLabel } from '../lib/i18n';
 import {
   Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart, Upload,
   Newspaper, ShoppingBag, Gamepad2, Search, Sparkles,
   Star, Play, Eye, Tv, BookOpen, Compass, Swords, Theater, Laugh, Zap,
-  Ghost, Rocket, Wand2, Siren, MessageSquare
+  Ghost, Rocket, Wand2, Siren, MessageSquare, Bookmark
 } from 'lucide-react';
 
 const GOLD = '#c9a84c';
@@ -122,7 +124,7 @@ function ScrollRow({ title, icon:Icon, color, movies, link, onViewAll, id }) {
             </motion.button>
           </>
         )}
-        <div ref={rowRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+        <div ref={rowRef} className="flex gap-3 overflow-x-auto scrollbar-hide py-2.5 px-1"
           style={{ scrollBehavior:'smooth', WebkitOverflowScrolling:'touch' }}>
           {movies.map((m, i) => (
             <div key={m.id} className="flex-shrink-0" style={{ width:'clamp(140px,16vw,180px)' }}>
@@ -260,7 +262,9 @@ function ShopRowCard({ item, index }) {
 
 function HeroMovieSpotlight({ movie }) {
   const { language, t } = useLanguage();
+  const { toggleWatchlist, isInWatchlist } = useCollection();
   if (!movie) return null;
+  const saved = isInWatchlist(movie.id);
   return (
     <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
       <div className="relative rounded-2xl overflow-hidden"
@@ -343,6 +347,23 @@ function HeroMovieSpotlight({ movie }) {
                   <Download size={13} /> {t.spotlight.download}
                 </motion.div>
               </Link>
+              <motion.button
+                type="button"
+                onClick={() => toggleWatchlist(movie)}
+                whileHover={{ scale:1.03 }}
+                whileTap={{ scale:0.97 }}
+                data-testid="spotlight-watchlist-btn"
+                aria-pressed={saved}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer"
+                style={{
+                  background: saved ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.04)',
+                  border: saved ? '1px solid rgba(201,168,76,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                  color: saved ? '#f5e4a8' : '#b8b4a8',
+                }}
+              >
+                <Bookmark size={13} fill={saved ? '#c9a84c' : 'none'} />
+                <span>{saved ? t.card.inWatchlist : t.card.saveToWatchlist}</span>
+              </motion.button>
             </div>
           </motion.div>
         </div>
@@ -351,12 +372,14 @@ function HeroMovieSpotlight({ movie }) {
   );
 }
 
-export default function Home({ movies: initial }) {
+export default function Home({ movies: initial, comingSoon }) {
   const { language, t, tr } = useLanguage();
   const [movies, setMovies] = useState(initial || []);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [genreFilter, setGenreFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('All');
+  const [ratingFilter, setRatingFilter] = useState('All');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(!initial || initial.length === 0);
   const [stats, setStats] = useState(null);
@@ -391,17 +414,37 @@ export default function Home({ movies: initial }) {
     }
   }, [movies]);
 
-  useEffect(() => { setPage(1); }, [query, filter, genreFilter]);
+  useEffect(() => { setPage(1); }, [query, filter, genreFilter, yearFilter, ratingFilter]);
 
   const types = ['All', 'Movie', 'Series', 'Anime', 'Documentary'];
+  const availableYears = getMovieFilterYears(movies);
+  const hasActiveFilters = Boolean(
+    query.trim() || filter !== 'All' || genreFilter || yearFilter !== 'All' || ratingFilter !== 'All'
+  );
+
+  const resetAllFilters = () => {
+    setQuery('');
+    setFilter('All');
+    setGenreFilter('');
+    setYearFilter('All');
+    setRatingFilter('All');
+    setPage(1);
+  };
 
   const filtered = filterMovies(movies, {
     query,
     type: filter,
     category: genreFilter || 'All',
+    year: yearFilter,
+    minRating: ratingFilter,
   });
 
-  const categoryCounts = getCategoryCounts(movies, GENRES, { query, type: filter });
+  const categoryCounts = getCategoryCounts(movies, GENRES, {
+    query,
+    type: filter,
+    year: yearFilter,
+    minRating: ratingFilter,
+  });
 
   const noResult = movies.length > 0 && filtered.length === 0;
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
@@ -657,7 +700,7 @@ export default function Home({ movies: initial }) {
         <RecommendedForYou />
 
         {/* ══ COMING SOON ══ */}
-        <ComingSoonSection />
+        <ComingSoonSection items={comingSoon || undefined} />
 
         {/* ══ SHOP ROW ══ */}
         {shopItems.length > 0 && (
@@ -702,16 +745,14 @@ export default function Home({ movies: initial }) {
             <span className="section-tag">
               {filter === 'All' ? t.homeSections.allTitles : getMediaTypeLabel(filter, language)}
               {genreFilter ? ` · ${getCategoryLabel(genreFilter, language)}` : ''}
+              {yearFilter !== 'All' ? ` · ${yearFilter}` : ''}
+              {ratingFilter !== 'All' ? ` · ${ratingFilter}+ ★` : ''}
             </span>
             <div className="flex-1 divider-soft" />
-            {(genreFilter || filter !== 'All' || query) && (
+            {hasActiveFilters && (
               <button
                 type="button"
-                onClick={() => {
-                  setQuery('');
-                  setFilter('All');
-                  setGenreFilter('');
-                }}
+                onClick={resetAllFilters}
                 className="text-[10px] font-medium px-2 py-0.5 rounded-md cursor-pointer transition-colors"
                 style={{
                   background: 'rgba(201,168,76,0.1)',
@@ -722,11 +763,39 @@ export default function Home({ movies: initial }) {
                 {t.homeSections.reset}
               </button>
             )}
-            <span className="text-[11px]" style={{ color:MUTED }}>
+            <span className="text-[11px] tabular-nums" data-testid="explore-result-count" style={{ color:MUTED }}>
               {filtered.length} {filtered.length === 1 ? t.homeSections.titleSingular : t.homeSections.titlePlural}
               {totalPages > 1 && <span style={{ color:'#4a4a3a' }}> · p{page}/{totalPages}</span>}
             </span>
           </div>
+
+          {/* Search Filtering Component (Search + Genre + Year + Rating) */}
+          <MovieSearchFilter
+            query={query}
+            onQueryChange={(val) => {
+              setQuery(val);
+              setPage(1);
+            }}
+            genre={genreFilter || 'All'}
+            onGenreChange={(cat) => {
+              setGenreFilter(cat === 'All' ? '' : cat);
+              setPage(1);
+            }}
+            year={yearFilter}
+            onYearChange={(yr) => {
+              setYearFilter(yr);
+              setPage(1);
+            }}
+            minRating={ratingFilter}
+            onMinRatingChange={(rt) => {
+              setRatingFilter(rt);
+              setPage(1);
+            }}
+            availableYears={availableYears}
+            categories={GENRES}
+            onReset={resetAllFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
 
           {/* Horizontal scrolling category filter */}
           <CategoryFilterBar
@@ -763,7 +832,14 @@ export default function Home({ movies: initial }) {
                 {query
                   ? t.homeSections.notInLibrary
                   : tr('homeSections.noCategoryTitles', {
-                      category: getCategoryLabel(genreFilter || filter, language),
+                      category:
+                        genreFilter
+                          ? getCategoryLabel(genreFilter, language)
+                          : yearFilter !== 'All'
+                          ? yearFilter
+                          : ratingFilter !== 'All'
+                          ? `${ratingFilter}+ ★`
+                          : getMediaTypeLabel(filter, language),
                     })}
               </h3>
               <p className="text-xs mb-5" style={{ color:MUTED }}>
@@ -779,11 +855,7 @@ export default function Home({ movies: initial }) {
               <div className="flex gap-3 justify-center flex-wrap">
                 <button
                   type="button"
-                  onClick={() => {
-                    setQuery('');
-                    setFilter('All');
-                    setGenreFilter('');
-                  }}
+                  onClick={resetAllFilters}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
                   style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}
                 >
@@ -874,9 +946,12 @@ export default function Home({ movies: initial }) {
 
 export async function getServerSideProps() {
   try {
-    const movies = await getMovies();
-    return { props: { movies } };
+    const [movies, comingSoon] = await Promise.all([
+      getMovies(),
+      getComingSoonMovies(),
+    ]);
+    return { props: { movies, comingSoon: comingSoon || null } };
   } catch {
-    return { props: { movies: [] } };
+    return { props: { movies: [], comingSoon: null } };
   }
 }

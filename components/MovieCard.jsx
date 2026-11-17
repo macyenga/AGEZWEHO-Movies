@@ -1,12 +1,13 @@
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Star, Download, Tv2, Heart, Play } from 'lucide-react';
+import { Star, Download, Tv2, Heart, Play, Share2, Check } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { useMovieRatings } from '../hooks/useMovieRatings';
 import { useTrailer } from '../contexts/TrailerContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getCategoryLabel, getMediaTypeLabel } from '../lib/i18n';
+import { shareMovieLink } from '../lib/share';
 
 const PLATFORM_COLORS = {
   Netflix: '#E50914',
@@ -30,6 +31,16 @@ export default function MovieCard({ movie, index = 0 }) {
   const { openTrailer } = useTrailer();
   const { language, t, tr } = useLanguage();
   const [hoverStar, setHoverStar] = useState(0);
+  const [shareStatus, setShareStatus] = useState('idle');
+  const shareTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (shareTimerRef.current) {
+        clearTimeout(shareTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleMouse = e => {
     const rect = ref.current?.getBoundingClientRect();
@@ -61,31 +72,54 @@ export default function MovieCard({ movie, index = 0 }) {
     openTrailer(movie);
   };
 
+  const handleShare = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const result = await shareMovieLink({ movie, origin });
+
+    if (result.status === 'shared' || result.status === 'copied') {
+      setShareStatus(result.status);
+      if (shareTimerRef.current) clearTimeout(shareTimerRef.current);
+      shareTimerRef.current = setTimeout(() => {
+        setShareStatus('idle');
+      }, 2200);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity:0, y:24 }}
       whileInView={{ opacity:1, y:0 }}
       viewport={{ once:true, margin:'-30px' }}
       transition={{ duration:0.45, delay:(index%5)*0.06 }}
-      className="h-full"
+      className="h-full relative hover:z-20"
     >
       <motion.div
         ref={ref}
+        data-testid={`movie-card-${movie.id}`}
         style={{
           rotateX,
           rotateY,
           transformPerspective: 900,
+          willChange: 'transform',
           background:'linear-gradient(160deg,rgba(26,26,40,0.9) 0%,rgba(15,15,22,0.95) 100%)',
           border:'1px solid rgba(255,255,255,0.06)',
           boxShadow:'0 4px 24px rgba(0,0,0,0.5)',
-          transition:'border-color 0.3s, box-shadow 0.3s',
         }}
         onMouseMove={handleMouse}
-        whileHover={{ scale:1.03 }} whileTap={{ scale:0.98 }}
-        className="group relative rounded-xl overflow-hidden flex flex-col h-full"
+        whileHover={{
+          scale: 1.04,
+          y: -4,
+          transition: { type: 'spring', stiffness: 280, damping: 22, mass: 0.75 },
+        }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+        className="movie-card group relative rounded-xl overflow-hidden flex flex-col h-full transition-[border-color,box-shadow] duration-300 ease-out"
         onMouseEnter={e => {
-          e.currentTarget.style.borderColor='rgba(201,168,76,0.25)';
-          e.currentTarget.style.boxShadow='0 8px 40px rgba(0,0,0,0.6), 0 0 30px rgba(201,168,76,0.06)';
+          e.currentTarget.style.borderColor='rgba(201,168,76,0.35)';
+          e.currentTarget.style.boxShadow='0 14px 40px rgba(0,0,0,0.68), 0 0 28px rgba(201,168,76,0.12)';
         }}
         onMouseLeave={e => {
           x.set(0);
@@ -103,25 +137,20 @@ export default function MovieCard({ movie, index = 0 }) {
           data-testid={`watchlist-btn-${movie.id}`}
           aria-label={inWatchlist ? `${t.card.inWatchlistTitle}: ${movie.title}` : `${t.card.addToWatchlistTitle}: ${movie.title}`}
           aria-pressed={inWatchlist}
-          title={inWatchlist ? t.card.inWatchlistTitle : t.card.addToWatchlistTitle}
-          className="absolute top-2 left-2 z-30 h-8 px-2 rounded-full flex items-center justify-center gap-1 cursor-pointer transition-all opacity-95 group-hover:opacity-100"
+          title={inWatchlist ? t.card.inWatchlist : t.card.addToWatchlistTitle}
+          className="absolute top-2 left-2 z-30 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all opacity-95 group-hover:opacity-100"
           style={{
-            background: inWatchlist ? 'rgba(201,168,76,0.28)' : 'rgba(8,8,18,0.78)',
-            border: inWatchlist ? '1px solid rgba(201,168,76,0.75)' : '1px solid rgba(255,255,255,0.18)',
+            background: inWatchlist ? 'rgba(18,16,10,0.88)' : 'rgba(8,8,18,0.78)',
+            border: inWatchlist ? '1px solid rgba(201,168,76,0.82)' : '1px solid rgba(255,255,255,0.18)',
             backdropFilter: 'blur(6px)',
-            boxShadow: inWatchlist ? '0 0 12px rgba(201,168,76,0.35)' : '0 2px 8px rgba(0,0,0,0.45)',
+            boxShadow: inWatchlist ? '0 0 12px rgba(201,168,76,0.4)' : '0 2px 8px rgba(0,0,0,0.45)',
           }}
         >
           <Heart
-            size={13}
+            size={14}
             fill={inWatchlist ? '#c9a84c' : 'none'}
             style={{ color: inWatchlist ? '#f5e4a8' : '#e8e4d8' }}
           />
-          {inWatchlist && (
-            <span className="text-[9px] font-semibold tracking-wide" style={{ color: '#f5e4a8' }}>
-              {t.card.saved}
-            </span>
-          )}
         </motion.button>
 
         <Link href={`/movies/${movie.id}`} className="block cursor-pointer flex-1">
@@ -129,8 +158,7 @@ export default function MovieCard({ movie, index = 0 }) {
           <div className="relative aspect-[2/3] overflow-hidden">
             {movie.poster_url ? (
               <img src={movie.poster_url} alt={movie.title} loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-105"
-                style={{ transition:'transform 0.6s ease' }}
+                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
               />
             ) : null}
@@ -257,24 +285,60 @@ export default function MovieCard({ movie, index = 0 }) {
             </div>
           </div>
 
-          {/* Play Trailer Button */}
-          <motion.button
-            type="button"
-            onClick={handlePlayTrailer}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            data-testid={`play-trailer-btn-${movie.id}`}
-            aria-label={`${t.card.playTrailer} — ${movie.title}`}
-            className="w-full py-1.5 px-2.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-            style={{
-              background: 'rgba(201,168,76,0.12)',
-              border: '1px solid rgba(201,168,76,0.32)',
-              color: '#e8c87a',
-            }}
-          >
-            <Play size={11} fill="currentColor" />
-            <span>{t.card.playTrailer}</span>
-          </motion.button>
+          {/* Play Trailer & Share Actions */}
+          <div className="flex items-center gap-1.5">
+            <motion.button
+              type="button"
+              onClick={handlePlayTrailer}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              data-testid={`play-trailer-btn-${movie.id}`}
+              aria-label={`${t.card.playTrailer} — ${movie.title}`}
+              title={t.card.playTrailer}
+              className="flex-1 min-w-0 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
+              style={{
+                background: 'rgba(201,168,76,0.12)',
+                border: '1px solid rgba(201,168,76,0.32)',
+                color: '#e8c87a',
+              }}
+            >
+              <Play size={10} fill="currentColor" className="flex-shrink-0" />
+              <span>{t.card.playTrailerShort}</span>
+            </motion.button>
+
+            <motion.button
+              type="button"
+              onClick={handleShare}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              data-testid={`share-btn-${movie.id}`}
+              aria-label={tr('card.shareAria', { title: movie.title })}
+              title={tr('card.shareAria', { title: movie.title })}
+              className="flex-shrink-0 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
+              style={shareStatus !== 'idle' ? {
+                background: 'rgba(74,222,128,0.14)',
+                border: '1px solid rgba(74,222,128,0.4)',
+                color: '#86efac',
+              } : {
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                color: '#d6d2c4',
+              }}
+            >
+              {shareStatus !== 'idle' ? (
+                <Check size={10} className="flex-shrink-0" />
+              ) : (
+                <Share2 size={10} className="flex-shrink-0" />
+              )}
+              <span>
+                {shareStatus === 'shared'
+                  ? t.card.shared
+                  : shareStatus === 'copied'
+                  ? t.card.copied
+                  : t.card.share}
+              </span>
+            </motion.button>
+          </div>
         </div>
       </motion.div>
     </motion.div>

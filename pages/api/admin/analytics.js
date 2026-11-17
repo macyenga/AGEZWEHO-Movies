@@ -25,6 +25,10 @@ export default async function handler(req, res) {
     .from('games')
     .select('id, title, price');
 
+  const { data: movies } = await supabaseAdmin
+    .from('movies')
+    .select('id, title, views, genre, status');
+
   const { data: requests } = await supabaseAdmin
     .from('requests')
     .select('id, title, votes, donation_total, donation_goal');
@@ -86,23 +90,46 @@ export default async function handler(req, res) {
   }
   topGames = topGames.sort((a, b) => b.revenue - a.revenue).slice(0, 20);
 
+  const totalViews = (movies || []).reduce((sum, m) => sum + (Number(m.views) || 0), 0);
+  const topMovies = [...(movies || [])]
+    .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
+    .slice(0, 10)
+    .map((m) => ({
+      id: m.id,
+      title: m.title,
+      genre: m.genre || 'Other',
+      views: Number(m.views) || 0,
+    }));
+
+  const genreCounts = {};
+  for (const m of movies || []) {
+    const g = m.genre || 'Uncategorized';
+    genreCounts[g] = (genreCounts[g] || 0) + 1;
+  }
+  const moviesByGenre = Object.entries(genreCounts)
+    .map(([genre, count]) => ({ genre, count }))
+    .sort((a, b) => b.count - a.count);
+
   const totalByStatus = {
     pending: 0, completed: 0, cancelled: 0, refunded: 0,
   };
-  const { data: completedCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'completed');
-  const { data: pendingCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-  const { data: cancelledCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'cancelled');
-  const { data: refundedCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'refunded');
-  totalByStatus.completed = completedCount?.length || 0;
-  totalByStatus.pending = pendingCount?.length || 0;
-  totalByStatus.cancelled = cancelledCount?.length || 0;
-  totalByStatus.refunded = refundedCount?.length || 0;
+  const { count: completedCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'completed');
+  const { count: pendingCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+  const { count: cancelledCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'cancelled');
+  const { count: refundedCount } = await supabaseAdmin.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'refunded');
+  totalByStatus.completed = completedCount || 0;
+  totalByStatus.pending = pendingCount || 0;
+  totalByStatus.cancelled = cancelledCount || 0;
+  totalByStatus.refunded = refundedCount || 0;
 
   return res.status(200).json({
     totalRevenue,
     gameSalesTotal,
     donationTotal,
     directDonationTotal,
+    totalViews,
+    topMovies,
+    moviesByGenre,
     revenueByPeriod: Object.values(revenueByPeriod).sort((a, b) => a.date.localeCompare(b.date)).slice(-90),
     topRequests,
     topGames,

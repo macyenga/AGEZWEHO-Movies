@@ -6,7 +6,9 @@ import SEOHead from '../../components/SEOHead';
 import CinematicBackground from '../../components/CinematicBackground';
 import AdBanner from '../../components/ads/AdBanner';
 import { useDonate } from '../../contexts/DonateContext';
-import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign } from 'lucide-react';
+import { useCollection } from '../../hooks/useCollection';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2, Share2, Copy, Check, PlayCircle, DollarSign, Bookmark } from 'lucide-react';
 
 const SITE_URL = 'https://agasobanuye.rw';
 
@@ -20,6 +22,9 @@ const sharePlatforms = [
 export default function MovieDetail({ movie }) {
   const [copiedShare, setCopiedShare] = useState(false);
   const { openDonate } = useDonate();
+  const { toggleWatchlist, isInWatchlist } = useCollection();
+  const { t } = useLanguage();
+  const inWatchlist = movie?.id ? isInWatchlist(movie.id) : false;
 
   useEffect(() => {
     if (!movie?.genre && !movie?.title) return;
@@ -273,6 +278,24 @@ const seoKeywords = `${movie.title} download, ${movie.title} ${movie.year || ''}
                   <Download size={15} /> Request Link
                 </Link>
               )}
+              <motion.button
+                type="button"
+                onClick={() => toggleWatchlist(movie)}
+                whileHover={{ scale:1.02 }}
+                whileTap={{ scale:0.98 }}
+                data-testid="detail-watchlist-btn"
+                aria-pressed={inWatchlist}
+                aria-label={inWatchlist ? `${t.card.inWatchlistTitle}: ${movie.title}` : `${t.card.addToWatchlistTitle}: ${movie.title}`}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                style={{
+                  background: inWatchlist ? 'rgba(201,168,76,0.22)' : 'rgba(255,255,255,0.04)',
+                  border: inWatchlist ? '1px solid rgba(201,168,76,0.6)' : '1px solid rgba(255,255,255,0.12)',
+                  color: inWatchlist ? '#f5e4a8' : '#e8e4d8',
+                }}
+              >
+                <Bookmark size={15} fill={inWatchlist ? 'currentColor' : 'none'} />
+                <span>{inWatchlist ? t.card.inWatchlist : t.card.saveToWatchlist}</span>
+              </motion.button>
 </div>
           </motion.div>
 

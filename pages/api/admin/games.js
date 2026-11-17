@@ -3,6 +3,7 @@ import { requireAdmin } from '../../../lib/server/admin-auth';
 
 const ALLOWED_FIELDS = [
   'title',
+  'type',
   'category',
   'version',
   'rating',
@@ -24,11 +25,43 @@ function pickGameUpdates(body) {
 export default async function handler(req, res) {
   if (!(await requireAdmin(req, res))) return;
 
+  if (req.method === 'POST') {
+    const payload = pickGameUpdates(req.body);
+    if (!payload.title || !String(payload.title).trim()) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    const isPremium = Boolean(payload.premium);
+    const parsedPrice = isPremium ? Math.max(0, parseInt(payload.price || 500, 10) || 0) : 0;
+
+    const { data, error } = await supabaseAdmin
+      .from('games')
+      .insert([{
+        type: 'Game',
+        category: 'Action',
+        rating: '4.8',
+        links: [],
+        ...payload,
+        title: String(payload.title).trim(),
+        premium: isPremium,
+        price: parsedPrice,
+        status: payload.status || 'approved',
+      }])
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(201).json({ game: data });
+  }
+
   if (req.method === 'PATCH') {
     const { id, ...body } = req.body || {};
     if (!id) return res.status(400).json({ error: 'Game ID required' });
 
     const updates = pickGameUpdates(body);
+    if (updates.price !== undefined) {
+      updates.price = Math.max(0, parseInt(updates.price, 10) || 0);
+    }
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No valid updates provided' });
     }

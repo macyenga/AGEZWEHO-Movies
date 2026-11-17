@@ -5,6 +5,28 @@ export default async function handler(req, res) {
   const admin = await requireAdmin(req, res);
   if (!admin) return;
 
+  if (req.method === 'PATCH') {
+    const { id, resolved, admin_note } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'Contact ID required' });
+
+    const updates = {};
+    if (typeof resolved === 'boolean') updates.resolved = resolved;
+    if (admin_note !== undefined) updates.admin_note = String(admin_note || '');
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid updates provided' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('contacts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ contact: data });
+  }
+
   if (req.method === 'DELETE') {
     const { id } = req.body || {};
     if (!id) return res.status(400).json({ error: 'Contact ID required' });

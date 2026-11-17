@@ -6,33 +6,52 @@ export default async function handler(req, res) {
 
   if (!(await requireAdmin(req, res))) return;
 
-  const [pendingMovies, pendingTxs, completedTxs, contacts, admins, completedDonations, allMovies, allRequests, allGames, allNews, allShop] = await Promise.all([
-    supabaseAdmin.from('movies').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(50),
-    supabaseAdmin.from('transactions').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(50),
-    supabaseAdmin.from('transactions').select('*').eq('status', 'completed').order('created_at', { ascending: false }).limit(50),
-    supabaseAdmin.from('contacts').select('*').order('created_at', { ascending: false }).limit(50),
-    supabaseAdmin.from('admins').select('id, email, created_at'),
-    supabaseAdmin.from('donations').select('*').order('created_at', { ascending: false }).limit(50),
-    supabaseAdmin.from('movies').select('*').order('created_at', { ascending: false }).limit(100),
-    supabaseAdmin.from('requests').select('*').order('created_at', { ascending: false }).limit(100),
-    supabaseAdmin.from('games').select('*').order('created_at', { ascending: false }).limit(100),
-    supabaseAdmin.from('news').select('*').order('created_at', { ascending: false }).limit(100),
-    supabaseAdmin.from('shop').select('*').order('created_at', { ascending: false }).limit(100),
+  const [
+    pendingMovies,
+    pendingTxs,
+    completedTxs,
+    contacts,
+    admins,
+    completedDonations,
+    allMovies,
+    allRequests,
+    allGames,
+    allNews,
+    allShop,
+    comingSoon,
+    subscriptions,
+    payouts,
+  ] = await Promise.all([
+    supabaseAdmin.from('movies').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('transactions').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('transactions').select('*').eq('status', 'completed').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('contacts').select('*').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('admins').select('id, user_id, email, created_at'),
+    supabaseAdmin.from('donations').select('*').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('movies').select('*').order('created_at', { ascending: false }).limit(200),
+    supabaseAdmin.from('requests').select('*').order('created_at', { ascending: false }).limit(200),
+    supabaseAdmin.from('games').select('*').order('created_at', { ascending: false }).limit(200),
+    supabaseAdmin.from('news').select('*').order('created_at', { ascending: false }).limit(200),
+    supabaseAdmin.from('shop').select('*').order('created_at', { ascending: false }).limit(200),
+    supabaseAdmin.from('coming_soon').select('*').order('releaseDate', { ascending: true }).limit(100),
+    supabaseAdmin.from('subscriptions').select('*').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('payouts').select('*').order('created_at', { ascending: false }).limit(100),
   ]);
 
-  const userIds = [...new Set([
-    ...(pendingTxs.data || []).filter(t => t.user_id).map(t => t.user_id),
-    ...(completedTxs.data || []).filter(t => t.user_id).map(t => t.user_id),
-  ])];
-
+  let registeredUsers = [];
   let userMap = {};
-  if (userIds.length > 0) {
+  try {
     const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-    if (users) {
-      userMap = Object.fromEntries(
-        users.users.filter(u => userIds.includes(u.id)).map(u => [u.id, u.email])
-      );
+    if (users?.users) {
+      registeredUsers = users.users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        created_at: u.created_at,
+      }));
+      userMap = Object.fromEntries(users.users.map((u) => [u.id, u.email]));
     }
+  } catch {
+    // ignore user list errors in limited auth configurations
   }
 
   const gameEarnings = {};
@@ -62,12 +81,16 @@ export default async function handler(req, res) {
     completedTransactions: completedTxs.data || [],
     contacts: contacts.data || [],
     admins: admins.data || [],
+    registeredUsers,
     completedDonations: completedDonations.data || [],
     allMovies: allMovies.data || [],
     allRequests: allRequests.data || [],
     allGames: allGames.data || [],
     allNews: allNews.data || [],
     allShop: allShop.data || [],
+    comingSoon: comingSoon.data || [],
+    subscriptions: subscriptions.data || [],
+    payouts: payouts.data || [],
     gameEarnings,
     requestDonations,
     movieDonations,

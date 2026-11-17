@@ -10,9 +10,11 @@ import {
   Star,
   Tv2,
   ArrowRight,
+  Bookmark,
 } from 'lucide-react';
 import { useTrailer } from '../contexts/TrailerContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCollection } from '../hooks/useCollection';
 import { formatViewCountLocalized, getCategoryLabel } from '../lib/i18n';
 import {
   getHighQualityThumbnailUrl,
@@ -27,6 +29,7 @@ export default function TrendingNowSection({ movies = [] }) {
   const sliderRef = useRef(null);
   const { openTrailer } = useTrailer();
   const { language, t, tr } = useLanguage();
+  const { toggleWatchlist, isInWatchlist } = useCollection();
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
@@ -127,7 +130,7 @@ export default function TrendingNowSection({ movies = [] }) {
       <div
         ref={sliderRef}
         data-testid="trending-slider"
-        className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-proximity pb-2"
+        className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-proximity py-2.5 px-1"
         style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
       >
         {topTrending.map((movie, idx) => {
@@ -141,7 +144,14 @@ export default function TrendingNowSection({ movies = [] }) {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: idx * 0.05 }}
-              className="group snap-start flex-shrink-0 w-[268px] sm:w-[296px] lg:w-[310px] glass-card glass-card-hover rounded-2xl overflow-hidden flex flex-col"
+              whileHover={{
+                scale: 1.03,
+                y: -4,
+                transition: { type: 'spring', stiffness: 280, damping: 22, mass: 0.75 },
+              }}
+              whileTap={{ scale: 0.99 }}
+              style={{ willChange: 'transform' }}
+              className="group relative hover:z-20 snap-start flex-shrink-0 w-[268px] sm:w-[296px] lg:w-[310px] glass-card glass-card-hover rounded-2xl overflow-hidden flex flex-col"
             >
               {/* High-Quality Thumbnail */}
               <Link href={`/movies/${movie.id}`} className="relative block aspect-[16/10] overflow-hidden bg-[#13131e]">
@@ -284,7 +294,7 @@ export default function TrendingNowSection({ movies = [] }) {
                     onClick={() => openTrailer(movie)}
                     data-testid={`trending-trailer-${movie.id}`}
                     aria-label={`${t.card.playTrailer} — ${movie.title}`}
-                    className="py-1.5 px-3 rounded-lg text-[11px] font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
+                    className="py-1.5 px-2.5 rounded-lg text-[11px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
                     style={{
                       background: 'rgba(255,255,255,0.04)',
                       border: '1px solid rgba(255,255,255,0.1)',
@@ -293,6 +303,22 @@ export default function TrendingNowSection({ movies = [] }) {
                   >
                     <Play size={10} fill="currentColor" />
                     <span>{t.trending.trailer}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleWatchlist(movie)}
+                    data-testid={`trending-watchlist-${movie.id}`}
+                    aria-pressed={isInWatchlist(movie.id)}
+                    aria-label={isInWatchlist(movie.id) ? `${t.card.inWatchlistTitle}: ${movie.title}` : `${t.card.addToWatchlistTitle}: ${movie.title}`}
+                    title={isInWatchlist(movie.id) ? t.card.inWatchlistTitle : t.card.addToWatchlistTitle}
+                    className="w-8 h-8 rounded-lg inline-flex items-center justify-center cursor-pointer shrink-0 transition-colors"
+                    style={{
+                      background: isInWatchlist(movie.id) ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.04)',
+                      border: isInWatchlist(movie.id) ? '1px solid rgba(201,168,76,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                      color: isInWatchlist(movie.id) ? '#f5e4a8' : '#b8b4a8',
+                    }}
+                  >
+                    <Bookmark size={12} fill={isInWatchlist(movie.id) ? '#c9a84c' : 'none'} />
                   </button>
                 </div>
               </div>

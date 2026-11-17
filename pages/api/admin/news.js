@@ -14,6 +14,30 @@ function pickNewsUpdates(body) {
 export default async function handler(req, res) {
   if (!(await requireAdmin(req, res))) return;
 
+  if (req.method === 'POST') {
+    const payload = pickNewsUpdates(req.body);
+    if (!payload.title || !String(payload.title).trim()) {
+      return res.status(400).json({ error: 'News title is required' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('news')
+      .insert([{
+        category: 'Amakuru',
+        author_name: 'Agasobanuye.rw News',
+        content: '',
+        likes: 0,
+        ...payload,
+        title: String(payload.title).trim(),
+        status: payload.status || 'approved',
+      }])
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(201).json({ news: data });
+  }
+
   if (req.method === 'PATCH') {
     const { id, ...body } = req.body || {};
     if (!id) return res.status(400).json({ error: 'News ID required' });

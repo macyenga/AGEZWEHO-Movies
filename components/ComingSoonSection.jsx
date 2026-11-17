@@ -73,8 +73,14 @@ export default function ComingSoonSection({ items }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-20px' }}
               transition={{ duration: 0.4, delay: Math.min(idx, 5) * 0.05 }}
-              whileHover={{ y: -3 }}
-              className="glass-card glass-card-hover rounded-2xl p-3 flex gap-3.5 items-stretch"
+              whileHover={{
+                scale: 1.025,
+                y: -4,
+                transition: { type: 'spring', stiffness: 280, damping: 22, mass: 0.75 },
+              }}
+              whileTap={{ scale: 0.99 }}
+              style={{ willChange: 'transform' }}
+              className="group relative hover:z-20 glass-card glass-card-hover rounded-2xl p-3 flex gap-3.5 items-stretch"
             >
               {/* Poster */}
               <div className="relative w-24 sm:w-28 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 bg-[#13131e]">
@@ -83,7 +89,7 @@ export default function ComingSoonSection({ items }) {
                     src={movie.poster_url}
                     alt={`${movie.title} poster`}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';

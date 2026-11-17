@@ -34,8 +34,22 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'DELETE') {
-    const { id } = req.body;
+    const { id } = req.body || {};
     if (!id) return res.status(400).json({ error: 'Admin ID required' });
+
+    const { data: adminsList, error: fetchErr } = await supabaseAdmin
+      .from('admins')
+      .select('id, user_id, email');
+    if (fetchErr) return res.status(500).json({ error: fetchErr.message });
+
+    const target = (adminsList || []).find((a) => a.id === id);
+    if (!target) return res.status(404).json({ error: 'Admin record not found' });
+    if (target.user_id === user.id || target.email === user.email) {
+      return res.status(400).json({ error: 'Cannot remove your own active admin account' });
+    }
+    if ((adminsList || []).length <= 1) {
+      return res.status(400).json({ error: 'At least one admin must remain' });
+    }
 
     const { error } = await supabaseAdmin.from('admins').delete().eq('id', id);
     if (error) return res.status(500).json({ error: error.message });

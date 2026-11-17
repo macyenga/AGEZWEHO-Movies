@@ -149,7 +149,17 @@ body::after {
 }
 
 /* ── Movie card ── */
-.movie-card { transform-style: preserve-3d; }
+.movie-card {
+  transform-style: preserve-3d;
+  transform-origin: center center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .movie-card,
+  .glass-card-hover {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  }
+}
 
 /* ── Badge ── */
 .badge { font-size: 0.62rem; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
