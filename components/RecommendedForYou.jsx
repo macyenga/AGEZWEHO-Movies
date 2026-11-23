@@ -77,23 +77,15 @@ export default function RecommendedForYou() {
   };
 
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-12">
+    <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 mb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
-              <Sparkles size={13} className="text-amber-400" />
-            </span>
-            <span className="section-tag" style={{ color: GOLD }}>{t.recommended.heading}</span>
-            <span
-              className="text-[9px] px-2 py-0.5 rounded-full font-medium"
-              style={{
-                background: 'rgba(201,168,76,0.1)',
-                border: '1px solid rgba(201,168,76,0.25)',
-                color: GOLD_LIGHT,
-              }}
-            >
+          <div className="flex items-baseline gap-3 mb-1">
+            <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+              {t.recommended.heading}
+            </h2>
+            <span className="text-xs" style={{ color: GOLD_LIGHT }}>
               {t.recommended.badge}
             </span>
           </div>
@@ -104,57 +96,54 @@ export default function RecommendedForYou() {
 
         {/* Controls */}
         <div className="flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
+            type="button"
             onClick={handleRefresh}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors hover:text-amber-200"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.08)',
-              color: MUTED,
+              color: '#a39f92',
             }}
             title={t.recommended.refresh}
           >
-            <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
+            <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
             <span>{t.recommended.refresh}</span>
-          </motion.button>
+          </button>
         </div>
       </div>
 
-      {/* Genre Filter Pills based on recent views */}
+      {/* Genre Segmented Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2.5 mb-4">
-        <span className="text-[10px] uppercase font-semibold mr-1 flex-shrink-0" style={{ color: DIM }}>
+        <span className="text-[11px] font-medium mr-1.5 flex-shrink-0" style={{ color: '#706c5f' }}>
           {t.recommended.yourGenres}
         </span>
-        <motion.button
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
+        <button
+          type="button"
           onClick={() => handleSelectGenre('All')}
-          className="flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-semibold transition-all"
+          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
           style={
             activeGenre === 'All'
-              ? { background: 'rgba(201,168,76,0.2)', border: '1px solid rgba(201,168,76,0.5)', color: GOLD_LIGHT }
-              : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: MUTED }
+              ? { background: 'rgba(201,168,76,0.16)', border: '1px solid rgba(201,168,76,0.45)', color: GOLD_LIGHT }
+              : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: MUTED }
           }
         >
           {t.recommended.allRecentlyViewed}
-        </motion.button>
+        </button>
         {recentGenres.map((g) => (
-          <motion.button
+          <button
+            type="button"
             key={g}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
             onClick={() => handleSelectGenre(g)}
-            className="flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-medium transition-all"
+            className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             style={
               activeGenre === g
-                ? { background: 'rgba(201,168,76,0.2)', border: '1px solid rgba(201,168,76,0.5)', color: GOLD_LIGHT }
-                : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: MUTED }
+                ? { background: 'rgba(201,168,76,0.16)', border: '1px solid rgba(201,168,76,0.45)', color: GOLD_LIGHT }
+                : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: MUTED }
             }
           >
             {getCategoryLabel(g, language)}
-          </motion.button>
+          </button>
         ))}
       </div>
 
@@ -162,27 +151,31 @@ export default function RecommendedForYou() {
       <div className="relative group">
         {recommendations.length > 4 && (
           <>
-            <motion.button
+            <button
+              type="button"
               onClick={() => scroll(-1)}
-              className="absolute left-0 top-0 bottom-0 z-20 w-10 flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Scroll recommendations left"
+              className="absolute left-0 top-0 bottom-0 z-20 w-10 flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               style={{ background: 'linear-gradient(90deg, rgba(10,10,15,0.9), transparent)' }}
             >
               <ChevronLeft size={20} style={{ color: GOLD }} />
-            </motion.button>
-            <motion.button
+            </button>
+            <button
+              type="button"
               onClick={() => scroll(1)}
-              className="absolute right-0 top-0 bottom-0 z-20 w-10 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Scroll recommendations right"
+              className="absolute right-0 top-0 bottom-0 z-20 w-10 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               style={{ background: 'linear-gradient(270deg, rgba(10,10,15,0.9), transparent)' }}
             >
               <ChevronRight size={20} style={{ color: GOLD }} />
-            </motion.button>
+            </button>
           </>
         )}
 
         {loading ? (
-          <div className="flex gap-3 overflow-hidden pb-3">
+          <div className="flex gap-3.5 overflow-hidden pb-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex-shrink-0" style={{ width: 'clamp(150px, 18vw, 190px)' }}>
+              <div key={i} className="flex-shrink-0" style={{ width: 'clamp(155px, 17vw, 195px)' }}>
                 <div className="shimmer aspect-[2/3] rounded-xl mb-2" />
                 <div className="shimmer h-3 rounded w-3/4 mb-1.5" />
                 <div className="shimmer h-2 rounded w-1/2" />
@@ -202,76 +195,60 @@ export default function RecommendedForYou() {
         ) : (
           <div
             ref={scrollRef}
-            className="flex gap-3.5 overflow-x-auto scrollbar-hide pb-3 pt-1"
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-3 pt-1"
             style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
           >
             {recommendations.map((movie, idx) => (
               <motion.div
                 key={movie.id || movie.imdbID || idx}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
                 whileHover={{ scale: 1.03, y: -3 }}
                 onClick={() => setSelectedMovie(movie)}
-                className="flex-shrink-0 cursor-pointer rounded-xl overflow-hidden group/card"
+                className="flex-shrink-0 cursor-pointer rounded-xl overflow-hidden group/card transition-colors hover:border-amber-400/40"
                 style={{
-                  width: 'clamp(150px, 18vw, 190px)',
-                  background: 'linear-gradient(160deg, rgba(26,26,40,0.85) 0%, rgba(15,15,22,0.95) 100%)',
-                  border: '1px solid rgba(201,168,76,0.15)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                  width: 'clamp(155px, 17vw, 195px)',
+                  background: 'rgba(15,15,24,0.9)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.45)',
                 }}
               >
                 {/* Poster */}
-                <div className="relative aspect-[2/3] overflow-hidden bg-black/40">
+                <div className="relative aspect-[2/3] overflow-hidden bg-[#12121b]">
                   {movie.poster_url ? (
                     <img
                       src={movie.poster_url}
                       alt={movie.title}
                       loading="lazy"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
                       onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=500&auto=format&fit=crop&q=80';
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
                       }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-900/60">
-                      <Film size={28} style={{ color: DIM }} />
-                    </div>
-                  )}
+                  ) : null}
+                  <div
+                    className="w-full h-full items-center justify-center flex-col gap-1.5 px-3 text-center"
+                    style={{
+                      display: movie.poster_url ? 'none' : 'flex',
+                      background: 'linear-gradient(145deg, #171724 0%, #0d0d14 100%)',
+                    }}
+                  >
+                    <Film size={24} style={{ color: GOLD, opacity: 0.45 }} />
+                    <span className="text-[11px] font-medium line-clamp-2" style={{ color: '#9e9a8d' }}>
+                      {movie.title}
+                    </span>
+                  </div>
 
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 poster-fade" />
 
-                  {/* Matched Genre Tag */}
-                  {movie.matchedGenre && (
-                    <div className="absolute top-2 left-2 z-10">
-                      <span
-                        className="text-[8px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider backdrop-blur-md"
-                        style={{
-                          background: 'rgba(0,0,0,0.65)',
-                          border: '1px solid rgba(201,168,76,0.35)',
-                          color: GOLD_LIGHT,
-                        }}
-                      >
-                        {movie.matchedGenre}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Year */}
                   {movie.year && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <span
-                        className="text-[9px] px-1.5 py-0.5 rounded font-medium backdrop-blur-md"
-                        style={{
-                          background: 'rgba(0,0,0,0.65)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          color: '#e8e4d8',
-                        }}
-                      >
-                        {movie.year}
-                      </span>
-                    </div>
+                    <span
+                      className="absolute top-2.5 right-2.5 z-10 text-[10px] font-medium tabular-nums px-1.5 py-0.5 rounded"
+                      style={{ background: 'rgba(10,10,16,0.75)', color: '#e8e4d8' }}
+                    >
+                      {movie.year}
+                    </span>
                   )}
 
                   {/* Hover action prompt */}

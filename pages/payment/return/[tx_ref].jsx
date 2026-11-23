@@ -17,6 +17,7 @@ export default function PaymentReturn() {
   const status = router.query.status;
   const reference = router.query.reference;
   const [outcome, setOutcome] = useState('checking'); // checking | success | failed | pending
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     if (!txRef) return;
@@ -82,7 +83,7 @@ export default function PaymentReturn() {
             <>
               <Loader2 size={42} className="mx-auto mb-4 animate-spin" style={{ color: '#c9a84c' }} />
               <h1 className="font-cinzel text-lg mb-2" style={{ fontFamily: 'Cinzel,serif', color: '#e8e6f0' }}>Confirming payment…</h1>
-              <p className="text-xs" style={{ color: '#6a6a5a' }}>Checking RwandaPay for your payment. This should take a few seconds.</p>
+              <p className="text-xs" style={{ color: '#6a6a5a' }}>Checking MoMo Pay 156833 / Paypack confirmation status. This should take a few seconds.</p>
             </>
           )}
 
@@ -157,10 +158,14 @@ export default function PaymentReturn() {
                     Telegram
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                    onClick={() => { navigator.clipboard?.writeText(SITE_URL); alert('Link copied!'); }}
-                    className="py-2 rounded-xl text-[10px] font-semibold"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(SITE_URL);
+                      setCopiedLink(true);
+                      setTimeout(() => setCopiedLink(false), 2000);
+                    }}
+                    className="py-2 rounded-xl text-[10px] font-semibold cursor-pointer"
                     style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', color: '#e8c87a' }}>
-                    Copy Link
+                    {copiedLink ? 'Copied!' : 'Copy Link'}
                   </motion.button>
                 </div>
               </div>

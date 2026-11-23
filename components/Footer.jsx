@@ -1,21 +1,36 @@
 import Link from 'next/link';
-import { Film, MessageCircle, Camera, Music2, HeartHandshake, ArrowUpRight } from 'lucide-react';
-import { getSocialConfig, getSocialLinks } from '../lib/social-config';
+import {
+  Film,
+  Send,
+  MessageCircle,
+  Camera,
+  Music2,
+  Play,
+  Globe,
+  AtSign,
+  HeartHandshake,
+  ArrowUpRight,
+} from 'lucide-react';
+import { getSocialConfig, getAllSocialLinks } from '../lib/social-config';
 import { useDonate } from '../contexts/DonateContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const GOLD = '#c9a84c';
 const SOCIAL_ICONS = {
+  telegram: Send,
   whatsapp: MessageCircle,
   instagram: Camera,
   tiktok: Music2,
+  youtube: Play,
+  facebook: Globe,
+  x: AtSign,
 };
 
 export default function Footer() {
   const { openDonate } = useDonate();
   const { t, tr } = useLanguage();
   const config = getSocialConfig();
-  const socialLinks = getSocialLinks();
+  const socialLinks = getAllSocialLinks();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [

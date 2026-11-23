@@ -6,7 +6,14 @@ import {
   isValidRwandaPhone,
   PAYPACK_MERCHANT_NAME,
 } from '../../../lib/server/paypack';
-import { buildWhatsAppConfirmationUrl } from '../../../lib/paypack-client';
+import {
+  buildWhatsAppConfirmationUrl,
+  formatRwf,
+  resolveMinimumPaymentAmount,
+  resolvePaymentPurpose,
+} from '../../../lib/paypack-client';
+
+const SUBSCRIPTION_PRICE = process.env.SUBSCRIPTION_PRICE ? parseInt(process.env.SUBSCRIPTION_PRICE, 10) : 2000;
 
 const RATE_LIMIT_MAP = new Map();
 const RATE_LIMIT_WINDOW = 60_000;
@@ -34,31 +41,66 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please wait before trying again.' });
   }
 
-  const { amount, phone, email, purpose, request_id, movie_id, game_id } = req.body || {};
-  const numAmount = Number(amount);
-
-  if (!Number.isInteger(numAmount) || numAmount < 100) {
-    return res.status(400).json({ error: 'Minimum amount is 100 RWF' });
-  }
-
-  const normalizedPhone = toPaypackPhone(phone);
-  if (!isValidRwandaPhone(normalizedPhone)) {
-    return res.status(400).json({
-      error: 'Please enter a valid Rwandan MTN or Airtel number (e.g. 0788392120 or 0738392120)',
-    });
-  }
+  const {
+    amount,
+    phone,
+    name,
+    payer_name,
+    email,
+    donor_email,
+    purpose,
+    request_id,
+    movie_id,
+    game_id,
+    subscription_plan,
+    months,
+  } = req.body || {};
 
   let userId = req.body?.user_id || null;
+  let userEmail = null;
   const authHeader = req.headers.authorization || '';
   if (authHeader.startsWith('Bearer ')) {
     const token = authHeader.slice(7);
     const {
       data: { user },
     } = await supabaseAdmin.auth.getUser(token);
-    if (user) userId = user.id;
+    if (user) {
+      userId = user.id;
+      userEmail = user.email || null;
+    }
+  }
+
+  if (subscription_plan === 'pro' && !userId) {
+    return res.status(401).json({ error: 'Please sign in first to subscribe to Pro Membership.' });
+  }
+
+  const numAmount = Number(amount);
+  const minAmount = resolveMinimumPaymentAmount({
+    subscriptionPlan: subscription_plan,
+    requestId: request_id,
+    subscriptionPrice: SUBSCRIPTION_PRICE,
+  });
+
+  if (!Number.isInteger(numAmount) || numAmount < minAmount) {
+    return res.status(400).json({ error: `Minimum amount is ${formatRwf(minAmount)}` });
+  }
+
+  const normalizedPhone = toPaypackPhone(phone);
+  if (!isValidRwandaPhone(normalizedPhone)) {
+    return res.status(400).json({
+      error: 'Please enter a valid Rwandan MTN or Airtel number (e.g. 0789690247 or 0738392120)',
+    });
   }
 
   const tx_ref = generateTxRef();
+  const effectivePurpose = resolvePaymentPurpose({
+    purpose,
+    subscriptionPlan: subscription_plan,
+    gameId: game_id,
+    requestId: request_id,
+  });
+  const effectiveEmail = (donor_email || email || userEmail || '').trim() || null;
+  const effectivePayerName = (payer_name || name || '').trim().slice(0, 80) || null;
 
   // Insert initial pending transaction
   const { error: txError } = await supabaseAdmin.from('transactions').insert([
@@ -70,6 +112,10 @@ export default async function handler(req, res) {
       amount: numAmount,
       tx_ref,
       phone: normalizedPhone,
+      donor_email: effectiveEmail,
+      payer_name: effectivePayerName,
+      payment_method: 'paypack',
+      purpose: effectivePurpose,
       status: 'pending',
     },
   ]);
@@ -79,7 +125,25 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to record transaction' });
   }
 
-  const effectivePurpose = purpose || 'Support Agasobanuye.rw';
+  if (subscription_plan === 'pro' && userId) {
+    const subMonths = Math.max(1, Math.min(12, Number(months) || 1));
+    const { error: subError } = await supabaseAdmin.from('subscriptions').insert([
+      {
+        user_id: userId,
+        plan_type: 'pro',
+        months: subMonths,
+        amount: numAmount,
+        phone: normalizedPhone,
+        tx_ref,
+        payment_method: 'paypack',
+        status: 'pending',
+      },
+    ]);
+    if (subError) {
+      await supabaseAdmin.from('transactions').delete().eq('tx_ref', tx_ref);
+      return res.status(500).json({ error: 'Failed to initialize Pro subscription record' });
+    }
+  }
 
   try {
     const paypackResult = await initiatePaypackCashin({
@@ -98,7 +162,7 @@ export default async function handler(req, res) {
     const whatsappUrl = buildWhatsAppConfirmationUrl({
       amount: numAmount,
       phone: normalizedPhone,
-      email: email || '',
+      email: effectiveEmail || '',
       txRef: tx_ref,
       paypackRef: paypackResult.reference || '',
       merchantName: PAYPACK_MERCHANT_NAME,
@@ -129,7 +193,7 @@ export default async function handler(req, res) {
       const whatsappUrl = buildWhatsAppConfirmationUrl({
         amount: numAmount,
         phone: normalizedPhone,
-        email: email || '',
+        email: effectiveEmail || '',
         txRef: tx_ref,
         merchantName: PAYPACK_MERCHANT_NAME,
         purpose: effectivePurpose,
@@ -145,10 +209,13 @@ export default async function handler(req, res) {
         phone: normalizedPhone,
         merchant_name: PAYPACK_MERCHANT_NAME,
         whatsapp_url: whatsappUrl,
-        message: `Paypack is in sandbox/testing mode for unapproved test numbers. Use the WhatsApp confirmation button below to complete your support for "${PAYPACK_MERCHANT_NAME}".`,
+        message: `Paypack is in sandbox/testing mode for unapproved test numbers. Use the WhatsApp confirmation button below to complete your payment for "${PAYPACK_MERCHANT_NAME}".`,
       });
     }
 
+    if (subscription_plan === 'pro') {
+      await supabaseAdmin.from('subscriptions').delete().eq('tx_ref', tx_ref);
+    }
     await supabaseAdmin.from('transactions').delete().eq('tx_ref', tx_ref);
     return res.status(400).json({
       error: err.message || 'Payment initiation failed via Paypack',

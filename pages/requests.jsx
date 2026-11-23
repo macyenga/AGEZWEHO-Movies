@@ -8,9 +8,10 @@ import SEOHead from '../components/SEOHead';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
-  Star, ChevronUp, Send, Sparkles, CheckCircle2, Smartphone, Heart, Loader2, Phone, Crown,
-  ArrowLeft, Inbox, Search, TrendingUp, Clock,
+  Star, ChevronUp, Send, CheckCircle2, Smartphone, Loader2, Crown,
+  Inbox, TrendingUp,
 } from 'lucide-react';
+import UnifiedPaymentFlow from '../components/UnifiedPaymentFlow';
 
 export default function Requests({ requests: initial }) {
   const { t } = useLanguage();
@@ -23,9 +24,7 @@ export default function Requests({ requests: initial }) {
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState({});
   const [donateModal, setDonateModal] = useState(null);
-  const [donateStep, setDonateStep] = useState('pay');
   const [processing, setProcessing] = useState(false);
-  const [donorPhone, setDonorPhone] = useState('');
   const [voteAmount, setVoteAmount] = useState(100);
   const voteBoost = Math.max(1, Math.floor(voteAmount / 50));
 
@@ -42,8 +41,6 @@ export default function Requests({ requests: initial }) {
   const handleVote = (req) => {
     if (voted[req.id]) return;
     setDonateModal(req);
-    setDonateStep('pay');
-    setDonorPhone('');
     setVoteAmount(100);
   };
 
@@ -61,33 +58,6 @@ export default function Requests({ requests: initial }) {
       if (!res.ok) throw new Error(data.error);
       setVoted(prev => ({ ...prev, [req.id]: true }));
       setRequests(prev => prev.map(r => r.id === data.request.id ? data.request : r));
-    } catch (err) {
-      setErrors({ submit: err.message });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleDonate = async () => {
-    if (!donorPhone.trim()) return;
-    setProcessing(true);
-    try {
-      const res = await fetch('/api/payments/initialize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: voteAmount,
-          request_id: donateModal.id,
-          phone: donorPhone.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setDonateStep('submitted');
-      setVoted(prev => ({ ...prev, [donateModal.id]: true }));
-      if (data.payment_url) {
-        window.location.assign(data.payment_url);
-      }
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -341,96 +311,68 @@ export default function Requests({ requests: initial }) {
               onClick={() => setDonateModal(null)}>
               <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }} onClick={e => e.stopPropagation()}
-                className="w-full max-w-md rounded-2xl overflow-hidden"
-                style={{ background: 'rgba(12,12,24,0.95)', border: '1px solid rgba(201,168,76,0.2)' }}>
-                {donateStep === 'pay' && (
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Smartphone size={18} style={{ color: '#fbbf24' }} />
-                        <h3 className="font-cinzel text-lg font-semibold" style={{ fontFamily: 'Cinzel,serif', color: '#fbbf24' }}>
-                          Boost Vote
-                        </h3>
-                      </div>
-                      <button onClick={() => setDonateModal(null)} className="text-[#4a4a3a] hover:text-white text-lg">✕</button>
+                className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl"
+                style={{ background: 'rgba(12,12,24,0.97)', border: '1px solid rgba(201,168,76,0.22)' }}>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Smartphone size={18} style={{ color: '#fbbf24' }} />
+                      <h3 className="font-cinzel text-lg font-semibold" style={{ fontFamily: 'Cinzel,serif', color: '#fbbf24' }}>
+                        Boost Vote
+                      </h3>
                     </div>
-
-                    <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>{donateModal.title}</p>
-
-                    <div className="p-4 rounded-xl mb-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-[10px] mb-2" style={{ color: '#6a6a5a' }}>Choose amount</p>
-                      <div className="flex gap-2 justify-center mb-3">
-                        {[50, 100, 200, 500].map(a => (
-                          <motion.button key={a} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                            onClick={() => setVoteAmount(a)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                            style={voteAmount === a
-                              ? { background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.4)', color: '#fbbf24' }
-                              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#4a4a3a' }
-                            }>{a} RWF</motion.button>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 justify-center">
-                        <input type="number" value={voteAmount} onChange={e => setVoteAmount(Math.max(50, parseInt(e.target.value) || 50))}
-                          min="100" step="50"
-                          className="w-24 text-center px-2 py-1.5 rounded-lg text-sm font-bold outline-none"
-                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24', fontFamily: 'Cinzel,serif' }} />
-                        <span className="text-xs" style={{ color: '#4a4a3a' }}>RWF</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between px-3 py-2 rounded-lg mb-4"
-                      style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.12)' }}>
-                      <span className="text-xs" style={{ color: '#4a4a3a' }}>Vote boost</span>
-                      <span className="text-sm font-bold" style={{ color: '#22c55e' }}>+{voteBoost} vote{voteBoost > 1 ? 's' : ''}</span>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#6a6a5a' }}>
-                        Your MTN Phone Number
-                      </label>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Phone size={13} style={{ color: '#4a4a3a' }} />
-                        <input type="tel" value={donorPhone} onChange={e => setDonorPhone(e.target.value)}
-                          placeholder="078XXXXXXX"
-                          className="flex-1 bg-transparent text-sm outline-none" style={{ color: '#e8e6f0' }} />
-                      </div>
-                      <p className="text-[9px] mt-1" style={{ color: '#3a3a2a' }}>Admin uses this to verify your payment.</p>
-                    </div>
-
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                      onClick={handleDonate} disabled={processing || !donorPhone.trim()}
-                      className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
-                      style={{
-                        background: !donorPhone.trim() ? 'rgba(255,255,255,0.05)' : 'rgba(251,191,36,0.12)',
-                        border: `1px solid ${!donorPhone.trim() ? 'rgba(255,255,255,0.08)' : 'rgba(251,191,36,0.3)'}`,
-                        color: !donorPhone.trim() ? '#3a3a2a' : '#fbbf24',
-                      }}>
-                      {processing ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
-                      {processing ? 'Submitting...' : `Send ${voteAmount} RWF — +${voteBoost} vote${voteBoost > 1 ? 's' : ''}`}
-                    </motion.button>
+                    <button type="button" onClick={() => setDonateModal(null)} aria-label="Close boost modal" className="text-[#4a4a3a] hover:text-white text-lg cursor-pointer">✕</button>
                   </div>
-                )}
 
-                {donateStep === 'submitted' && (
-                  <div className="p-6 text-center">
-                    <CheckCircle2 size={48} style={{ color: '#22c55e', margin: '0 auto 12px' }} />
-                    <h3 className="text-lg font-semibold mb-2" style={{ color: '#22c55e' }}>Payment Started!</h3>
-                    <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>
-                      Complete your <strong>{voteAmount} RWF</strong> payment in the RwandaPay prompt on your phone.
-                    </p>
-                    <div className="p-3 rounded-xl mb-4 text-xs" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
-                      <p style={{ color: '#6a6a5a' }}>Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong></p>
+                  <p className="text-sm mb-4" style={{ color: '#e8e6f0' }}>{donateModal.title}</p>
+
+                  <div className="p-4 rounded-xl mb-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <p className="text-[10px] mb-2" style={{ color: '#6a6a5a' }}>Choose amount</p>
+                    <div className="flex gap-2 justify-center mb-3">
+                      {[50, 100, 200, 500].map(a => (
+                        <motion.button key={a} type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          onClick={() => setVoteAmount(a)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold tabular-nums cursor-pointer"
+                          style={voteAmount === a
+                            ? { background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.4)', color: '#fbbf24' }
+                            : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#4a4a3a' }
+                          }>{a} RWF</motion.button>
+                      ))}
                     </div>
-                    <p className="text-[10px] mb-5" style={{ color: '#4a4a3a' }}>Votes appear automatically once RwandaPay confirms the payment.</p>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                      onClick={() => { setDonateModal(null); getRequests().then(d => setRequests(d)); }}
-                      className="w-full py-2.5 rounded-xl text-sm font-semibold"
-                      style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c' }}>
-                      Done
-                    </motion.button>
+                    <div className="flex items-center gap-2 justify-center">
+                      <input type="number" value={voteAmount} onChange={e => setVoteAmount(Math.max(50, parseInt(e.target.value) || 50))}
+                        min="50" step="50"
+                        className="w-24 text-center px-2 py-1.5 rounded-lg text-sm font-bold outline-none tabular-nums"
+                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24', fontFamily: 'Cinzel,serif' }} />
+                      <span className="text-xs" style={{ color: '#4a4a3a' }}>RWF</span>
+                    </div>
                   </div>
-                )}
+
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg mb-4"
+                    style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.12)' }}>
+                    <span className="text-xs" style={{ color: '#4a4a3a' }}>Vote boost</span>
+                    <span className="text-sm font-bold tabular-nums" style={{ color: '#22c55e' }}>+{voteBoost} vote{voteBoost > 1 ? 's' : ''}</span>
+                  </div>
+
+                  <UnifiedPaymentFlow
+                    amount={voteAmount}
+                    minAmount={50}
+                    requestId={donateModal.id}
+                    purpose={`Boost vote: ${donateModal.title}`}
+                    compact
+                    resetTrigger={donateModal?.id}
+                    onSubmitted={() => {
+                      setVoted(prev => ({ ...prev, [donateModal.id]: true }));
+                    }}
+                    onConfirmed={() => {
+                      getRequests().then(setRequests);
+                    }}
+                    onDone={() => {
+                      setDonateModal(null);
+                      getRequests().then(setRequests);
+                    }}
+                  />
+                </div>
               </motion.div>
             </motion.div>
           )}

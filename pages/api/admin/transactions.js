@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     if (search) {
       const term = `%${search}%`;
       query = query.or(
-        `tx_ref.ilike.${term},phone.ilike.${term},donor_email.ilike.${term},provider_reference.ilike.${term},user_id.ilike.${term},request_id.ilike.${term}`
+        `tx_ref.ilike.${term},phone.ilike.${term},donor_email.ilike.${term},provider_reference.ilike.${term},manual_tx_id.ilike.${term},merchant_code.ilike.${term},payer_name.ilike.${term},user_id.ilike.${term},request_id.ilike.${term}`
       );
     }
 

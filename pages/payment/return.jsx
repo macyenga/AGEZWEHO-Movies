@@ -78,7 +78,7 @@ export default function PaymentReturn() {
             <>
               <Loader2 size={42} className="mx-auto mb-4 animate-spin" style={{ color: '#c9a84c' }} />
               <h1 className="font-cinzel text-lg mb-2" style={{ fontFamily: 'Cinzel,serif', color: '#e8e6f0' }}>Confirming payment…</h1>
-              <p className="text-xs" style={{ color: '#6a6a5a' }}>Checking RwandaPay for your payment. This should take a few seconds.</p>
+              <p className="text-xs" style={{ color: '#6a6a5a' }}>Checking MoMo Pay 156833 / Paypack confirmation status. This should take a few seconds.</p>
             </>
           )}
 

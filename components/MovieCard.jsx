@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Star, Download, Tv2, Heart, Play, Share2, Check } from 'lucide-react';
@@ -20,12 +20,8 @@ const PLATFORM_COLORS = {
   MXPlayer: '#FF6C00',
 };
 
-export default function MovieCard({ movie, index = 0 }) {
+export default function MovieCard({ movie }) {
   const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-60,60], [6,-6]), { stiffness:200, damping:24 });
-  const rotateY = useSpring(useTransform(x, [-60,60], [-6,6]), { stiffness:200, damping:24 });
   const { toggleWatchlist, isInWatchlist } = useCollection();
   const { rateMovie, getMovieRatingSummary } = useMovieRatings();
   const { openTrailer } = useTrailer();
@@ -41,13 +37,6 @@ export default function MovieCard({ movie, index = 0 }) {
       }
     };
   }, []);
-
-  const handleMouse = e => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    x.set(e.clientX - rect.left - rect.width/2);
-    y.set(e.clientY - rect.top  - rect.height/2);
-  };
 
   const links   = Array.isArray(movie.links) ? movie.links : [];
   const inWatchlist = isInWatchlist(movie.id);
@@ -89,26 +78,16 @@ export default function MovieCard({ movie, index = 0 }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity:0, y:24 }}
-      whileInView={{ opacity:1, y:0 }}
-      viewport={{ once:true, margin:'-30px' }}
-      transition={{ duration:0.45, delay:(index%5)*0.06 }}
-      className="h-full relative hover:z-20"
-    >
+    <div className="h-full relative hover:z-20">
       <motion.div
         ref={ref}
         data-testid={`movie-card-${movie.id}`}
         style={{
-          rotateX,
-          rotateY,
-          transformPerspective: 900,
           willChange: 'transform',
-          background:'linear-gradient(160deg,rgba(26,26,40,0.9) 0%,rgba(15,15,22,0.95) 100%)',
-          border:'1px solid rgba(255,255,255,0.06)',
+          background:'linear-gradient(160deg,rgba(26,26,40,0.92) 0%,rgba(15,15,22,0.96) 100%)',
+          border:'1px solid rgba(255,255,255,0.07)',
           boxShadow:'0 4px 24px rgba(0,0,0,0.5)',
         }}
-        onMouseMove={handleMouse}
         whileHover={{
           scale: 1.04,
           y: -4,
@@ -122,9 +101,7 @@ export default function MovieCard({ movie, index = 0 }) {
           e.currentTarget.style.boxShadow='0 14px 40px rgba(0,0,0,0.68), 0 0 28px rgba(201,168,76,0.12)';
         }}
         onMouseLeave={e => {
-          x.set(0);
-          y.set(0);
-          e.currentTarget.style.borderColor='rgba(255,255,255,0.06)';
+          e.currentTarget.style.borderColor='rgba(255,255,255,0.07)';
           e.currentTarget.style.boxShadow='0 4px 24px rgba(0,0,0,0.5)';
         }}
       >
@@ -171,57 +148,70 @@ export default function MovieCard({ movie, index = 0 }) {
             </div>
             <div className="absolute inset-0 poster-fade" />
 
-            {movie.featured && (
-              <div className="absolute top-2 right-2 z-10">
-                <span className="badge badge-gold">{t.card.featured}</span>
+            {movie.featured ? (
+              <div
+                className="absolute top-2.5 right-2.5 z-10 text-[9px] font-semibold uppercase tracking-[0.14em] px-2 py-0.5 rounded"
+                style={{
+                  background: 'rgba(10,10,16,0.78)',
+                  color: '#e8c87a',
+                  backdropFilter: 'blur(6px)',
+                }}
+              >
+                {t.card.featured}
+              </div>
+            ) : (
+              <div
+                className="absolute top-2.5 right-2.5 z-10 text-[9px] font-medium uppercase tracking-[0.12em] px-2 py-0.5 rounded"
+                style={{
+                  background: 'rgba(10,10,16,0.72)',
+                  color: movie.type === 'Series' ? '#7ec8f7' : movie.type === 'Anime' ? '#c4b5fd' : '#d6d2c4',
+                  backdropFilter: 'blur(6px)',
+                }}
+              >
+                {getMediaTypeLabel(movie.type, language)}
               </div>
             )}
-            {!movie.featured && (
-              <div className="absolute top-2 right-2 z-10">
-                <span className={`badge ${movie.type==='Series'?'badge-blue':movie.type==='Anime'?'badge-purple':'badge-muted'}`}>
-                  {getMediaTypeLabel(movie.type, language)}
+
+            {/* Quiet unboxed source + download count footer over scrim */}
+            {((movie.platforms && movie.platforms.length > 0) || links.length > 0) && (
+              <div className="absolute bottom-2 left-2.5 right-2.5 z-10 flex items-center justify-between gap-2 text-[10px]">
+                <span className="truncate font-medium" style={{ color: 'rgba(232,228,216,0.82)' }}>
+                  {movie.platforms && movie.platforms.length > 0 ? movie.platforms[0] : ''}
                 </span>
-              </div>
-            )}
-
-            {/* Platform badges */}
-            {movie.platforms && movie.platforms.length > 0 && (
-              <div className="absolute bottom-2 left-2 z-10 flex gap-1">
-                {movie.platforms.slice(0, 3).map(p => (
-                  <span key={p} className="text-[8px] px-1.5 py-0.5 rounded font-semibold"
-                    style={{
-                      background: `${PLATFORM_COLORS[p] || '#c9a84c'}25`,
-                      color: PLATFORM_COLORS[p] || '#c9a84c',
-                      border: `1px solid ${PLATFORM_COLORS[p] || '#c9a84c'}40`,
-                    }}>
-                    {p}
+                {links.length > 0 && (
+                  <span className="inline-flex items-center gap-1 tabular-nums shrink-0 font-semibold" style={{ color: '#e8c87a' }}>
+                    <Download size={10} />
+                    {links.length}
                   </span>
-                ))}
-              </div>
-            )}
-
-            {links.length > 0 && (
-              <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-md"
-                style={{ background:'rgba(10,10,15,0.75)', border:'1px solid rgba(201,168,76,0.15)' }}>
-                <Download size={9} style={{ color:'#c9a84c' }} />
-                <span className="text-[10px]" style={{ color:'#c9a84c' }}>{links.length}</span>
+                )}
               </div>
             )}
           </div>
 
           {/* Info */}
-          <div className="px-2.5 sm:px-3 pt-2.5 pb-1.5">
-            <h3 className="font-medium text-sm leading-snug mb-1 line-clamp-2" style={{ color:'#e8e4d8' }}>
+          <div className="px-3 pt-3 pb-2">
+            <h3 className="font-semibold text-sm leading-snug mb-1.5 line-clamp-2 text-[#f1ede2] group-hover:text-[#f5e4a8] transition-colors">
               {movie.title}
             </h3>
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[11px] truncate" style={{ color:'#6a6a5a' }}>
-                {movie.year}{movie.language ? ` · ${movie.language}` : ''}
-              </span>
-              {movie.genre && <span className="badge badge-muted flex-shrink-0">{getCategoryLabel(movie.genre, language)}</span>}
+            <div className="flex items-center gap-1.5 text-[11px] truncate tabular-nums" style={{ color: '#8f8b7e' }}>
+              {movie.year && <span>{movie.year}</span>}
+              {movie.year && movie.genre && <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>}
+              {movie.genre && (
+                <span style={{ color: '#b5b0a2' }}>
+                  {getCategoryLabel(movie.genre.split(',')[0].trim(), language)}
+                </span>
+              )}
+              {movie.language && (
+                <>
+                  <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
+                  <span className="truncate">{movie.language}</span>
+                </>
+              )}
             </div>
             {movie.uploaded_by && (
-              <div className="mt-1 text-[10px] truncate" style={{ color:'#4a4a3a' }}>{t.card.byPrefix} {movie.uploaded_by}</div>
+              <div className="mt-1 text-[10px] truncate" style={{ color: '#6b685c' }}>
+                {t.card.byPrefix} {movie.uploaded_by}
+              </div>
             )}
           </div>
         </Link>
@@ -341,6 +331,6 @@ export default function MovieCard({ movie, index = 0 }) {
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }

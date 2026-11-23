@@ -120,49 +120,51 @@ export default function CategoryFilterBar({
             className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1 px-0.5 flex-nowrap"
             style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
           >
-            {allItems.map((category) => {
-              const Icon = CATEGORY_ICONS[category] || Compass;
-              const isActive = (activeCategory || 'All') === category;
-              const count = typeof counts[category] === 'number' ? counts[category] : null;
+            {allItems
+              .filter((category) => {
+                if (category === 'All' || (activeCategory || 'All') === category) return true;
+                const count = counts[category];
+                return typeof count !== 'number' || count > 0;
+              })
+              .map((category) => {
+                const Icon = CATEGORY_ICONS[category] || Compass;
+                const isActive = (activeCategory || 'All') === category;
+                const count = typeof counts[category] === 'number' ? counts[category] : null;
 
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={(e) => handleSelect(category, e)}
-                  aria-pressed={isActive}
-                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap cursor-pointer"
-                  style={
-                    isActive
-                      ? {
-                          background: 'linear-gradient(135deg, rgba(201,168,76,0.22), rgba(201,168,76,0.1))',
-                          border: '1px solid rgba(201,168,76,0.55)',
-                          color: '#f5e4a8',
-                          boxShadow: '0 2px 12px rgba(201,168,76,0.16)',
-                        }
-                      : {
-                          background: 'rgba(255,255,255,0.03)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          color: '#9b9889',
-                        }
-                  }
-                >
-                  <Icon size={11} style={{ color: isActive ? '#e8c87a' : '#6a6a5a' }} />
-                  <span>{getCategoryLabel(category, language)}</span>
-                  {count !== null && (
-                    <span
-                      className="text-[9px] px-1.5 py-0.5 rounded font-semibold"
-                      style={{
-                        background: isActive ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.05)',
-                        color: isActive ? '#f5e4a8' : '#6a6a5a',
-                      }}
-                    >
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={(e) => handleSelect(category, e)}
+                    aria-pressed={isActive}
+                    className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap cursor-pointer"
+                    style={
+                      isActive
+                        ? {
+                            background: 'rgba(201,168,76,0.16)',
+                            border: '1px solid rgba(201,168,76,0.48)',
+                            color: '#f5e4a8',
+                          }
+                        : {
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(255,255,255,0.07)',
+                            color: '#a39f92',
+                          }
+                    }
+                  >
+                    <Icon size={12} style={{ color: isActive ? '#e8c87a' : '#787467' }} />
+                    <span>{getCategoryLabel(category, language)}</span>
+                    {count !== null && (
+                      <span
+                        className="text-[11px] tabular-nums"
+                        style={{ color: isActive ? '#e8c87a' : '#6c685c' }}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
           </div>
         </div>
 

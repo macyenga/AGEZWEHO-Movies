@@ -1,13 +1,12 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, Crown, CheckCircle2, Loader2, Smartphone } from 'lucide-react';
+import { ArrowLeft, Crown, CheckCircle2, Smartphone } from 'lucide-react';
 import SupportUs from '../components/SupportUs';
+import UnifiedPaymentFlow from '../components/UnifiedPaymentFlow';
 
 const PRO_BENEFITS = [
   'No ads on the entire site',
@@ -20,40 +19,6 @@ const PRO_BENEFITS = [
 export default function Subscribe() {
   const { user, isPro, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [state, setState] = useState('idle');
-  const [error, setError] = useState('');
-  const [phone, setPhone] = useState('');
-
-  const handleSubscribe = async () => {
-    if (!user) {
-      router.push('/auth/login?redirect=/subscribe');
-      return;
-    }
-    setState('loading');
-    setError('');
-    try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
-      const res = await fetch('/api/payments/subscribe', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phone.trim() || undefined }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Something went wrong');
-        setState('idle');
-        return;
-      }
-      if (data.payment_url) {
-        window.location.assign(data.payment_url);
-        return;
-      }
-      setState('done');
-    } catch {
-      setError('Network error. Please try again.');
-      setState('idle');
-    }
-  };
 
   if (authLoading) return null;
 
@@ -150,7 +115,7 @@ export default function Subscribe() {
               </div>
             </motion.div>
 
-            {/* Automated Account Subscription via Paypack */}
+            {/* Pro Account Subscription via MoMo Pay 156833 or Paypack */}
             {user ? (
               <motion.div
                 initial={{ opacity: 0, y: 14 }}
@@ -167,59 +132,24 @@ export default function Subscribe() {
                   </div>
                   <div>
                     <h2 className="font-cinzel font-semibold text-lg leading-tight" style={{ fontFamily: 'Cinzel,serif', color: '#FFCC00' }}>
-                      Activate Pro via Paypack
+                      Activate Pro Membership
                     </h2>
-                    <p className="text-xs" style={{ color: '#8a8060' }}>
-                      2,000 RWF / month — Merchant: Agasobanuye
+                    <p className="text-xs tabular-nums" style={{ color: '#8a8060' }}>
+                      2,000 RWF / month — MoMo Pay ID 156833 (Agasobanuye)
                     </p>
                   </div>
                 </div>
 
-                {error && (
-                  <div
-                    className="px-4 py-2 rounded-xl text-xs mb-4"
-                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
-                  >
-                    {error}
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <label className="text-xs mb-2 block" style={{ color: '#8a8060' }}>
-                    Your MTN MoMo / Airtel number <span style={{ color: '#f87171' }}>*</span>
-                  </label>
-                  <div
-                    className="flex items-center gap-2 p-3 rounded-xl"
-                    style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    <Smartphone size={16} style={{ color: '#6a6a5a' }} />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. 0788123456"
-                      className="flex-1 bg-transparent text-sm outline-none"
-                      style={{ color: '#e8e6f0' }}
-                      autoComplete="tel"
-                    />
-                  </div>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSubscribe}
-                  disabled={state === 'loading' || !phone.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold cursor-pointer"
-                  style={{
-                    background: state === 'loading' || !phone.trim() ? 'rgba(201,168,76,0.05)' : 'rgba(201,168,76,0.16)',
-                    border: `1px solid ${state === 'loading' || !phone.trim() ? 'rgba(255,255,255,0.08)' : 'rgba(201,168,76,0.35)'}`,
-                    color: state === 'loading' || !phone.trim() ? '#4a4a3a' : '#e8c87a',
-                  }}
-                >
-                  {state === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <Crown size={16} />}
-                  {state === 'loading' ? 'Connecting to Paypack...' : 'Subscribe Now — 2,000 RWF / month'}
-                </motion.button>
+                <UnifiedPaymentFlow
+                  amount={2000}
+                  minAmount={2000}
+                  purpose="Pro Membership (1 Month)"
+                  subscriptionPlan="pro"
+                  months={1}
+                  defaultEmail={user?.email || ''}
+                  showEmail
+                  onConfirmed={() => router.reload()}
+                />
               </motion.div>
             ) : (
               <div
@@ -227,7 +157,7 @@ export default function Subscribe() {
                 style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}
               >
                 <p className="text-xs mb-3" style={{ color: '#8a8778' }}>
-                  Sign in to subscribe to Pro membership automatically, or donate below and confirm on WhatsApp.
+                  Sign in to link a Pro subscription to your account (MoMo Pay 156833 or Paypack), or support us below.
                 </p>
                 <Link href="/auth/login?redirect=/subscribe">
                   <motion.div
@@ -242,11 +172,11 @@ export default function Subscribe() {
               </div>
             )}
 
-            {/* Reusable SupportUs component for Paypack donation / manual WhatsApp confirmation */}
+            {/* Reusable SupportUs component */}
             <SupportUs
               variant="card"
-              title="Paypack Pro / Donation"
-              subtitle="Prefer quick Paypack push or instant WhatsApp confirmation? Pay 2,000 RWF and confirm with merchant Agasobanuye."
+              title="MoMo Pay 156833 / Support"
+              subtitle="Send a support transfer or donation via MoMo Pay 156833 (QR / USSD) or Paypack to merchant Agasobanuye."
               defaultAmount={2000}
               presetAmounts={[2000, 5000, 10000]}
               purpose="Pro Membership (1 Month)"

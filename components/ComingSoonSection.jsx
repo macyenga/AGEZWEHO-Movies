@@ -44,43 +44,43 @@ export default function ComingSoonSection({ items }) {
     <section
       id="coming-soon"
       data-testid="coming-soon-section"
-      className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-12 scroll-mt-44 md:scroll-mt-32"
+      className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14 scroll-mt-44 md:scroll-mt-32"
     >
       {/* Section Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <Calendar size={13} style={{ color: GOLD }} />
-        <span className="section-tag">{t.comingSoon.heading}</span>
-        <div className="flex-1 divider-soft" />
-        <span className="text-[11px] hidden sm:inline" style={{ color: MUTED }}>
-          {tr('comingSoon.upcomingCount', { count: upcoming.length })}
-        </span>
-        <Link href="/requests">
-          <span className="text-[10px] cursor-pointer hover:underline" style={{ color: MUTED }}>
-            {t.comingSoon.requestTitle}
+      <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+            {t.comingSoon.heading}
+          </h2>
+          <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
+            {tr('comingSoon.upcomingCount', { count: upcoming.length })}
           </span>
+        </div>
+        <Link href="/requests" className="text-xs font-medium hover:text-amber-300 transition-colors whitespace-nowrap" style={{ color: '#a5a193' }}>
+          {t.comingSoon.requestTitle}
         </Link>
       </div>
 
-      {/* Upcoming Releases Grid using existing glass-card styling */}
+      {/* Upcoming Releases Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {upcoming.map((movie, idx) => {
+        {upcoming.map((movie) => {
           const reminded = remindedIds.includes(movie.id);
           return (
             <motion.article
               key={movie.id}
               data-testid={`coming-soon-card-${movie.id}`}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-20px' }}
-              transition={{ duration: 0.4, delay: Math.min(idx, 5) * 0.05 }}
               whileHover={{
-                scale: 1.025,
-                y: -4,
+                scale: 1.02,
+                y: -3,
                 transition: { type: 'spring', stiffness: 280, damping: 22, mass: 0.75 },
               }}
               whileTap={{ scale: 0.99 }}
-              style={{ willChange: 'transform' }}
-              className="group relative hover:z-20 glass-card glass-card-hover rounded-2xl p-3 flex gap-3.5 items-stretch"
+              style={{
+                willChange: 'transform',
+                background: 'rgba(15,15,24,0.82)',
+                border: '1px solid rgba(255,255,255,0.07)',
+              }}
+              className="group relative hover:z-20 rounded-2xl p-3.5 flex gap-3.5 items-stretch transition-colors hover:border-amber-400/35"
             >
               {/* Poster */}
               <div className="relative w-24 sm:w-28 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 bg-[#13131e]">
@@ -89,6 +89,7 @@ export default function ComingSoonSection({ items }) {
                     src={movie.poster_url}
                     alt={`${movie.title} poster`}
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -104,14 +105,11 @@ export default function ComingSoonSection({ items }) {
                 </div>
                 <div className="absolute inset-0 poster-fade" />
                 <span
-                  className={`absolute top-1.5 left-1.5 max-w-[calc(100%-12px)] truncate badge backdrop-blur-md ${
-                    movie.type === 'Series'
-                      ? 'badge-blue'
-                      : movie.type === 'Anime'
-                      ? 'badge-purple'
-                      : 'badge-gold'
-                  }`}
-                  style={{ backgroundColor: 'rgba(10, 10, 15, 0.78)' }}
+                  className="absolute top-2 left-2 text-[9px] font-semibold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded"
+                  style={{
+                    backgroundColor: 'rgba(10, 10, 15, 0.8)',
+                    color: movie.type === 'Series' ? '#7ec8f7' : movie.type === 'Anime' ? '#c4b5fd' : '#e8c87a',
+                  }}
                 >
                   {getMediaTypeLabel(movie.type, language)}
                 </span>
@@ -120,25 +118,18 @@ export default function ComingSoonSection({ items }) {
               {/* Release Info & Actions */}
               <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                 <div>
-                  {/* Release Date Pill */}
-                  <div className="flex items-center flex-wrap gap-1.5 mb-2">
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mb-2 text-[11px] tabular-nums">
                     <span
                       data-testid={`coming-soon-date-${movie.id}`}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold"
-                      style={{
-                        background: 'rgba(201,168,76,0.14)',
-                        border: '1px solid rgba(201,168,76,0.3)',
-                        color: '#e8c87a',
-                      }}
+                      className="inline-flex items-center gap-1 font-semibold"
+                      style={{ color: '#e8c87a' }}
                     >
-                      <Calendar size={10} />
+                      <Calendar size={11} />
                       <span>{movie.formattedReleaseDate}</span>
                     </span>
-                    <span
-                      className="inline-flex items-center gap-1 text-[10px]"
-                      style={{ color: '#8a8778' }}
-                    >
-                      <Clock size={9} />
+                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
+                    <span className="inline-flex items-center gap-1" style={{ color: '#8a8778' }}>
+                      <Clock size={10} />
                       <span>{getComingSoonCountdownLabel(movie.daysUntilRelease, language)}</span>
                     </span>
                   </div>
@@ -150,8 +141,11 @@ export default function ComingSoonSection({ items }) {
                     {movie.title}
                   </h3>
 
-                  <div className="flex items-center flex-wrap gap-1.5 mb-1.5 text-[10px]" style={{ color: MUTED }}>
-                    {movie.genre && <span className="badge badge-muted">{getCategoryLabel(movie.genre, language)}</span>}
+                  <div className="flex items-center flex-wrap gap-1.5 mb-1.5 text-[11px]" style={{ color: '#8f8b7e' }}>
+                    {movie.genre && (
+                      <span style={{ color: '#b5b0a2' }}>{getCategoryLabel(movie.genre, language)}</span>
+                    )}
+                    {movie.genre && movie.interpreter && <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>}
                     {movie.interpreter && <span className="truncate">{t.comingSoon.byPrefix} {movie.interpreter}</span>}
                   </div>
 

@@ -7,7 +7,8 @@ import { supabaseAdmin } from '../../lib/server/supabase-admin';
 import CinematicBackground from '../../components/CinematicBackground';
 import AdBanner from '../../components/ads/AdBanner';
 import { useAuth } from '../../contexts/AuthContext';
-import { ArrowLeft, Download, ExternalLink, Package, Star, Shield, Zap, Lock, CheckCircle2, Loader2, Heart, Phone, Send, Crown } from 'lucide-react';
+import { ArrowLeft, Download, ExternalLink, Package, Star, Shield, Zap, Lock, Heart, Crown, X } from 'lucide-react';
+import UnifiedPaymentFlow from '../../components/UnifiedPaymentFlow';
 
 const UNLOCK_KEY = 'agezweho_unlocked_games';
 const GAME_TX_KEY = 'agezweho_game_transactions';
@@ -16,12 +17,8 @@ export default function GameDetail({ game }) {
   const { user, isPro } = useAuth();
   const [unlocked, setUnlocked] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
-  const [donateStep, setDonateStep] = useState('confirm');
-  const [processing, setProcessing] = useState(false);
-  const [donorPhone, setDonorPhone] = useState('');
   const [downloadLinks, setDownloadLinks] = useState(Array.isArray(game?.links) ? game.links : []);
   const [pendingTxRef, setPendingTxRef] = useState('');
-  const [paymentError, setPaymentError] = useState('');
   const donateAmount = game?.price || 100;
 
   const loadUnlockedLinks = useCallback(async () => {
@@ -52,22 +49,14 @@ export default function GameDetail({ game }) {
 
   const checkPaymentStatus = useCallback(async (txRef = pendingTxRef) => {
     if (!txRef) return false;
-    setPaymentError('');
 
     const res = await fetch(`/api/payments/status?tx_ref=${encodeURIComponent(txRef)}`);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setPaymentError(data.error || 'Payment not found yet');
-      return false;
-    }
+    if (!res.ok) return false;
 
     if (data.transaction?.status === 'completed' && data.transaction?.game_id === game?.id) {
-      const loaded = await loadUnlockedLinks();
-      if (!loaded) setPaymentError('Payment is confirmed, but links could not be loaded. Please sign in again.');
-      return loaded;
+      return loadUnlockedLinks();
     }
-
-    setPaymentError('Payment is still pending admin confirmation.');
     return false;
   }, [game?.id, loadUnlockedLinks, pendingTxRef]);
 
@@ -85,33 +74,6 @@ export default function GameDetail({ game }) {
       checkPaymentStatus(txRefs[game.id]);
     }
   }, [checkPaymentStatus, game?.id, game?.links, game?.premium]);
-
-  const handleDonate = async () => {
-    if (!user || !donorPhone.trim()) return;
-    setProcessing(true);
-    try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
-      const res = await fetch('/api/payments/initialize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ amount: donateAmount, user_id: user.id, phone: donorPhone, game_id: game.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      const txRefs = JSON.parse(localStorage.getItem(GAME_TX_KEY) || '{}');
-      localStorage.setItem(GAME_TX_KEY, JSON.stringify({ ...txRefs, [game.id]: data.tx_ref }));
-      setPendingTxRef(data.tx_ref);
-      setDonateStep('submitted');
-      if (!data.payment_url) throw new Error('RwandaPay is not configured yet. Please try again later.');
-      window.location.assign(data.payment_url);
-      return;
-    } catch (err) {
-      setPaymentError(err.message || 'Could not start payment');
-      setDonateStep('confirm');
-    } finally {
-      setProcessing(false);
-    }
-  };
 
   if (!game) return (
     <div className="min-h-screen flex items-center justify-center bg-deep">
@@ -303,7 +265,7 @@ export default function GameDetail({ game }) {
                 <p className="text-xs mb-4" style={{ color: '#8a8060' }}>
                   {isPro
                     ? 'You are Pro! Download links are being unlocked...'
-                    : `Download links are locked. Donate <strong>${donateAmount} RWF</strong> via MTN MoMo to unlock.`
+                    : <>Download links are locked. Pay <strong style={{ color: '#fbbf24' }}>{donateAmount} RWF</strong> via MoMo Pay <strong style={{ color: '#fbbf24' }}>156833</strong> to unlock.</>
                   }
                 </p>
                 {user ? (
@@ -391,80 +353,58 @@ export default function GameDetail({ game }) {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="fixed inset-0 z-50 flex items-center justify-center p-4"
                   style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
-                  onClick={() => { if (donateStep !== 'pay' && donateStep !== 'success') { setShowDonate(false); setDonateStep('confirm'); } }}>
+                  onClick={() => setShowDonate(false)}>
                   <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-                    className="w-full max-w-sm rounded-2xl p-6 relative"
-                    style={{ background: 'rgba(12,12,24,0.95)', border: '1px solid rgba(201,168,76,0.2)' }}
+                    className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl p-6 relative"
+                    style={{ background: 'rgba(12,12,24,0.97)', border: '1px solid rgba(201,168,76,0.24)' }}
                     onClick={e => e.stopPropagation()}>
 
-                    {donateStep === 'confirm' && (
-                      <>
-                        <Package size={40} style={{ color: '#fbbf24', margin: '0 auto 12px', display: 'block' }} />
-                        <h3 className="font-cinzel text-lg mb-2 text-center" style={{ fontFamily: 'Cinzel,serif', color: '#fbbf24' }}>Unlock with Donation</h3>
-                        <p className="text-xs text-center mb-3" style={{ color: '#8a8060' }}>
-                          Donate <strong>{donateAmount} RWF</strong> to unlock download links for this content.
-                        </p>
-                        <Link href="/subscribe">
-                          <div className="p-2 rounded-xl mb-4 text-center cursor-pointer" style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.1)' }}>
-                            <p className="text-[10px]" style={{ color: '#b8a060' }}>
-                              <Crown size={10} style={{ display:'inline', verticalAlign:'middle', marginRight:4 }} />
-                              Go Pro for 2,000 RWF/month — unlock all premium content, no per-item fees
-                            </p>
-                          </div>
-                        </Link>
-                        <div className="mb-4">
-                          <label className="block text-[10px] uppercase tracking-widest mb-1.5" style={{ color: '#6a6a5a' }}>Your MTN Phone Number</label>
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            <Phone size={14} style={{ color: '#6a6a5a' }} />
-                            <input type="tel" value={donorPhone} onChange={e => setDonorPhone(e.target.value)}
-                              placeholder="078XXXXXXX"
-                              className="flex-1 bg-transparent text-sm outline-none" style={{ color: '#e8e6f0' }} />
-                          </div>
-                        </div>
-                        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                          onClick={handleDonate} disabled={processing || !donorPhone.trim()}
-                          className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold"
-                          style={{ background: !donorPhone.trim() ? 'rgba(255,255,255,0.05)' : 'rgba(251,191,36,0.12)', border: `1px solid ${!donorPhone.trim() ? 'rgba(255,255,255,0.08)' : 'rgba(251,191,36,0.3)'}`, color: !donorPhone.trim() ? '#4a4a3a' : '#fbbf24' }}>
-                          {processing ? <Loader2 size={14} /> : <Send size={14} />}
-                          {processing ? 'Submitting...' : `Submit — Send ${donateAmount} RWF`}
-                        </motion.button>
-                      </>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowDonate(false)}
+                      aria-label="Close unlock modal"
+                      className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-stone-400 hover:text-white cursor-pointer"
+                    >
+                      <X size={16} />
+                    </button>
 
-                    {donateStep === 'submitted' && (
-                      <div className="text-center py-4">
-                        <CheckCircle2 size={40} style={{ color: '#22c55e', margin: '0 auto 12px', display: 'block' }} />
-                        <h3 className="font-cinzel text-lg mb-1" style={{ fontFamily: 'Cinzel,serif', color: '#22c55e' }}>Payment Started!</h3>
-                        <p className="text-xs mb-2" style={{ color: '#8a8060' }}>
-                          Complete your <strong>{donateAmount} RWF</strong> payment in the RwandaPay prompt on your phone.
+                    <Package size={36} style={{ color: '#fbbf24', margin: '0 auto 10px', display: 'block' }} />
+                    <h3 className="font-cinzel text-lg mb-1.5 text-center" style={{ fontFamily: 'Cinzel,serif', color: '#fbbf24' }}>Unlock with Donation</h3>
+                    <p className="text-xs text-center mb-3" style={{ color: '#8a8060' }}>
+                      Pay <strong className="tabular-nums">{donateAmount} RWF</strong> to unlock download links for this content.
+                    </p>
+                    <Link href="/subscribe">
+                      <div className="p-2 rounded-xl mb-4 text-center cursor-pointer" style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.1)' }}>
+                        <p className="text-[10px]" style={{ color: '#b8a060' }}>
+                          <Crown size={10} style={{ display:'inline', verticalAlign:'middle', marginRight:4 }} />
+                          Go Pro for 2,000 RWF/month — unlock all premium content, no per-item fees
                         </p>
-                        <p className="text-xs mb-4" style={{ color: '#6b6b8a' }}>
-                          Your number <strong style={{ color: '#fbbf24' }}>{donorPhone}</strong> helps us link the payment to you.
-                        </p>
-                        {pendingTxRef && (
-                          <p className="text-[10px] mb-3 break-all" style={{ color: '#6a6a5a' }}>
-                            Ref: <span style={{ color: '#fbbf24' }}>{pendingTxRef}</span>
-                          </p>
-                        )}
-                        {paymentError && (
-                          <p className="text-[11px] mb-3" style={{ color: '#f87171' }}>{paymentError}</p>
-                        )}
-                        <div className="flex gap-2 justify-center flex-wrap">
-                          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                            onClick={() => checkPaymentStatus()}
-                            className="px-5 py-2 rounded-xl text-xs font-semibold"
-                            style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', color: '#22c55e' }}>
-                            Check Status
-                          </motion.button>
-                          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                            onClick={() => { setShowDonate(false); setDonateStep('confirm'); setDonorPhone(''); }}
-                            className="px-5 py-2 rounded-xl text-xs font-semibold"
-                            style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c' }}>
-                            Done
-                          </motion.button>
-                        </div>
                       </div>
-                    )}
+                    </Link>
+
+                    <UnifiedPaymentFlow
+                      amount={donateAmount}
+                      minAmount={donateAmount}
+                      gameId={game.id}
+                      purpose={`Unlock ${game.title}`}
+                      compact
+                      resetTrigger={`${game.id}-${showDonate}`}
+                      onSubmitted={(data) => {
+                        if (data?.tx_ref) {
+                          const txRefs = JSON.parse(localStorage.getItem(GAME_TX_KEY) || '{}');
+                          localStorage.setItem(GAME_TX_KEY, JSON.stringify({ ...txRefs, [game.id]: data.tx_ref }));
+                          setPendingTxRef(data.tx_ref);
+                        }
+                      }}
+                      onConfirmed={() => {
+                        loadUnlockedLinks().then((ok) => {
+                          if (ok) setShowDonate(false);
+                        });
+                      }}
+                      onDone={() => {
+                        setShowDonate(false);
+                      }}
+                    />
                   </motion.div>
                 </motion.div>
               )}

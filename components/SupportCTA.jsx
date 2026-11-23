@@ -26,10 +26,11 @@ export default function SupportCTA() {
     : 0;
 
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
-      <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-20px' }}
+    <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+      <div
         className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
-        style={{ background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.16)' }}>
+        style={{ background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.16)' }}
+      >
         <div className="orb absolute -top-24 right-0 w-[280px] h-[280px]" style={{ background: 'rgba(201,168,76,0.05)' }} />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center gap-6">
@@ -37,35 +38,35 @@ export default function SupportCTA() {
             <div className="section-tag mb-2 flex items-center gap-2">
               <HeartHandshake size={11} style={{ color: GOLD }} /> {t.supportCta.tag}
             </div>
-            <p className="text-xs leading-relaxed mb-1" style={{ color: '#8a8778' }}>
+            <p className="text-xs sm:text-sm leading-relaxed mb-1" style={{ color: '#a5a193' }}>
               {t.supportCta.headlinePrefix} <span className="font-semibold" style={{ color: '#e8c87a' }}>{t.supportCta.headlineHighlight}</span> {t.supportCta.headlineSuffix}
             </p>
-            <p className="text-[11px] mb-4" style={{ color: '#6a6a5a' }}>
+            <p className="text-xs mb-4" style={{ color: '#787467' }}>
               {t.supportCta.paypackPrefix} <strong style={{ color: '#e8c87a' }}>{t.supportCta.paypackNetwork}</strong> {t.supportCta.paypackDetails} <strong style={{ color: '#ffcc00' }}>Agasobanuye</strong> {t.supportCta.paypackSuffix}
             </p>
 
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-6 flex-wrap tabular-nums">
               <div>
-                <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: '#6a6a5a' }}>{t.supportCta.raisedThisMonth}</div>
+                <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#787467' }}>{t.supportCta.raisedThisMonth}</div>
                 <div className="text-lg font-bold" style={{ color: GOLD }}>
                   {stats.monthlyTotal.toLocaleString()} <span style={{ color: '#8a8778', fontSize: 12, fontWeight: 400 }}>/ {stats.monthlyGoal.toLocaleString()} RWF</span>
                 </div>
               </div>
               <div>
-                <div className="text-[9px] uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: '#6a6a5a' }}><Users size={8} /> {t.supportCta.supporters}</div>
+                <div className="text-[10px] uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: '#787467' }}><Users size={10} /> {t.supportCta.supporters}</div>
                 <div className="text-lg font-bold" style={{ color: '#e8e6f0' }}>{(stats.totalDonors || 0).toLocaleString()}</div>
               </div>
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.16)' }}>
-                <TrendingUp size={11} style={{ color: GOLD }} />
-                <span className="text-[10px]" style={{ color: '#e8c87a' }}>{tr('supportCta.goalPct', { pct })}</span>
+              <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: '#e8c87a' }}>
+                <TrendingUp size={13} style={{ color: GOLD }} />
+                <span>{tr('supportCta.goalPct', { pct })}</span>
               </div>
             </div>
 
-            <div className="mt-4 h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.12)' }}>
-              <motion.div initial={{ width: 0 }} whileInView={{ width: `${pct}%` }} viewport={{ once: true }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, #a07828, #e8c87a)' }} />
+            <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #a07828, #e8c87a)' }}
+              />
             </div>
           </div>
 
@@ -85,7 +86,7 @@ export default function SupportCTA() {
             </Link>
           </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

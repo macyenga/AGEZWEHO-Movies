@@ -60,6 +60,7 @@ export default function Support() {
   const { t } = useLanguage();
   const [stats, setStats] = useState(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     fetch('/api/donations/stats').then(r => r.json()).then(setStats).catch(() => {});
@@ -68,7 +69,8 @@ export default function Support() {
   const handleShare = (p, text) => {
     if (p.url === null) {
       navigator.clipboard?.writeText(SITE_URL);
-      alert('Link copied!');
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
       return;
     }
     window.open(p.url(SITE_URL, text), '_blank');
@@ -210,7 +212,7 @@ export default function Support() {
                 style={{ background:`${p.color}12`, border:`1px solid ${p.color}30`, color:p.color, cursor:'pointer' }}>
                 <span className="text-base flex-shrink-0">{p.icon}</span>
                 <div className="relative z-10">
-                  <div className="font-semibold">{p.name}</div>
+                  <div className="font-semibold">{p.url === null && copiedLink ? 'Link Copied!' : p.name}</div>
                   {p.note && <div className="text-[9px] opacity-60 mt-0.5">{p.note}</div>}
                 </div>
               </motion.button>

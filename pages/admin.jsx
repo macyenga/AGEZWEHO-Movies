@@ -199,6 +199,9 @@ export default function Admin() {
   const [addAdminEmail, setAddAdminEmail] = useState('');
   const [addAdminLoading, setAddAdminLoading] = useState(false);
 
+  // Payment screenshot lightbox modal
+  const [proofModalTx, setProofModalTx] = useState(null);
+
   const notifySuccess = (msg) => {
     setActionError('');
     setActionSuccess(msg);
@@ -2001,7 +2004,7 @@ export default function Admin() {
                       <Search size={14} style={{ color: '#6a6a5a' }} />
                       <input type="text" value={txSearch} onChange={(e) => setTxSearch(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') loadTransactions(); }}
-                        placeholder="Search ref, phone, email..." className="flex-1 bg-transparent text-xs outline-none" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search ref, MoMo TX ID, phone, email..." className="flex-1 bg-transparent text-xs outline-none" style={{ color: '#e8e6f0' }} />
                       <button type="button" onClick={loadTransactions} className="px-2.5 py-1 rounded text-xs font-medium"
                         style={{ background: 'rgba(201,168,76,0.14)', color: '#e8c87a' }}>
                         Search
@@ -2044,21 +2047,51 @@ export default function Admin() {
                     <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No transactions found.</p>
                   ) : (
                     <div className="space-y-2">
-                      {txList.map((tx) => (
+                      {txList.map((tx) => {
+                        const isManualMomo = tx.payment_method === 'momo_manual' || Boolean(tx.manual_tx_id) || Boolean(tx.screenshot_data);
+                        return (
                         <div key={tx.id} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-semibold tabular-nums" style={{ color: '#e8e6f0' }}>{(tx.amount || 0).toLocaleString()} RWF</span>
-                              <StatusBadge label={tx.status} tone={tx.status === 'completed' ? 'green' : tx.status === 'pending' ? 'amber' : tx.status === 'refunded' ? 'red' : 'muted'} />
-                            </div>
-                            <div className="text-xs mt-1" style={{ color: '#8e8a7e' }}>
-                              Ref {tx.tx_ref}
-                              {tx.phone ? ` · ${tx.phone}` : ''}
-                              {tx.user_id ? ` · ${txUserMap[tx.user_id] || tx.user_id}` : ''}
-                              {tx.donor_email ? ` · ${tx.donor_email}` : ''}
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            {tx.screenshot_data && (
+                              <button
+                                type="button"
+                                onClick={() => setProofModalTx(tx)}
+                                title="View payment screenshot"
+                                className="w-12 h-12 rounded-lg overflow-hidden border border-amber-400/35 shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                              >
+                                <img src={tx.screenshot_data} alt={`Proof for ${tx.tx_ref}`} className="w-full h-full object-cover" />
+                              </button>
+                            )}
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-semibold tabular-nums" style={{ color: '#e8e6f0' }}>{(tx.amount || 0).toLocaleString()} RWF</span>
+                                <StatusBadge label={tx.status} tone={tx.status === 'completed' ? 'green' : tx.status === 'pending' ? 'amber' : tx.status === 'refunded' ? 'red' : 'muted'} />
+                                {isManualMomo && (
+                                  <StatusBadge label={`MoMo Pay ${tx.merchant_code || '156833'}`} tone="gold" />
+                                )}
+                              </div>
+                              <div className="text-xs mt-1 break-words" style={{ color: '#8e8a7e' }}>
+                                Ref {tx.tx_ref}
+                                {tx.manual_tx_id ? ` · TX ID: ${tx.manual_tx_id}` : ''}
+                                {tx.payer_name ? ` · ${tx.payer_name}` : ''}
+                                {tx.phone ? ` · ${tx.phone}` : ''}
+                                {tx.user_id ? ` · ${txUserMap[tx.user_id] || tx.user_id}` : ''}
+                                {tx.donor_email ? ` · ${tx.donor_email}` : ''}
+                                {tx.purpose ? ` · ${tx.purpose}` : ''}
+                              </div>
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-2 shrink-0">
+                            {tx.screenshot_data && (
+                              <button
+                                type="button"
+                                onClick={() => setProofModalTx(tx)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap cursor-pointer"
+                                style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)', color: '#e8c87a' }}
+                              >
+                                <Eye size={12} /> View Proof
+                              </button>
+                            )}
                             {tx.status === 'pending' && (
                               <>
                                 <button type="button" onClick={async () => {
@@ -2069,12 +2102,12 @@ export default function Admin() {
                                     await refresh();
                                     notifySuccess('Transaction confirmed');
                                   } catch (err) { notifyError(err.message); } finally { setActionLoading(null); }
-                                }} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
+                                }} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer"
                                   style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
                                   Confirm
                                 </button>
                                 <button type="button" onClick={() => handleCancelTx(tx.tx_ref)}
-                                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
+                                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer"
                                   style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
                                   Cancel
                                 </button>
@@ -2082,14 +2115,15 @@ export default function Admin() {
                             )}
                             {tx.status === 'completed' && (
                               <button type="button" onClick={() => handleRefundTx(tx.tx_ref)}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer"
                                 style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
                                 <RotateCcw size={12} /> Refund
                               </button>
                             )}
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -2560,6 +2594,84 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      {/* Payment Proof Screenshot Lightbox */}
+      {proofModalTx && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setProofModalTx(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Payment receipt screenshot"
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl overflow-hidden p-5 space-y-4"
+            style={{ background: '#0e0e16', border: '1px solid rgba(201,168,76,0.3)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold" style={{ color: '#e8c87a' }}>
+                  MoMo Pay {proofModalTx.merchant_code || '156833'} Payment Proof
+                </h3>
+                <p className="text-xs mt-0.5 tabular-nums" style={{ color: '#8e8a7e' }}>
+                  {(proofModalTx.amount || 0).toLocaleString()} RWF · Ref {proofModalTx.tx_ref}
+                  {proofModalTx.manual_tx_id ? ` · TX ID: ${proofModalTx.manual_tx_id}` : ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setProofModalTx(null)}
+                aria-label="Close proof modal"
+                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-stone-400 hover:text-white cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {proofModalTx.screenshot_data && (
+              <div className="rounded-xl overflow-hidden bg-black border border-white/10 max-h-[65vh] flex items-center justify-center">
+                <img
+                  src={proofModalTx.screenshot_data}
+                  alt={`Payment screenshot for ${proofModalTx.tx_ref}`}
+                  className="max-w-full max-h-[62vh] object-contain"
+                />
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-end gap-2">
+              {proofModalTx.status === 'pending' && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const targetRef = proofModalTx.tx_ref;
+                    setProofModalTx(null);
+                    setActionLoading(`confirm_${proofModalTx.id}`);
+                    try {
+                      await doAdminRequest('/api/admin/confirm-transaction', 'POST', { tx_ref: targetRef });
+                      await loadTransactions();
+                      await refresh();
+                      notifySuccess('Transaction confirmed');
+                    } catch (err) { notifyError(err.message); } finally { setActionLoading(null); }
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+                  style={{ background: 'rgba(34,197,94,0.18)', border: '1px solid rgba(34,197,94,0.4)', color: '#22c55e' }}
+                >
+                  Approve &amp; Confirm Payment
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setProofModalTx(null)}
+                className="px-4 py-2 rounded-lg text-xs font-medium bg-white/10 text-stone-200 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

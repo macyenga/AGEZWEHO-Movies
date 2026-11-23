@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
 import { getMovies, getComingSoonMovies } from '../lib/supabase';
 import CinematicBackground from '../components/CinematicBackground';
-import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
 import AdBanner, { NativeBanner } from '../components/ads/AdBanner';
 import SupportCTA from '../components/SupportCTA';
@@ -16,54 +14,38 @@ import MovieSearchFilter from '../components/MovieSearchFilter';
 import { MOVIE_CATEGORIES, filterMovies, getCategoryCounts, getMovieFilterYears } from '../lib/movie-filters';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCollection } from '../hooks/useCollection';
+import { useTrailer } from '../contexts/TrailerContext';
 import { getCategoryLabel, getMediaTypeLabel } from '../lib/i18n';
+import { getAllSocialLinks } from '../lib/social-config';
 import {
   Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart, Upload,
-  Newspaper, ShoppingBag, Gamepad2, Search, Sparkles,
-  Star, Play, Eye, Tv, BookOpen, Compass, Swords, Theater, Laugh, Zap,
-  Ghost, Rocket, Wand2, Siren, MessageSquare, Bookmark
+  Newspaper, ShoppingBag, Sparkles, Star, Play, Eye, Tv, BookOpen, Compass,
+  Swords, Theater, Laugh, Zap, Ghost, Rocket, Wand2, Siren, MessageSquare,
+  Bookmark, X, Bell, ArrowUpRight, MessageCircle, Camera, Music2, Globe, AtSign
 } from 'lucide-react';
 
-const GOLD = '#c9a84c';
-const MUTED = '#6a6a5a';
-const TEXT = '#e8e4d8';
-const DIM = '#4a4a3a';
-const BG_CARD = 'rgba(14,14,22,0.6)';
-const BORDER = 'rgba(255,255,255,0.06)';
+const HERO_SOCIAL_ICONS = {
+  telegram: Send,
+  whatsapp: MessageCircle,
+  instagram: Camera,
+  tiktok: Music2,
+  youtube: Play,
+  facebook: Globe,
+  x: AtSign,
+};
 
-function NoticeBoard() {
-  const [visible, setVisible] = useState(true);
-  const { t } = useLanguage();
-  if (!visible) return null;
-  return (
-    <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
-      className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-4">
-      <div className="relative px-4 py-2.5 rounded-xl overflow-hidden flex items-center gap-3"
-        style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.12)', backdropFilter:'blur(12px)' }}>
-        <motion.div className="absolute inset-0 pointer-events-none"
-          style={{ background:'linear-gradient(105deg,transparent 30%,rgba(201,168,76,0.04) 50%,transparent 70%)' }}
-          animate={{ x:['-100%','200%'] }}
-          transition={{ repeat:Infinity, duration:5, ease:'easeInOut', repeatDelay:3 }} />
-        <span className="text-sm flex-shrink-0">📢</span>
-        <p className="text-[10px] leading-relaxed flex-1" style={{ color:'#8a8778' }}>
-          {t.notice.prefix}{' '}
-          <Link href="/requests"><span className="underline cursor-pointer" style={{ color:GOLD }}>{t.notice.link}</span></Link>
-          {' '}{t.notice.suffix}
-        </p>
-        <motion.button whileHover={{ scale:1.1, rotate:90 }} whileTap={{ scale:0.9 }}
-          onClick={() => setVisible(false)}
-          aria-label={t.notice.dismissAria}
-          className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-          style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', color:'#6a6a5a' }}>✕</motion.button>
-      </div>
-    </motion.div>
-  );
-}
+const GOLD = '#c9a84c';
+const GOLD_LIGHT = '#e8c87a';
+const MUTED = '#8a8679';
+const TEXT = '#f1ede2';
+const DIM = '#565347';
+const BLUE = '#38bdf8';
+const AMBER = '#fbbf24';
 
 const CATEGORIES = [
-  { key:'Series', label:'Series', icon:Tv, count:0 },
-  { key:'Anime', label:'Anime', icon:Star, count:0 },
-  { key:'Documentary', label:'Documentary', icon:BookOpen, count:0 },
+  { key: 'Series', label: 'Series', icon: Tv },
+  { key: 'Anime', label: 'Anime', icon: Star },
+  { key: 'Documentary', label: 'Documentary', icon: BookOpen },
 ];
 
 const GENRES = MOVIE_CATEGORIES;
@@ -85,49 +67,454 @@ const GENRE_ROWS = [
 
 const PER_PAGE = 24;
 
-function ScrollRow({ title, icon:Icon, color, movies, link, onViewAll, id }) {
+function NoticeBoard() {
+  const [visible, setVisible] = useState(true);
+  const { t } = useLanguage();
+  if (!visible) return null;
+
+  return (
+    <div
+      style={{
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(14,14,22,0.52)',
+      }}
+    >
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
+        <Bell size={13} className="shrink-0" style={{ color: GOLD }} />
+        <p className="text-xs leading-relaxed flex-1 min-w-0" style={{ color: '#a9a596' }}>
+          {t.notice.prefix}{' '}
+          <Link href="/requests" className="underline hover:text-amber-300 transition-colors" style={{ color: GOLD_LIGHT }}>
+            {t.notice.link}
+          </Link>{' '}
+          {t.notice.suffix}
+        </p>
+        <button
+          type="button"
+          onClick={() => setVisible(false)}
+          aria-label={t.notice.dismissAria}
+          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-white/10"
+          style={{ color: '#8a8778' }}
+        >
+          <X size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PremiereHeroStage({ movies = [] }) {
+  const { language, t } = useLanguage();
+  const { toggleWatchlist, isInWatchlist } = useCollection();
+  const { openTrailer } = useTrailer();
+
+  const featuredPool = movies.filter((m) => m.featured);
+  const premiereList = (featuredPool.length > 0 ? featuredPool : movies).slice(0, 3);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (activeIndex >= premiereList.length) setActiveIndex(0);
+  }, [activeIndex, premiereList.length]);
+
+  const activeMovie = premiereList[activeIndex] || movies[0] || null;
+  const saved = activeMovie ? isInWatchlist(activeMovie.id) : false;
+
+  return (
+    <section
+      aria-label="Featured Premiere"
+      className="relative pt-20 sm:pt-24 pb-6 sm:pb-10 overflow-hidden"
+    >
+      {/* Full-bleed Kigali Screening Room + subtle ambient film atmosphere */}
+      <div className="absolute inset-0 pointer-events-none">
+        <img
+          src="/images/hero-cinema-stage.jpg"
+          alt=""
+          referrerPolicy="no-referrer"
+          className="w-full h-full object-cover object-center opacity-55"
+        />
+        {activeMovie?.poster_url && (
+          <img
+            src={activeMovie.poster_url}
+            alt=""
+            referrerPolicy="no-referrer"
+            className="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-110 transition-opacity duration-700"
+          />
+        )}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(100deg, rgba(7,7,11,0.96) 0%, rgba(7,7,11,0.84) 44%, rgba(7,7,11,0.44) 76%, rgba(7,7,11,0.86) 100%)',
+          }}
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-32"
+          style={{ background: 'linear-gradient(to top, #0a0a0f 0%, transparent 100%)' }}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {activeMovie ? (
+          <>
+            {/* Editorial Split: Narrative & Primary Action Left + Framed Vertical Poster Right */}
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_310px] xl:grid-cols-[minmax(0,1fr)_340px] gap-5 sm:gap-8 lg:gap-14 items-center">
+              <div className="order-2 lg:order-1 min-w-0">
+                {/* Quiet single-line stage eyebrow */}
+                <div className="flex items-center justify-between gap-3 pb-3 mb-3.5 sm:pb-4 sm:mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs tabular-nums" style={{ color: '#b8b3a6' }}>
+                    <span className="font-semibold" style={{ color: GOLD_LIGHT }}>
+                      {getMediaTypeLabel(activeMovie.type || 'Movie', language)}
+                    </span>
+                    {activeMovie.year && (
+                      <>
+                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
+                        <span>{activeMovie.year}</span>
+                      </>
+                    )}
+                    {activeMovie.language && (
+                      <>
+                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
+                        <span>{activeMovie.language}</span>
+                      </>
+                    )}
+                    {activeMovie.genre && (
+                      <>
+                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
+                        <span>
+                          {activeMovie.genre
+                            .split(',')
+                            .map((g) => getCategoryLabel(g.trim(), language))
+                            .join(', ')}
+                        </span>
+                      </>
+                    )}
+                    {activeMovie.rating && (
+                      <>
+                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
+                        <span className="inline-flex items-center gap-1 font-semibold" style={{ color: GOLD_LIGHT }}>
+                          <Star size={11} fill={GOLD} stroke={GOLD} />
+                          {activeMovie.rating}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <h1
+                  className="font-cinzel font-bold leading-[1.04] tracking-tight mb-3 sm:mb-4"
+                  style={{
+                    fontFamily: 'Cinzel, serif',
+                    fontSize: 'clamp(1.9rem, 4.1vw, 3.55rem)',
+                    color: '#f7f4eb',
+                    textWrap: 'balance',
+                    textShadow: '0 6px 32px rgba(0,0,0,0.65)',
+                  }}
+                >
+                  {activeMovie.title}
+                </h1>
+
+                {activeMovie.overview && (
+                  <p
+                    className="text-sm sm:text-[15px] leading-[1.62] sm:leading-[1.68] max-w-2xl mb-5 sm:mb-7 line-clamp-2 sm:line-clamp-3"
+                    style={{ color: '#c4bfb2' }}
+                  >
+                    {activeMovie.overview}
+                  </p>
+                )}
+
+                {/* Single Dominant Primary CTA + Quiet Secondary Controls */}
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                  <Link
+                    href={`/watch/${activeMovie.id}`}
+                    className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-transform duration-200 hover:-translate-y-0.5"
+                    style={{
+                      background: 'linear-gradient(135deg, #f6e3a4 0%, #c9a84c 100%)',
+                      color: '#09080b',
+                      boxShadow: '0 14px 34px rgba(201,168,76,0.28)',
+                    }}
+                  >
+                    <Play size={14} fill="currentColor" />
+                    <span>{t.spotlight.watchNow}</span>
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => openTrailer(activeMovie)}
+                    className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors hover:bg-white/10"
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.16)',
+                      color: '#f1ede2',
+                    }}
+                  >
+                    <Play size={12} />
+                    <span>{t.trending.trailer}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => toggleWatchlist(activeMovie)}
+                    data-testid="spotlight-watchlist-btn"
+                    aria-pressed={saved}
+                    className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-medium whitespace-nowrap cursor-pointer transition-colors hover:bg-white/10"
+                    style={{
+                      background: saved ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.03)',
+                      border: saved ? '1px solid rgba(201,168,76,0.45)' : '1px solid rgba(255,255,255,0.12)',
+                      color: saved ? '#f5e4a8' : '#c8c3b6',
+                    }}
+                  >
+                    <Bookmark size={12} fill={saved ? GOLD : 'none'} />
+                    <span>{saved ? t.card.inWatchlist : t.card.saveToWatchlist}</span>
+                  </button>
+
+                  <Link
+                    href={`/movies/${activeMovie.id}`}
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2.5 sm:py-3 text-xs font-medium whitespace-nowrap transition-colors hover:text-amber-300"
+                    style={{ color: '#b0ab9d' }}
+                  >
+                    <Download size={12} />
+                    <span>{t.spotlight.download}</span>
+                  </Link>
+                </div>
+
+                {/* Social Media Row: Telegram first, followed by WhatsApp, Instagram, TikTok, YouTube, Facebook, X */}
+                <div
+                  data-testid="hero-social-links"
+                  className="mt-4 sm:mt-5 pt-3.5 flex flex-wrap items-center gap-x-4 gap-y-2"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+                >
+                  {getAllSocialLinks().map((social) => {
+                    const SocialIcon = HERO_SOCIAL_ICONS[social.id] || Send;
+                    return (
+                      <a
+                        key={social.id}
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid={`hero-social-${social.id}`}
+                        aria-label={social.ariaLabel}
+                        title={social.ariaLabel}
+                        className="inline-flex items-center gap-1.5 py-1 text-xs font-medium whitespace-nowrap transition-opacity opacity-85 hover:opacity-100"
+                        style={{ color: social.accentColor }}
+                      >
+                        <SocialIcon size={12} aria-hidden="true" />
+                        <span style={{ color: '#d4cfc0' }}>{social.name}</span>
+                        {social.id === 'telegram' && (
+                          <ArrowUpRight size={11} style={{ color: social.accentColor }} aria-hidden="true" />
+                        )}
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Stage: Framed 3:4 Cinema Poster Showcase */}
+              <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
+                <Link
+                  href={`/movies/${activeMovie.id}`}
+                  className="group relative w-full max-w-[380px] lg:max-w-[340px] aspect-[16/9] lg:aspect-[3/4] rounded-2xl overflow-hidden block bg-[#12121b]"
+                  style={{
+                    border: '1px solid rgba(232,200,122,0.28)',
+                    boxShadow: '0 26px 64px rgba(0,0,0,0.75), 0 0 42px rgba(201,168,76,0.12)',
+                  }}
+                >
+                  {activeMovie.poster_url ? (
+                    <img
+                      src={activeMovie.poster_url}
+                      alt={activeMovie.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="w-full h-full items-center justify-center flex-col gap-2 px-6 text-center"
+                    style={{
+                      display: activeMovie.poster_url ? 'none' : 'flex',
+                      background: 'linear-gradient(145deg, #171724 0%, #0d0d14 100%)',
+                    }}
+                  >
+                    <Film size={32} style={{ color: GOLD, opacity: 0.45 }} />
+                    <span className="font-cinzel text-sm" style={{ color: '#b8b4a8' }}>
+                      {activeMovie.title}
+                    </span>
+                  </div>
+
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background:
+                        'linear-gradient(180deg, rgba(8,8,14,0.04) 0%, rgba(8,8,14,0.22) 55%, rgba(8,8,14,0.92) 100%)',
+                    }}
+                  />
+
+                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+                    <div className="min-w-0">
+                      {activeMovie.uploaded_by && (
+                        <div className="text-xs truncate" style={{ color: '#d4cfc0' }}>
+                          {t.card.byPrefix}{' '}
+                          <span className="font-semibold text-white">{activeMovie.uploaded_by}</span>
+                        </div>
+                      )}
+                      {activeMovie.views > 0 && (
+                        <div className="text-[11px] tabular-nums mt-0.5" style={{ color: '#a5a193' }}>
+                          {Number(activeMovie.views).toLocaleString()} views
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105"
+                      style={{
+                        background: 'rgba(10,10,16,0.82)',
+                        border: '1px solid rgba(232,200,122,0.55)',
+                        color: GOLD_LIGHT,
+                      }}
+                    >
+                      <Play size={14} fill="currentColor" />
+                    </span>
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* Full-Width 3-Card Thumbnail Premiere Dock below the hero split */}
+            {premiereList.length > 1 && (
+              <div
+                className="mt-5 sm:mt-7 pt-3.5 sm:pt-4 flex sm:grid sm:grid-cols-3 gap-2.5 sm:gap-3 overflow-x-auto scrollbar-hide pb-1.5 sm:pb-2"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                {premiereList.map((item, idx) => {
+                  const isActive = idx === activeIndex;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveIndex(idx)}
+                      data-testid={`hero-reel-tab-${idx}`}
+                      className="group relative flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors cursor-pointer min-w-[220px] sm:min-w-0 shrink-0 sm:shrink"
+                      style={{
+                        background: isActive ? 'rgba(201,168,76,0.11)' : 'rgba(14,14,22,0.55)',
+                        border: isActive
+                          ? '1px solid rgba(232,200,122,0.42)'
+                          : '1px solid rgba(255,255,255,0.07)',
+                      }}
+                    >
+                      <div className="w-10 h-14 rounded-lg overflow-hidden shrink-0 bg-[#12121b]">
+                        {item.poster_url ? (
+                          <img
+                            src={item.poster_url}
+                            alt=""
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Film size={14} style={{ color: GOLD, opacity: 0.45 }} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 text-[11px] tabular-nums mb-0.5">
+                          <span style={{ color: isActive ? GOLD_LIGHT : '#7e7a6d', fontWeight: 700 }}>
+                            {String(idx + 1).padStart(2, '0')}
+                          </span>
+                          {item.year && <span style={{ color: '#7e7a6d' }}>{item.year}</span>}
+                          {item.genre && (
+                            <span className="truncate" style={{ color: '#8a8778' }}>
+                              · {getCategoryLabel(item.genre.split(',')[0].trim(), language)}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className="text-xs sm:text-[13px] font-semibold truncate transition-colors group-hover:text-amber-200"
+                          style={{ color: isActive ? '#f7f4eb' : '#c4bfb2' }}
+                        >
+                          {item.title}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="py-12 text-center">
+            <h1 className="font-cinzel text-3xl font-bold" style={{ color: GOLD_LIGHT }}>
+              AGASOBANUYE.RW
+            </h1>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ScrollRow({ title, icon: Icon, color, movies, link, onViewAll, id }) {
   const rowRef = useRef(null);
   const { t } = useLanguage();
   const scroll = (dir) => {
-    if (rowRef.current) rowRef.current.scrollBy({ left: dir * 320, behavior:'smooth' });
+    if (rowRef.current) rowRef.current.scrollBy({ left: dir * 320, behavior: 'smooth' });
   };
+
   return (
-    <section id={id} className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10 scroll-mt-32">
-      <div className="flex items-center gap-3 mb-4">
-        <Icon size={13} style={{ color }} />
-        <span className="section-tag" style={{ color }}>{title}</span>
-        <div className="flex-1 divider-soft" />
+    <section id={id} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14 scroll-mt-32">
+      <div className="flex items-baseline justify-between gap-4 pb-3 mb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex items-center gap-2.5">
+          <Icon size={15} style={{ color }} />
+          <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+            {title}
+          </h2>
+        </div>
         {link && (
-          <Link href={link}>
-            <span className="text-[10px] cursor-pointer hover:underline" style={{ color: MUTED }}>{t.homeSections.viewAll}</span>
+          <Link href={link} className="text-xs font-medium hover:text-amber-300 transition-colors" style={{ color: MUTED }}>
+            {t.homeSections.viewAll}
           </Link>
         )}
         {!link && onViewAll && (
-          <motion.button onClick={onViewAll} whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-            className="text-[10px] cursor-pointer hover:underline" style={{ color: MUTED }}>
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="text-xs font-medium cursor-pointer hover:text-amber-300 transition-colors"
+            style={{ color: MUTED }}
+          >
             {t.homeSections.viewAll}
-          </motion.button>
+          </button>
         )}
       </div>
       <div className="relative group">
         {movies.length > 4 && (
           <>
-            <motion.button onClick={() => scroll(-1)}
-              className="absolute left-0 top-0 bottom-0 z-20 w-10 flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ background:'linear-gradient(90deg,rgba(10,10,15,0.85),transparent)' }}>
-              <ChevronLeft size={18} style={{ color:GOLD }} />
-            </motion.button>
-            <motion.button onClick={() => scroll(1)}
-              className="absolute right-0 top-0 bottom-0 z-20 w-10 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ background:'linear-gradient(270deg,rgba(10,10,15,0.85),transparent)' }}>
-              <ChevronRight size={18} style={{ color:GOLD }} />
-            </motion.button>
+            <button
+              type="button"
+              onClick={() => scroll(-1)}
+              aria-label="Scroll left"
+              className="absolute left-0 top-0 bottom-0 z-20 w-10 flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              style={{ background: 'linear-gradient(90deg,rgba(10,10,15,0.85),transparent)' }}
+            >
+              <ChevronLeft size={18} style={{ color: GOLD }} />
+            </button>
+            <button
+              type="button"
+              onClick={() => scroll(1)}
+              aria-label="Scroll right"
+              className="absolute right-0 top-0 bottom-0 z-20 w-10 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              style={{ background: 'linear-gradient(270deg,rgba(10,10,15,0.85),transparent)' }}
+            >
+              <ChevronRight size={18} style={{ color: GOLD }} />
+            </button>
           </>
         )}
-        <div ref={rowRef} className="flex gap-3 overflow-x-auto scrollbar-hide py-2.5 px-1"
-          style={{ scrollBehavior:'smooth', WebkitOverflowScrolling:'touch' }}>
+        <div
+          ref={rowRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide py-2 px-0.5"
+          style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
+        >
           {movies.map((m, i) => (
-            <div key={m.id} className="flex-shrink-0" style={{ width:'clamp(140px,16vw,180px)' }}>
+            <div key={m.id} className="flex-shrink-0" style={{ width: 'clamp(160px,16vw,196px)' }}>
               <MovieCard movie={m} index={i} />
             </div>
           ))}
@@ -138,237 +525,146 @@ function ScrollRow({ title, icon:Icon, color, movies, link, onViewAll, id }) {
 }
 
 function GenreNav({ active, onSelect }) {
-  const navRef = useRef(null);
   const { language } = useLanguage();
   return (
-    <motion.div
-      initial={{ opacity:0, y:-8 }}
-      animate={{ opacity:1, y:0 }}
-      transition={{ delay:0.1, duration:0.4 }}
-      className="sticky top-[110px] md:top-[64px] z-40 mb-2"
-      style={{ background:'rgba(10,10,16,0.92)', backdropFilter:'blur(16px)', borderBottom:'1px solid rgba(255,255,255,0.06)' }}
+    <div
+      className="sticky top-[110px] md:top-[64px] z-40"
+      style={{
+        background: 'rgba(10,10,16,0.94)',
+        backdropFilter: 'blur(16px)',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+      }}
     >
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-        <div ref={navRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-2.5"
-          style={{ scrollBehavior:'smooth', WebkitOverflowScrolling:'touch' }}>
-          <motion.button onClick={() => onSelect('All')}
-            whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold transition-all"
-            style={active === 'All'
-              ? { background:'rgba(201,168,76,0.18)', border:'1px solid rgba(201,168,76,0.5)', color:'#e8c87a' }
-              : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:MUTED }}>
-            <Compass size={10} /> {getCategoryLabel('All', language)}
-          </motion.button>
-          {GENRES.map(g => (
-            <motion.button key={g} onClick={() => onSelect(g)}
-              whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-medium transition-all"
-              style={active === g
-                ? { background:'rgba(201,168,76,0.18)', border:'1px solid rgba(201,168,76,0.5)', color:'#e8c87a' }
-                : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:MUTED }
-              }>{getCategoryLabel(g, language)}</motion.button>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div
+          className="flex items-center gap-5 overflow-x-auto scrollbar-hide"
+          style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
+        >
+          <button
+            type="button"
+            onClick={() => onSelect('All')}
+            className="flex-shrink-0 flex items-center gap-1.5 py-3 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+            style={{
+              color: active === 'All' ? GOLD_LIGHT : MUTED,
+              borderBottom: active === 'All' ? `2px solid ${GOLD}` : '2px solid transparent',
+            }}
+          >
+            <Compass size={12} />
+            <span>{getCategoryLabel('All', language)}</span>
+          </button>
+          {GENRES.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => onSelect(g)}
+              className="flex-shrink-0 py-3 text-xs font-medium transition-colors cursor-pointer whitespace-nowrap hover:text-stone-200"
+              style={{
+                color: active === g ? GOLD_LIGHT : '#948f82',
+                borderBottom: active === g ? `2px solid ${GOLD}` : '2px solid transparent',
+              }}
+            >
+              {getCategoryLabel(g, language)}
+            </button>
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-const BLUE = '#38bdf8';
-const AMBER = '#fbbf24';
-
-function NewsRowCard({ item, index }) {
-  const date = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '';
+function NewsRowCard({ item }) {
+  const date = item.created_at
+    ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : '';
   return (
     <Link href={`/news/${item.id}`}>
-      <motion.div initial={{ opacity:0, y:16 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, margin:'-20px' }}
-        transition={{ delay: Math.min((index||0)%6,5)*0.04 }}
-        whileHover={{ scale:1.02, y:-2 }}
-        className="rounded-xl overflow-hidden cursor-pointer h-full"
-        style={{ background:'rgba(14,14,22,0.6)', border:'1px solid rgba(56,189,248,0.08)' }}>
+      <div
+        className="rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-400/35"
+        style={{ background: 'rgba(15,15,24,0.82)', border: '1px solid rgba(255,255,255,0.07)' }}
+      >
         {item.image_url && (
-          <div className="w-full aspect-[16/9] overflow-hidden">
-            <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500"
-              style={{ willChange:'transform' }}
-              onMouseEnter={e => e.currentTarget.style.transform='scale(1.06)'}
-              onMouseLeave={e => e.currentTarget.style.transform='scale(1)'} />
+          <div className="w-full aspect-[16/9] overflow-hidden bg-[#12121b]">
+            <img
+              src={item.image_url}
+              alt={item.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+            />
           </div>
         )}
-        <div className="p-3">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            {item.category && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded-md" style={{ background:'rgba(56,189,248,0.1)', color:BLUE, border:'1px solid rgba(56,189,248,0.15)' }}>
-                {item.category}
-              </span>
-            )}
-            {date && <span className="text-[9px]" style={{ color:DIM }}>{date}</span>}
+        <div className="p-4">
+          <div className="flex items-center gap-1.5 mb-1.5 text-[11px]" style={{ color: '#8a8778' }}>
+            {item.category && <span style={{ color: BLUE, fontWeight: 600 }}>{item.category}</span>}
+            {item.category && date && <span aria-hidden="true">·</span>}
+            {date && <span>{date}</span>}
           </div>
-          <p className="text-[11px] font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color:TEXT }}>{item.title}</p>
-          <div className="flex items-center gap-2">
-            {item.author_name && <span className="text-[9px]" style={{ color:MUTED }}>{item.author_name}</span>}
+          <p className="text-xs sm:text-sm font-semibold leading-snug mb-2 line-clamp-2" style={{ color: TEXT }}>
+            {item.title}
+          </p>
+          <div className="flex items-center gap-3 text-[11px]" style={{ color: MUTED }}>
+            {item.author_name && <span>{item.author_name}</span>}
             {item.likes > 0 && (
-              <span className="flex items-center gap-0.5 text-[9px]" style={{ color:DIM }}>
-                <Heart size={8} /> {item.likes}
+              <span className="inline-flex items-center gap-1 tabular-nums">
+                <Heart size={10} /> {item.likes}
               </span>
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }
 
-function ShopRowCard({ item, index }) {
+function ShopRowCard({ item }) {
   return (
     <Link href={`/shop/${item.id}`}>
-      <motion.div initial={{ opacity:0, y:16 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, margin:'-20px' }}
-        transition={{ delay: Math.min((index||0)%6,5)*0.04 }}
-        whileHover={{ scale:1.02, y:-2 }}
-        className="rounded-xl overflow-hidden cursor-pointer h-full"
-        style={{ background:'rgba(14,14,22,0.6)', border:'1px solid rgba(251,191,36,0.08)' }}>
-        <div className="relative w-full aspect-[4/3] overflow-hidden">
-          {item.image_url
-            ? <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500"
-                style={{ willChange:'transform' }}
-                onMouseEnter={e => e.currentTarget.style.transform='scale(1.06)'}
-                onMouseLeave={e => e.currentTarget.style.transform='scale(1)'} />
-            : <div className="w-full h-full flex items-center justify-center" style={{ background:'rgba(255,255,255,0.03)' }}>
-                <ShoppingBag size={28} style={{ color:'#3a3a2a' }} />
-              </div>
-          }
-          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[10px] font-semibold"
-            style={{ background:'rgba(251,191,36,0.15)', border:'1px solid rgba(251,191,36,0.3)', color:AMBER, backdropFilter:'blur(8px)' }}>
+      <div
+        className="rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400/35"
+        style={{ background: 'rgba(15,15,24,0.82)', border: '1px solid rgba(255,255,255,0.07)' }}
+      >
+        <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#12121b]">
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={item.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ShoppingBag size={28} style={{ color: '#3a3a2a' }} />
+            </div>
+          )}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(180deg, transparent 55%, rgba(8,8,14,0.86) 100%)' }}
+          />
+          <div
+            className="absolute bottom-2.5 right-3 text-xs font-bold tabular-nums"
+            style={{ color: AMBER }}
+          >
             {item.currency || 'RWF'} {item.price}
           </div>
+        </div>
+        <div className="p-4">
           {item.category && (
-            <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-md text-[8px]"
-              style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', color:'#d4a040', border:'1px solid rgba(212,160,64,0.2)' }}>
+            <div className="text-[11px] mb-1 font-medium" style={{ color: '#c9a84c' }}>
               {item.category}
             </div>
           )}
-        </div>
-        <div className="p-3">
-          <p className="text-[11px] font-semibold leading-tight mb-1 line-clamp-1" style={{ color:TEXT }}>{item.title}</p>
-          {item.seller_name && <p className="text-[9px] mb-1" style={{ color:MUTED }}>{item.seller_name}</p>}
-          <div className="flex items-center gap-1">
-            <MessageSquare size={8} style={{ color:'#25d366' }} />
-            <span className="text-[8px]" style={{ color:'#25d366' }}>WhatsApp</span>
+          <p className="text-xs sm:text-sm font-semibold leading-snug mb-1.5 line-clamp-1" style={{ color: TEXT }}>
+            {item.title}
+          </p>
+          <div className="flex items-center justify-between gap-2 text-[11px]" style={{ color: MUTED }}>
+            {item.seller_name ? <span className="truncate">{item.seller_name}</span> : <span />}
+            <span className="inline-flex items-center gap-1 shrink-0" style={{ color: '#25d366' }}>
+              <MessageSquare size={10} /> WhatsApp
+            </span>
           </div>
-        </div>
-      </motion.div>
-    </Link>
-  );
-}
-
-function HeroMovieSpotlight({ movie }) {
-  const { language, t } = useLanguage();
-  const { toggleWatchlist, isInWatchlist } = useCollection();
-  if (!movie) return null;
-  const saved = isInWatchlist(movie.id);
-  return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
-      <div className="relative rounded-2xl overflow-hidden"
-        style={{ background:'rgba(14,14,22,0.7)', border:'1px solid rgba(201,168,76,0.15)' }}>
-        {movie.poster_url && (
-          <div className="absolute inset-0 opacity-20">
-            <img src={movie.poster_url} alt="" className="w-full h-full object-cover"
-              style={{ filter:'blur(40px) brightness(0.4)' }} />
-          </div>
-        )}
-        <div className="absolute inset-0" style={{ background:'linear-gradient(135deg,rgba(10,10,15,0.9) 30%,rgba(10,10,15,0.5) 70%,transparent)' }} />
-        <div className="relative z-10 flex flex-col sm:flex-row gap-6 p-6 sm:p-8 items-center sm:items-start">
-          <motion.div initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }} transition={{ delay:0.15 }}
-            className="flex-shrink-0 w-32 sm:w-44 rounded-xl overflow-hidden shadow-2xl"
-            style={{ border:'1px solid rgba(255,255,255,0.08)' }}>
-            {movie.poster_url
-              ? <img src={movie.poster_url} alt={movie.title} className="w-full aspect-[2/3] object-cover" />
-              : <div className="w-full aspect-[2/3] flex items-center justify-center" style={{ background:'rgba(255,255,255,0.03)' }}>
-                  <Film size={32} style={{ color:'#3a3a2a' }} />
-                </div>
-            }
-          </motion.div>
-          <motion.div initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} transition={{ delay:0.25 }}
-            className="flex-1 min-w-0 text-center sm:text-left">
-            <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-2">
-              <span className="badge badge-gold text-[10px]">{getMediaTypeLabel(movie.type || 'Movie', language)}</span>
-              {movie.year && <span className="text-[11px]" style={{ color:MUTED }}>{movie.year}</span>}
-              {movie.rating && (
-                <span className="flex items-center gap-1 text-[11px]" style={{ color:GOLD }}>
-                  <Star size={10} fill={GOLD} /> {movie.rating}
-                </span>
-              )}
-              {movie.language && <span className="text-[11px] px-2 py-0.5 rounded-md" style={{ background:'rgba(201,168,76,0.1)', color:'#c9a84c', border:'1px solid rgba(201,168,76,0.15)' }}>{movie.language}</span>}
-              {movie.platforms && movie.platforms.length > 0 && (
-                <div className="flex gap-1">
-                  {movie.platforms.slice(0, 3).map(p => (
-                    <span key={p} className="text-[8px] px-1.5 py-0.5 rounded"
-                      style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#b8b4a8' }}>
-                      {p}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <h2 className="font-cinzel font-bold text-lg sm:text-xl mb-2 leading-tight"
-              style={{ fontFamily:'Cinzel,serif', color:TEXT }}>
-              {movie.title}
-            </h2>
-
-            {movie.genre && (
-              <div className="flex flex-wrap gap-1.5 mb-3 justify-center sm:justify-start">
-                {movie.genre.split(',').map(g => (
-                  <span key={g.trim()} className="text-[10px] px-2 py-0.5 rounded-md"
-                    style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', color:'#b8b4a8' }}>
-                    {getCategoryLabel(g.trim(), language)}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {movie.overview && (
-              <p className="text-xs leading-relaxed mb-4 line-clamp-2" style={{ color:MUTED }}>
-                {movie.overview}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-              <Link href={`/movies/${movie.id}`}>
-                <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
-                  style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
-                  <Play size={13} /> {t.spotlight.watchNow}
-                </motion.div>
-              </Link>
-              <Link href={`/movies/${movie.id}`}>
-                <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer"
-                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }}>
-                  <Download size={13} /> {t.spotlight.download}
-                </motion.div>
-              </Link>
-              <motion.button
-                type="button"
-                onClick={() => toggleWatchlist(movie)}
-                whileHover={{ scale:1.03 }}
-                whileTap={{ scale:0.97 }}
-                data-testid="spotlight-watchlist-btn"
-                aria-pressed={saved}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium cursor-pointer"
-                style={{
-                  background: saved ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.04)',
-                  border: saved ? '1px solid rgba(201,168,76,0.45)' : '1px solid rgba(255,255,255,0.08)',
-                  color: saved ? '#f5e4a8' : '#b8b4a8',
-                }}
-              >
-                <Bookmark size={13} fill={saved ? '#c9a84c' : 'none'} />
-                <span>{saved ? t.card.inWatchlist : t.card.saveToWatchlist}</span>
-              </motion.button>
-            </div>
-          </motion.div>
         </div>
       </div>
-    </section>
+    </Link>
   );
 }
 
@@ -376,55 +672,37 @@ export default function Home({ movies: initial, comingSoon }) {
   const { language, t, tr } = useLanguage();
   const [movies, setMovies] = useState(initial || []);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('All');
   const [genreFilter, setGenreFilter] = useState('');
   const [yearFilter, setYearFilter] = useState('All');
   const [ratingFilter, setRatingFilter] = useState('All');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(!initial || initial.length === 0);
-  const [stats, setStats] = useState(null);
-  const [heroMovie, setHeroMovie] = useState(null);
   const [newsItems, setNewsItems] = useState([]);
   const [shopItems, setShopItems] = useState([]);
 
   useEffect(() => {
     if (!initial || initial.length === 0) {
-      getMovies().then(d => { setMovies(d); setLoading(false); }).catch(() => setLoading(false));
+      getMovies().then((d) => { setMovies(d); setLoading(false); }).catch(() => setLoading(false));
     }
-    fetch('/api/search?q=a').then(r => r.json()).then(d => {
-      setStats({
-        movies: d.movies?.length || 0, games: d.games?.length || 0,
-        news: d.news?.length || 0, shop: d.shop?.length || 0,
-      });
-    }).catch(() => {});
 
-    fetch('/api/news').then(r => r.json()).then(d => {
+    fetch('/api/news').then((r) => r.json()).then((d) => {
       if (d?.length) setNewsItems(d.slice(0, 8));
     }).catch(() => {});
 
-    fetch('/api/shop').then(r => r.json()).then(d => {
+    fetch('/api/shop').then((r) => r.json()).then((d) => {
       if (Array.isArray(d)) setShopItems(d.slice(0, 8));
     }).catch(() => {});
-  }, []);
+  }, [initial]);
 
-  useEffect(() => {
-    if (movies.length > 0) {
-      const featured = movies.find(m => m.featured);
-      setHeroMovie(featured || movies[0]);
-    }
-  }, [movies]);
+  useEffect(() => { setPage(1); }, [query, genreFilter, yearFilter, ratingFilter]);
 
-  useEffect(() => { setPage(1); }, [query, filter, genreFilter, yearFilter, ratingFilter]);
-
-  const types = ['All', 'Movie', 'Series', 'Anime', 'Documentary'];
   const availableYears = getMovieFilterYears(movies);
   const hasActiveFilters = Boolean(
-    query.trim() || filter !== 'All' || genreFilter || yearFilter !== 'All' || ratingFilter !== 'All'
+    query.trim() || genreFilter || yearFilter !== 'All' || ratingFilter !== 'All'
   );
 
   const resetAllFilters = () => {
     setQuery('');
-    setFilter('All');
     setGenreFilter('');
     setYearFilter('All');
     setRatingFilter('All');
@@ -433,7 +711,7 @@ export default function Home({ movies: initial, comingSoon }) {
 
   const filtered = filterMovies(movies, {
     query,
-    type: filter,
+    type: 'All',
     category: genreFilter || 'All',
     year: yearFilter,
     minRating: ratingFilter,
@@ -441,7 +719,7 @@ export default function Home({ movies: initial, comingSoon }) {
 
   const categoryCounts = getCategoryCounts(movies, GENRES, {
     query,
-    type: filter,
+    type: 'All',
     year: yearFilter,
     minRating: ratingFilter,
   });
@@ -453,22 +731,23 @@ export default function Home({ movies: initial, comingSoon }) {
   const getPageNumbers = () => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
     if (page <= 4) return [1, 2, 3, 4, 5, '...', totalPages];
-    if (page >= totalPages - 3) return [1, '...', totalPages-4, totalPages-3, totalPages-2, totalPages-1, totalPages];
-    return [1, '...', page-1, page, page+1, '...', totalPages];
+    if (page >= totalPages - 3) return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, '...', page - 1, page, page + 1, '...', totalPages];
+  };
+
+  const jumpToSection = (sectionId) => {
+    setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 30);
   };
 
   const changePage = (p) => {
     setPage(p);
-    setTimeout(() => {
-      document.getElementById('explore')?.scrollIntoView({ behavior:'smooth', block:'start' });
-    }, 50);
+    jumpToSection('explore');
   };
 
-  const moviesByType = (type) => movies.filter(m => m.type === type);
-
-  const moviesByGenre = (genre) => movies.filter(m =>
-    m.genre?.toLowerCase().includes(genre.toLowerCase())
-  );
+  const moviesByType = (type) => movies.filter((m) => m.type === type);
+  const moviesByGenre = (genre) => movies.filter((m) => m.genre?.toLowerCase().includes(genre.toLowerCase()));
 
   const handleGenreBrowse = (genre) => {
     if (genre !== 'All') {
@@ -483,23 +762,12 @@ export default function Home({ movies: initial, comingSoon }) {
     if (genre === 'All') {
       setGenreFilter('');
       setPage(1);
-      setTimeout(() => {
-        document.getElementById('explore')?.scrollIntoView({ behavior:'smooth', block:'start' });
-      }, 50);
+      jumpToSection('explore');
       return;
     }
     setGenreFilter(genre);
     setPage(1);
-    const row = document.getElementById(`genre-row-${genre}`);
-    if (row) {
-      setTimeout(() => {
-        row.scrollIntoView({ behavior:'smooth', block:'start' });
-      }, 50);
-    } else {
-      setTimeout(() => {
-        document.getElementById('explore')?.scrollIntoView({ behavior:'smooth', block:'start' });
-      }, 50);
-    }
+    jumpToSection('explore');
   };
 
   return (
@@ -548,228 +816,60 @@ export default function Home({ movies: initial, comingSoon }) {
         ]}
       />
 
-      <div className="min-h-screen bg-deep">
+      <div className="min-h-screen bg-deep pb-16">
         <CinematicBackground />
 
-        {/* ══ HERO ══ */}
-        <section className="relative flex flex-col items-center justify-center px-4 pt-32 md:pt-24 pb-10 overflow-hidden">
-          <div className="orb absolute -top-40 left-0 w-[500px] h-[500px]" style={{ background:'rgba(201,168,76,0.06)' }} />
-          <div className="orb absolute top-0 right-0 w-[350px] h-[350px]" style={{ background:'rgba(168,85,247,0.04)' }} />
+        {/* 1. Full-Bleed Kigali Screening Room Premiere Stage */}
+        <PremiereHeroStage movies={movies} />
 
-          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
-            transition={{ duration:0.7, ease:[0.16,1,0.3,1] }}
-            className="relative z-10 text-center w-full max-w-5xl mx-auto">
-
-            <motion.div className="mb-3" initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} transition={{ delay:0.1, duration:0.8 }}>
-              <motion.h1 className="font-cinzel font-bold tracking-[0.06em] sm:tracking-[0.12em] leading-none select-none whitespace-nowrap"
-                style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(1.35rem,4.9vw,3.5rem)',
-                  background:'linear-gradient(135deg,#f5e4a8 0%,#c9a84c 40%,#e8c87a 65%,#a07828 100%)',
-                  WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                  filter:'drop-shadow(0 0 30px rgba(201,168,76,0.4))',
-                }}
-                animate={{ filter:['drop-shadow(0 0 20px rgba(201,168,76,0.3))','drop-shadow(0 0 50px rgba(201,168,76,0.6))','drop-shadow(0 0 20px rgba(201,168,76,0.3))'] }}
-                transition={{ repeat:Infinity, duration:3.5, ease:'easeInOut' }}>
-                AGASOBANUYE.RW
-              </motion.h1>
-              <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }}
-                transition={{ delay:0.5, duration:1.2, ease:'easeOut' }}
-                className="divider-gold w-36 mx-auto mt-3" />
-            </motion.div>
-
-            <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.4 }}
-              data-testid="hero-description"
-              className="text-sm sm:text-base font-light mb-5 leading-relaxed max-w-lg mx-auto"
-              style={{ color:'#8a8778' }}>
-              {t.hero.description}
-            </motion.p>
-
-            {/* Stats */}
-            <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.3 }}
-              className="flex justify-center gap-3 mb-5 flex-wrap">
-              {[
-                { key: 'movies', label: t.hero.statsMovies, value: movies.length, color: GOLD, icon: Film },
-                { key: 'news', label: t.hero.statsNews, value: stats?.news || 0, color: '#38bdf8', icon: Newspaper },
-                { key: 'shop', label: t.hero.statsShop, value: stats?.shop || 0, color: '#fbbf24', icon: ShoppingBag },
-                { key: 'games', label: t.hero.statsGames, value: stats?.games || 0, color: '#a855f7', icon: Gamepad2 },
-              ].map(s => (
-                <div key={s.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-                  style={{ background:`${s.color}0A`, border:`1px solid ${s.color}18` }}>
-                  <s.icon size={9} style={{ color:s.color }} />
-                  <span className="text-[9px]" style={{ color:MUTED }}><span style={{ color:'#e8e6f0', fontWeight:600 }}>{s.value}</span> {s.label}</span>
-                </div>
-              ))}
-            </motion.div>
-
-            {/* Search */}
-            <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.45 }}
-              className="max-w-md mx-auto mb-5">
-              <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} placeholder={t.search.heroPlaceholder} />
-            </motion.div>
-
-            {/* Filter pills — cleaner */}
-            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.55 }}
-              className="flex items-center justify-center gap-1.5 flex-wrap mb-5">
-              {types.map(typeKey => (
-                <motion.button key={typeKey} onClick={() => setFilter(typeKey)}
-                  whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-                  className="px-3 py-1.5 rounded-full text-[10px] font-medium transition-all"
-                  style={filter === typeKey
-                    ? { background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.4)', color:'#e8c87a' }
-                    : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:MUTED }
-                  }>
-                  {getMediaTypeLabel(typeKey, language)}{typeKey === 'Anime' && <span className="ml-0.5">✦</span>}
-                </motion.button>
-              ))}
-            </motion.div>
-
-            {/* CTAs — tighter */}
-            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.65 }}
-              className="flex items-center justify-center gap-2 flex-wrap">
-              <Link href="/submit">
-                <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
-                  style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
-                  <Upload size={12} /> {t.hero.addMovie}
-                </motion.div>
-              </Link>
-              <Link href="/requests">
-                <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
-                  style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }}>
-                  <Inbox size={12} /> {t.hero.request}
-                </motion.div>
-              </Link>
-              <Link href="/live">
-                <motion.div whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-medium"
-                  style={{ background:'rgba(200,0,0,0.1)', border:'1px solid rgba(220,0,0,0.35)', color:'#ff4444' }}>
-                  <motion.div className="w-1.5 h-1.5 rounded-full" style={{ background:'#ef4444' }}
-                    animate={{ opacity:[1,0.2,1] }} transition={{ repeat:Infinity, duration:1 }} />
-                  {t.hero.liveSports}
-                </motion.div>
-              </Link>
-              <motion.a href="https://t.me/+n3etNnm3RxI5NGZl" target="_blank" rel="noopener noreferrer"
-                whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-medium"
-                style={{ background:'rgba(34,158,217,0.1)', border:'1px solid rgba(34,158,217,0.3)', color:'#4fc3f7' }}>
-                <Send size={10} /> {t.hero.telegram}
-              </motion.a>
-            </motion.div>
-          </motion.div>
-        </section>
-
-        {/* ══ TRENDING NOW (Top 5 Most Viewed) ══ */}
-        <TrendingNowSection movies={movies} />
-
-        {/* Notice */}
+        {/* 2. Quiet Editorial Notice Strip */}
         <NoticeBoard />
 
-        {/* ══ HERO SPOTLIGHT ══ */}
-        {heroMovie && <HeroMovieSpotlight movie={heroMovie} />}
+        {/* 3. Architectural Ranked Trending Showcase */}
+        <TrendingNowSection movies={movies} limit={8} />
 
-        {/* ══ SUPPORT / KEEP US FREE ══ */}
-        <SupportCTA />
-
-        {/* ══ GENRE NAV (sticky) ══ */}
+        {/* 4. Editorial Sticky Genre Rail */}
         <GenreNav active={genreFilter || 'All'} onSelect={handleGenreBrowse} />
 
-        {/* ══ ADS ══ */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
-          <AdBanner size="728x90" className="mb-3" />
-          <NativeBanner />
-        </div>
-
-        {/* ══ NEWS ROW ══ */}
-        {newsItems.length > 0 && (
-          <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
-            <div className="flex items-center gap-3 mb-4">
-              <Newspaper size={13} style={{ color:BLUE }} />
-              <span className="section-tag" style={{ color:BLUE }}>{t.homeSections.latestNews}</span>
-              <div className="flex-1 divider-soft" />
-              <Link href="/news"><span className="text-[10px] cursor-pointer hover:underline" style={{ color:MUTED }}>{t.homeSections.viewAll}</span></Link>
+        {/* 5. Main Film Catalog */}
+        <section id="explore" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-14 scroll-mt-44 md:scroll-mt-32">
+          <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+                {t.homeSections.allTitles}
+              </h2>
+              {(genreFilter || yearFilter !== 'All' || ratingFilter !== 'All') && (
+                <span className="text-xs font-medium" style={{ color: GOLD_LIGHT }}>
+                  {[
+                    genreFilter ? getCategoryLabel(genreFilter, language) : null,
+                    yearFilter !== 'All' ? yearFilter : null,
+                    ratingFilter !== 'All' ? `${ratingFilter}+ ★` : null,
+                  ].filter(Boolean).join(' · ')}
+                </span>
+              )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {newsItems.slice(0, 4).map((item, i) => (
-                <NewsRowCard key={item.id} item={item} index={i} />
-              ))}
+            <div className="flex items-center gap-3 shrink-0">
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetAllFilters}
+                  className="text-xs font-medium px-2.5 py-1 rounded-md cursor-pointer transition-colors"
+                  style={{
+                    background: 'rgba(201,168,76,0.12)',
+                    border: '1px solid rgba(201,168,76,0.3)',
+                    color: GOLD_LIGHT,
+                  }}
+                >
+                  {t.homeSections.reset}
+                </button>
+              )}
+              <span className="text-xs tabular-nums" data-testid="explore-result-count" style={{ color: MUTED }}>
+                {filtered.length} {filtered.length === 1 ? t.homeSections.titleSingular : t.homeSections.titlePlural}
+                {totalPages > 1 && <span style={{ color: DIM }}> · p{page}/{totalPages}</span>}
+              </span>
             </div>
-          </section>
-        )}
-
-        {/* ══ RECOMMENDED FOR YOU (OMDB API) ══ */}
-        <RecommendedForYou />
-
-        {/* ══ COMING SOON ══ */}
-        <ComingSoonSection items={comingSoon || undefined} />
-
-        {/* ══ SHOP ROW ══ */}
-        {shopItems.length > 0 && (
-          <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
-            <div className="flex items-center gap-3 mb-4">
-              <ShoppingBag size={13} style={{ color:AMBER }} />
-              <span className="section-tag" style={{ color:AMBER }}>{t.homeSections.shopDeals}</span>
-              <div className="flex-1 divider-soft" />
-              <Link href="/shop"><span className="text-[10px] cursor-pointer hover:underline" style={{ color:MUTED }}>{t.homeSections.viewAll}</span></Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {shopItems.slice(0, 4).map((item, i) => (
-                <ShopRowCard key={item.id} item={item} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ══ CATEGORY ROWS ══ */}
-        {CATEGORIES.map(cat => {
-          const catMovies = moviesByType(cat.key);
-          if (catMovies.length === 0) return null;
-          return (
-            <ScrollRow key={cat.key} title={getMediaTypeLabel(cat.key, language)} icon={cat.icon} color={GOLD} movies={catMovies} />
-          );
-        })}
-
-        {/* ══ GENRE ROWS ══ */}
-        {GENRE_ROWS.map(g => {
-          const genreMovies = moviesByGenre(g.name);
-          if (genreMovies.length === 0) return null;
-          return (
-            <ScrollRow key={g.name} id={`genre-row-${g.name}`} title={getCategoryLabel(g.name, language)} icon={g.icon} color={g.color}
-              movies={genreMovies.slice(0, 12)} onViewAll={() => handleGenreBrowse(g.name)} />
-          );
-        })}
-
-        {/* ══ BROWSE ALL ══ */}
-        <section id="explore" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-24 scroll-mt-44 md:scroll-mt-32">
-          <div className="flex items-center gap-3 mb-3">
-            <Film size={13} style={{ color:GOLD }} />
-            <span className="section-tag">
-              {filter === 'All' ? t.homeSections.allTitles : getMediaTypeLabel(filter, language)}
-              {genreFilter ? ` · ${getCategoryLabel(genreFilter, language)}` : ''}
-              {yearFilter !== 'All' ? ` · ${yearFilter}` : ''}
-              {ratingFilter !== 'All' ? ` · ${ratingFilter}+ ★` : ''}
-            </span>
-            <div className="flex-1 divider-soft" />
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={resetAllFilters}
-                className="text-[10px] font-medium px-2 py-0.5 rounded-md cursor-pointer transition-colors"
-                style={{
-                  background: 'rgba(201,168,76,0.1)',
-                  border: '1px solid rgba(201,168,76,0.25)',
-                  color: GOLD,
-                }}
-              >
-                {t.homeSections.reset}
-              </button>
-            )}
-            <span className="text-[11px] tabular-nums" data-testid="explore-result-count" style={{ color:MUTED }}>
-              {filtered.length} {filtered.length === 1 ? t.homeSections.titleSingular : t.homeSections.titlePlural}
-              {totalPages > 1 && <span style={{ color:'#4a4a3a' }}> · p{page}/{totalPages}</span>}
-            </span>
           </div>
 
-          {/* Search Filtering Component (Search + Genre + Year + Rating) */}
           <MovieSearchFilter
             query={query}
             onQueryChange={(val) => {
@@ -797,7 +897,6 @@ export default function Home({ movies: initial, comingSoon }) {
             hasActiveFilters={hasActiveFilters}
           />
 
-          {/* Horizontal scrolling category filter */}
           <CategoryFilterBar
             categories={GENRES}
             activeCategory={genreFilter || 'All'}
@@ -810,7 +909,7 @@ export default function Home({ movies: initial, comingSoon }) {
           />
 
           {loading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {[...Array(12)].map((_, i) => (
                 <div key={i}>
                   <div className="shimmer aspect-[2/3] rounded-xl mb-2" />
@@ -822,30 +921,30 @@ export default function Home({ movies: initial, comingSoon }) {
           )}
 
           {!loading && noResult && (
-            <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
-              className="text-center py-16">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background:'rgba(201,168,76,0.06)', border:'1px solid rgba(201,168,76,0.12)' }}>
-                <Film size={28} style={{ color:'#4a4a3a' }} />
+            <div className="text-center py-16">
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.12)' }}
+              >
+                <Film size={28} style={{ color: '#4a4a3a' }} />
               </div>
-              <h3 className="font-cinzel text-base mb-2" style={{ fontFamily:'Cinzel,serif', color:GOLD }}>
+              <h3 className="font-cinzel text-base mb-2" style={{ fontFamily: 'Cinzel,serif', color: GOLD }}>
                 {query
                   ? t.homeSections.notInLibrary
                   : tr('homeSections.noCategoryTitles', {
-                      category:
-                        genreFilter
-                          ? getCategoryLabel(genreFilter, language)
-                          : yearFilter !== 'All'
-                          ? yearFilter
-                          : ratingFilter !== 'All'
-                          ? `${ratingFilter}+ ★`
-                          : getMediaTypeLabel(filter, language),
+                      category: genreFilter
+                        ? getCategoryLabel(genreFilter, language)
+                        : yearFilter !== 'All'
+                        ? yearFilter
+                        : ratingFilter !== 'All'
+                        ? `${ratingFilter}+ ★`
+                        : t.homeSections.allTitles,
                     })}
               </h3>
-              <p className="text-xs mb-5" style={{ color:MUTED }}>
+              <p className="text-xs mb-5" style={{ color: MUTED }}>
                 {query ? (
                   <>
-                    <span>&ldquo;<span style={{ color:'#b8b4a8' }}>{query}</span>&rdquo; — </span>
+                    <span>&ldquo;<span style={{ color: '#b8b4a8' }}>{query}</span>&rdquo; — </span>
                     {t.homeSections.requestIt}
                   </>
                 ) : (
@@ -857,88 +956,190 @@ export default function Home({ movies: initial, comingSoon }) {
                   type="button"
                   onClick={resetAllFilters}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
-                  style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}
+                  style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: GOLD }}
                 >
                   {t.homeSections.showAllTitles}
                 </button>
                 <Link href="/requests">
-                  <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+                  <div
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
-                    style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#b8b4a8' }}>
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#b8b4a8' }}
+                  >
                     <Inbox size={13} /> {t.homeSections.requestIt}
-                  </motion.div>
+                  </div>
                 </Link>
                 <Link href="/submit">
-                  <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+                  <div
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
-                    style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778' }}>
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8a8778' }}
+                  >
                     <Upload size={13} /> {t.homeSections.addIt}
-                  </motion.div>
+                  </div>
                 </Link>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {!loading && !noResult && (
             <>
-              <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-10">
-                <AnimatePresence>
-                  {paginated.map((m, i) => <MovieCard key={m.id} movie={m} index={i} />)}
-                </AnimatePresence>
-              </motion.div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+                {paginated.map((m, i) => <MovieCard key={m.id} movie={m} index={i} />)}
+              </div>
 
               {totalPages > 1 && (
-                <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
-                  className="flex items-center justify-center gap-2 flex-wrap">
-                  <motion.button onClick={() => changePage(page-1)} disabled={page===1}
-                    whileHover={page!==1 ? { scale:1.05 } : {}} whileTap={page!==1 ? { scale:0.95 } : {}}
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => changePage(page - 1)}
+                    disabled={page === 1}
                     className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium"
-                    style={page===1
-                      ? { background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', color:'#3a3a2a', cursor:'not-allowed' }
-                      : { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', color:'#b8b4a8', cursor:'pointer' }
-                    }>
+                    style={
+                      page === 1
+                        ? { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#3a3a2a', cursor: 'not-allowed' }
+                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#b8b4a8', cursor: 'pointer' }
+                    }
+                  >
                     <ChevronLeft size={14} /> {t.homeSections.prev}
-                  </motion.button>
+                  </button>
                   {getPageNumbers().map((p, i) => (
-                    <motion.button key={i} onClick={() => p !== '...' && changePage(p)}
-                      whileHover={p !== '...' ? { scale:1.08 } : {}} whileTap={p !== '...' ? { scale:0.93 } : {}}
-                      className="w-9 h-9 rounded-xl text-xs font-medium flex items-center justify-center"
-                      style={p===page
-                        ? { background:'rgba(201,168,76,0.2)', border:'1px solid rgba(201,168,76,0.45)', color:'#e8c87a', boxShadow:'0 0 16px rgba(201,168,76,0.15)', cursor:'default' }
-                        : p==='...'
-                          ? { background:'transparent', border:'none', color:'#4a4a3a', cursor:'default' }
-                          : { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', color:'#8a8778', cursor:'pointer' }
-                      }>
+                    <button
+                      type="button"
+                      key={i}
+                      onClick={() => p !== '...' && changePage(p)}
+                      className="w-9 h-9 rounded-xl text-xs font-medium flex items-center justify-center tabular-nums"
+                      style={
+                        p === page
+                          ? { background: 'rgba(201,168,76,0.2)', border: '1px solid rgba(201,168,76,0.45)', color: GOLD_LIGHT, cursor: 'default' }
+                          : p === '...'
+                          ? { background: 'transparent', border: 'none', color: '#4a4a3a', cursor: 'default' }
+                          : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#8a8778', cursor: 'pointer' }
+                      }
+                    >
                       {p}
-                    </motion.button>
+                    </button>
                   ))}
-                  <motion.button onClick={() => changePage(page+1)} disabled={page===totalPages}
-                    whileHover={page!==totalPages ? { scale:1.05 } : {}} whileTap={page!==totalPages ? { scale:0.95 } : {}}
+                  <button
+                    type="button"
+                    onClick={() => changePage(page + 1)}
+                    disabled={page === totalPages}
                     className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium"
-                    style={page===totalPages
-                      ? { background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', color:'#3a3a2a', cursor:'not-allowed' }
-                      : { background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD, cursor:'pointer' }
-                    }>
+                    style={
+                      page === totalPages
+                        ? { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#3a3a2a', cursor: 'not-allowed' }
+                        : { background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: GOLD, cursor: 'pointer' }
+                    }
+                  >
                     {t.homeSections.next} <ChevronRight size={14} />
-                  </motion.button>
-                </motion.div>
+                  </button>
+                </div>
               )}
             </>
           )}
 
           {!loading && movies.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-sm mb-4" style={{ color:MUTED }}>{t.homeSections.noMoviesAdded}</p>
+              <p className="text-sm mb-4" style={{ color: MUTED }}>{t.homeSections.noMoviesAdded}</p>
               <Link href="/submit">
-                <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+                <div
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:GOLD }}>
+                  style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: GOLD }}
+                >
                   <Upload size={14} /> {t.homeSections.addFirstMovie}
-                </motion.div>
+                </div>
               </Link>
             </div>
           )}
         </section>
+
+        {/* 6. Curated Collections (Only collections with >= 2 titles) */}
+        {CATEGORIES.map((cat) => {
+          const catMovies = moviesByType(cat.key);
+          if (catMovies.length < 2) return null;
+          return (
+            <ScrollRow
+              key={cat.key}
+              title={getMediaTypeLabel(cat.key, language)}
+              icon={cat.icon}
+              color={GOLD}
+              movies={catMovies}
+            />
+          );
+        })}
+
+        {GENRE_ROWS.map((g) => {
+          const genreMovies = moviesByGenre(g.name);
+          if (genreMovies.length < 2) return null;
+          return (
+            <ScrollRow
+              key={g.name}
+              id={`genre-row-${g.name}`}
+              title={getCategoryLabel(g.name, language)}
+              icon={g.icon}
+              color={g.color}
+              movies={genreMovies.slice(0, 12)}
+              onViewAll={() => handleGenreBrowse(g.name)}
+            />
+          );
+        })}
+
+        {/* 7. Upcoming Premieres */}
+        <ComingSoonSection items={comingSoon || undefined} />
+
+        {/* 8. Latest Amakuru News */}
+        {newsItems.length > 0 && (
+          <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14">
+            <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2.5">
+                <Newspaper size={15} style={{ color: BLUE }} />
+                <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+                  {t.homeSections.latestNews}
+                </h2>
+              </div>
+              <Link href="/news" className="text-xs font-medium hover:text-sky-300 transition-colors" style={{ color: MUTED }}>
+                {t.homeSections.viewAll}
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {newsItems.slice(0, 4).map((item) => (
+                <NewsRowCard key={item.id} item={item} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 9. Community Shop */}
+        {shopItems.length > 0 && (
+          <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14">
+            <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-2.5">
+                <ShoppingBag size={15} style={{ color: AMBER }} />
+                <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+                  {t.homeSections.shopDeals}
+                </h2>
+              </div>
+              <Link href="/shop" className="text-xs font-medium hover:text-amber-300 transition-colors" style={{ color: MUTED }}>
+                {t.homeSections.viewAll}
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {shopItems.slice(0, 4).map((item) => (
+                <ShopRowCard key={item.id} item={item} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 10. Recommended For You */}
+        <RecommendedForYou />
+
+        {/* 11. Keep Us Free / Support CTA */}
+        <SupportCTA />
+
+        {/* 12. Partner Placements */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+          <AdBanner size="728x90" className="mb-3" />
+          <NativeBanner />
+        </div>
       </div>
     </>
   );

@@ -1,328 +1,164 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Flame, Eye, Star, Play } from 'lucide-react';
 import {
-  TrendingUp,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Play,
-  Star,
-  Tv2,
-  ArrowRight,
-  Bookmark,
-} from 'lucide-react';
-import { useTrailer } from '../contexts/TrailerContext';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useCollection } from '../hooks/useCollection';
-import { formatViewCountLocalized, getCategoryLabel } from '../lib/i18n';
-import {
-  getHighQualityThumbnailUrl,
-  getMovieViews,
   getTopTrendingMovies,
+  getMovieViews,
+  formatViewCount,
+  getHighQualityThumbnailUrl,
 } from '../lib/trending-movies';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const GOLD = '#c9a84c';
-const MUTED = '#6a6a5a';
+const GOLD_LIGHT = '#e8c87a';
 
-export default function TrendingNowSection({ movies = [] }) {
-  const sliderRef = useRef(null);
-  const { openTrailer } = useTrailer();
-  const { language, t, tr } = useLanguage();
-  const { toggleWatchlist, isInWatchlist } = useCollection();
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+export default function TrendingNowSection({ movies = [], limit = 5 }) {
+  const { t, tr } = useLanguage();
+  const scrollRef = useRef(null);
+  const trendingMovies = getTopTrendingMovies(movies, limit);
 
-  const topTrending = getTopTrendingMovies(movies, 5);
+  if (!trendingMovies.length) return null;
 
-  const updateScrollButtons = useCallback(() => {
-    const el = sliderRef.current;
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    setCanScrollLeft(scrollLeft > 4);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    updateScrollButtons();
-    const el = sliderRef.current;
-    if (!el) return undefined;
-    el.addEventListener('scroll', updateScrollButtons, { passive: true });
-    window.addEventListener('resize', updateScrollButtons);
-    return () => {
-      el.removeEventListener('scroll', updateScrollButtons);
-      window.removeEventListener('resize', updateScrollButtons);
-    };
-  }, [updateScrollButtons, topTrending.length]);
-
-  const scrollSlider = (direction) => {
-    const el = sliderRef.current;
-    if (!el) return;
-    const step = Math.max(280, Math.round(el.clientWidth * 0.55));
-    el.scrollBy({ left: direction * step, behavior: 'smooth' });
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction * 340, behavior: 'smooth' });
+    }
   };
-
-  if (topTrending.length === 0) return null;
 
   return (
     <section
-      id="trending-now"
-      data-testid="trending-now-section"
-      aria-label="Trending Now"
-      className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-8 scroll-mt-44 md:scroll-mt-32"
+      aria-label={t.trending.heading}
+      className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10"
     >
-      {/* Section Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <TrendingUp size={14} style={{ color: GOLD }} />
-        <h2 className="section-tag" style={{ color: '#e8c87a' }}>
-          {t.trending.heading}
-        </h2>
-        <span className="hidden sm:inline text-[11px] font-medium" style={{ color: '#8a8778' }}>
-          {tr('trending.subtitle', { count: topTrending.length })}
-        </span>
-        <div className="flex-1 divider-soft" />
+      <div className="flex items-end justify-between gap-4 mb-5">
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h2
+            className="font-cinzel text-lg sm:text-xl font-bold tracking-wide"
+            style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}
+          >
+            {t.trending.heading}
+          </h2>
+          <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
+            {tr('trending.subtitle', { count: trendingMovies.length })}
+          </span>
+        </div>
 
-        {/* Slider Controls */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
-            onClick={() => scrollSlider(-1)}
-            disabled={!canScrollLeft}
+            onClick={() => scroll(-1)}
             aria-label={t.trending.scrollLeftAria}
-            data-testid="trending-scroll-left"
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              color: '#e8e4d8',
-            }}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.04] hover:bg-amber-500/15 border border-white/10 hover:border-amber-400/40 text-stone-300 hover:text-amber-200 transition-colors cursor-pointer"
           >
             <ChevronLeft size={15} />
           </button>
           <button
             type="button"
-            onClick={() => scrollSlider(1)}
-            disabled={!canScrollRight}
+            onClick={() => scroll(1)}
             aria-label={t.trending.scrollRightAria}
-            data-testid="trending-scroll-right"
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
-            style={{
-              background: 'rgba(201,168,76,0.12)',
-              border: '1px solid rgba(201,168,76,0.32)',
-              color: '#e8c87a',
-            }}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.04] hover:bg-amber-500/15 border border-white/10 hover:border-amber-400/40 text-stone-300 hover:text-amber-200 transition-colors cursor-pointer"
           >
             <ChevronRight size={15} />
           </button>
         </div>
-
-        <Link
-          href="/finder"
-          className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium hover:underline whitespace-nowrap shrink-0"
-          style={{ color: MUTED }}
-        >
-          <span>{t.trending.viewAll}</span>
-          <ArrowRight size={11} />
-        </Link>
       </div>
 
-      {/* Horizontal Slider */}
       <div
-        ref={sliderRef}
-        data-testid="trending-slider"
-        className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-proximity py-2.5 px-1"
-        style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {topTrending.map((movie, idx) => {
+        {trendingMovies.map((movie, index) => {
+          const thumb = getHighQualityThumbnailUrl(movie.thumbnail_url || movie.poster_url || '');
           const views = getMovieViews(movie);
-          const thumbUrl = getHighQualityThumbnailUrl(movie.poster_url, 900);
+          const rating = Number.parseFloat(movie.rating);
+          const rankLabel = String(index + 1).padStart(2, '0');
 
           return (
-            <motion.article
+            <Link
               key={movie.id}
-              data-testid={`trending-card-${movie.id}`}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: idx * 0.05 }}
-              whileHover={{
-                scale: 1.03,
-                y: -4,
-                transition: { type: 'spring', stiffness: 280, damping: 22, mass: 0.75 },
-              }}
-              whileTap={{ scale: 0.99 }}
-              style={{ willChange: 'transform' }}
-              className="group relative hover:z-20 snap-start flex-shrink-0 w-[268px] sm:w-[296px] lg:w-[310px] glass-card glass-card-hover rounded-2xl overflow-hidden flex flex-col"
+              href={`/watch/${movie.id}`}
+              className="group relative shrink-0 w-[250px] sm:w-[285px] snap-start rounded-2xl overflow-hidden border border-white/[0.08] hover:border-amber-400/40 bg-[#0d0d15] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(0,0,0,0.65)]"
             >
-              {/* High-Quality Thumbnail */}
-              <Link href={`/movies/${movie.id}`} className="relative block aspect-[16/10] overflow-hidden bg-[#13131e]">
-                {thumbUrl ? (
+              <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/50">
+                {thumb ? (
                   <img
-                    src={thumbUrl}
-                    alt={`${movie.title} thumbnail`}
+                    src={thumb}
+                    alt={movie.title}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover object-[center_25%] transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      if (e.target.nextSibling) {
-                        e.target.nextSibling.style.display = 'flex';
-                      }
-                    }}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                ) : null}
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-stone-600">
+                    <Play size={28} />
+                  </div>
+                )}
 
-                <div
-                  className="w-full h-full items-center justify-center flex-col gap-1.5"
-                  style={{ display: thumbUrl ? 'none' : 'flex' }}
-                >
-                  <Tv2 size={28} style={{ color: GOLD, opacity: 0.45 }} />
-                  <span className="text-[11px] px-3 text-center line-clamp-1" style={{ color: '#8a8778' }}>
-                    {movie.title}
-                  </span>
-                </div>
-
-                {/* Scrim for crisp contrast over any thumbnail brightness */}
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background:
-                      'linear-gradient(180deg, rgba(10,10,15,0.45) 0%, rgba(10,10,15,0.12) 45%, rgba(10,10,15,0.92) 100%)',
+                      'linear-gradient(180deg, rgba(8,8,14,0.08) 0%, rgba(8,8,14,0.45) 48%, rgba(8,8,14,0.95) 100%)',
                   }}
                 />
 
-                {/* Top Row: Gold 'Trending' Badge + Rank */}
-                <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 z-10">
+                {/* Hover play indicator */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   <span
-                    data-testid={`trending-badge-${movie.id}`}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shrink-0"
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
                     style={{
-                      background: 'linear-gradient(135deg, #f5e4a8 0%, #c9a84c 58%, #a67c25 100%)',
-                      color: '#0a0a0f',
-                      boxShadow: '0 4px 14px rgba(201,168,76,0.35)',
+                      background: 'rgba(10,10,16,0.75)',
+                      border: '1px solid rgba(232,200,122,0.55)',
+                      color: GOLD_LIGHT,
                     }}
                   >
-                    <TrendingUp size={11} strokeWidth={2.5} />
-                    <span>{t.trending.badge}</span>
-                  </span>
-
-                  <span
-                    className="px-2 py-0.5 rounded-md text-[11px] font-cinzel font-bold tabular-nums whitespace-nowrap shrink-0"
-                    style={{
-                      background: 'rgba(10,10,15,0.82)',
-                      border: '1px solid rgba(201,168,76,0.45)',
-                      color: '#f5e4a8',
-                      backdropFilter: 'blur(6px)',
-                    }}
-                  >
-                    #{idx + 1}
+                    <Play size={14} fill="currentColor" />
                   </span>
                 </div>
 
-                {/* Bottom Thumbnail Metadata: Views + Rating */}
-                <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between gap-2 z-10 text-[11px]">
+                {/* Unboxed top-right rating */}
+                {Number.isFinite(rating) && rating > 0 && (
                   <span
-                    data-testid={`trending-views-${movie.id}`}
-                    className="inline-flex items-center gap-1.5 font-medium tabular-nums"
-                    style={{ color: '#e8e4d8' }}
+                    className="absolute top-2.5 right-3 text-[11px] font-semibold flex items-center gap-1 tabular-nums"
+                    style={{ color: GOLD_LIGHT, textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
                   >
-                    <Eye size={12} style={{ color: '#e8c87a' }} />
-                    <span>{formatViewCountLocalized(views, language)}</span>
+                    <Star size={11} fill={GOLD} stroke={GOLD} />
+                    {rating.toFixed(1)}
                   </span>
+                )}
 
-                  {movie.rating && (
-                    <span
-                      className="inline-flex items-center gap-1 font-semibold tabular-nums"
-                      style={{ color: '#f5e4a8' }}
-                    >
-                      <Star size={11} fill={GOLD} style={{ color: GOLD }} />
-                      <span>{movie.rating}</span>
-                    </span>
-                  )}
-                </div>
-              </Link>
-
-              {/* Card Body */}
-              <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
-                <div>
-                  <Link href={`/movies/${movie.id}`} className="block">
-                    <h3
-                      className="font-cinzel text-sm font-semibold leading-snug line-clamp-1 mb-1 group-hover:text-[#e8c87a] transition-colors"
-                      style={{ color: '#f0eee8' }}
-                    >
+                {/* Editorial Rank Numeral + Title */}
+                <div className="absolute bottom-2.5 left-3 right-3 flex items-end gap-2.5">
+                  <span
+                    className="font-cinzel text-3xl sm:text-[34px] font-bold leading-[0.85] tabular-nums shrink-0 select-none"
+                    style={{
+                      fontFamily: 'Cinzel, serif',
+                      background: index === 0
+                        ? 'linear-gradient(180deg, #f8e9b5 0%, #c9a84c 100%)'
+                        : 'linear-gradient(180deg, rgba(245,242,233,0.92) 0%, rgba(168,162,146,0.45) 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {rankLabel}
+                  </span>
+                  <div className="min-w-0 flex-1 pb-0.5">
+                    <h3 className="text-xs sm:text-[13px] font-semibold text-stone-100 truncate group-hover:text-amber-200 transition-colors">
                       {movie.title}
                     </h3>
-                  </Link>
-                  <div className="flex items-center gap-1.5 text-[11px] truncate" style={{ color: '#8a8778' }}>
-                    {movie.year && <span className="tabular-nums">{movie.year}</span>}
-                    {movie.genre && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span>
-                          {movie.genre
-                            .split(',')
-                            .map((g) => getCategoryLabel(g.trim(), language))
-                            .join(', ')}
-                        </span>
-                      </>
-                    )}
-                    {movie.language && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span className="truncate">{movie.language}</span>
-                      </>
-                    )}
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-stone-300/85 tabular-nums">
+                      <span className="inline-flex items-center gap-1">
+                        <Eye size={10} style={{ color: GOLD }} />
+                        {formatViewCount(views)}
+                      </span>
+                      {movie.genre && (
+                        <span className="text-stone-400 truncate">· {movie.genre.split(',')[0]}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                {/* Action Row */}
-                <div
-                  className="flex items-center gap-2 pt-2.5"
-                  style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-                >
-                  <Link
-                    href={`/movies/${movie.id}`}
-                    className="flex-1 py-1.5 px-3 rounded-lg text-[11px] font-semibold text-center whitespace-nowrap transition-colors"
-                    style={{
-                      background: 'rgba(201,168,76,0.14)',
-                      border: '1px solid rgba(201,168,76,0.34)',
-                      color: '#e8c87a',
-                    }}
-                  >
-                    {t.trending.watchNow}
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => openTrailer(movie)}
-                    data-testid={`trending-trailer-${movie.id}`}
-                    aria-label={`${t.card.playTrailer} — ${movie.title}`}
-                    className="py-1.5 px-2.5 rounded-lg text-[11px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
-                    style={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: '#d8d4c8',
-                    }}
-                  >
-                    <Play size={10} fill="currentColor" />
-                    <span>{t.trending.trailer}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleWatchlist(movie)}
-                    data-testid={`trending-watchlist-${movie.id}`}
-                    aria-pressed={isInWatchlist(movie.id)}
-                    aria-label={isInWatchlist(movie.id) ? `${t.card.inWatchlistTitle}: ${movie.title}` : `${t.card.addToWatchlistTitle}: ${movie.title}`}
-                    title={isInWatchlist(movie.id) ? t.card.inWatchlistTitle : t.card.addToWatchlistTitle}
-                    className="w-8 h-8 rounded-lg inline-flex items-center justify-center cursor-pointer shrink-0 transition-colors"
-                    style={{
-                      background: isInWatchlist(movie.id) ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.04)',
-                      border: isInWatchlist(movie.id) ? '1px solid rgba(201,168,76,0.5)' : '1px solid rgba(255,255,255,0.1)',
-                      color: isInWatchlist(movie.id) ? '#f5e4a8' : '#b8b4a8',
-                    }}
-                  >
-                    <Bookmark size={12} fill={isInWatchlist(movie.id) ? '#c9a84c' : 'none'} />
-                  </button>
-                </div>
               </div>
-            </motion.article>
+            </Link>
           );
         })}
       </div>
