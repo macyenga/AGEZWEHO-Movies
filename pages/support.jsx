@@ -168,7 +168,7 @@ export default function Support() {
           <SupportUs
             variant="full"
             defaultAmount={1000}
-            merchantName="Agasobanuye"
+            merchantName="Iradukunda Didier"
           />
         </motion.div>
 

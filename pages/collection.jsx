@@ -4,14 +4,16 @@ import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { useCollection } from '../hooks/useCollection';
-import { Heart, Trash2, Film, ArrowRight, Star, BookOpen } from 'lucide-react';
+import { Heart, Trash2, Film, ArrowRight, Star, BookOpen, Cloud, LogIn } from 'lucide-react';
 import AdBanner from '../components/ads/AdBanner';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { getMediaTypeLabel } from '../lib/i18n';
 
 export default function Collection() {
   const { language, t } = useLanguage();
-  const { collection, removeFromCollection, clearCollection, loaded } = useCollection();
+  const { user } = useAuth();
+  const { collection, removeFromCollection, clearCollection, loaded, syncing, syncedToProfile } = useCollection();
   const [confirmClear, setConfirmClear] = useState(false);
 
   return (
@@ -57,8 +59,13 @@ export default function Collection() {
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   {t.pages.collection.title}
                 </h1>
-                <p className="text-xs mt-0.5" style={{ color: '#4a4a3a' }}>
-                  {t.pages.collection.savedBrowser} · {collection.length} {collection.length === 1 ? t.homeSections.titleSingular : t.homeSections.titlePlural}
+                <p className="text-xs mt-0.5 tabular-nums" style={{ color: '#8a8679' }} data-testid="watchlist-sync-subtitle">
+                  {syncing
+                    ? t.pages.collection.syncingProfile
+                    : user && syncedToProfile
+                    ? `${t.pages.collection.syncedProfile}${user.email ? ` (${user.email})` : ''}`
+                    : t.pages.collection.savedBrowser}{' '}
+                  · {collection.length} {collection.length === 1 ? t.homeSections.titleSingular : t.homeSections.titlePlural}
                 </p>
               </div>
             </div>
@@ -67,7 +74,7 @@ export default function Collection() {
               <motion.button
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 onClick={() => setConfirmClear(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs cursor-pointer"
                 style={{ background: 'rgba(192,57,43,0.08)', border: '1px solid rgba(192,57,43,0.2)', color: '#e57373' }}>
                 <Trash2 size={12} /> {t.pages.collection.clearAll}
               </motion.button>
@@ -76,12 +83,45 @@ export default function Collection() {
 
           {/* Info banner */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-            className="mt-4 flex items-start gap-2.5 px-4 py-3 rounded-xl text-xs"
+            data-testid="watchlist-storage-banner"
+            className="mt-4 flex items-center justify-between flex-wrap gap-3 px-4 py-3 rounded-xl text-xs"
             style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.12)' }}>
-            <BookOpen size={13} style={{ color: '#c9a84c', flexShrink: 0, marginTop: 1 }} />
-            <span style={{ color: '#6a6a5a' }}>
-              {t.pages.collection.bannerPrefix} <span style={{ color: '#c9a84c' }}>{t.pages.collection.bannerHighlight}</span> {t.pages.collection.bannerSuffix}
-            </span>
+            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+              {user && syncedToProfile ? (
+                <Cloud size={14} style={{ color: '#4ade80', flexShrink: 0, marginTop: 1 }} />
+              ) : (
+                <BookOpen size={13} style={{ color: '#c9a84c', flexShrink: 0, marginTop: 1 }} />
+              )}
+              <span style={{ color: '#9c988b' }}>
+                {user && syncedToProfile ? (
+                  <>
+                    {t.pages.collection.profileBannerPrefix}{' '}
+                    <span style={{ color: '#86efac' }}>{t.pages.collection.profileBannerHighlight}</span>{' '}
+                    {t.pages.collection.profileBannerSuffix}
+                  </>
+                ) : (
+                  <>
+                    {t.pages.collection.bannerPrefix}{' '}
+                    <span style={{ color: '#c9a84c' }}>{t.pages.collection.bannerHighlight}</span>{' '}
+                    {t.pages.collection.bannerSuffix}
+                  </>
+                )}
+              </span>
+            </div>
+            {!user && (
+              <Link
+                href="/auth/login?redirect=/collection"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold shrink-0 transition-colors hover:bg-amber-400/15"
+                style={{
+                  background: 'rgba(201,168,76,0.1)',
+                  border: '1px solid rgba(201,168,76,0.28)',
+                  color: '#e8c87a',
+                }}
+              >
+                <LogIn size={12} />
+                <span>{t.pages.collection.signInToSync}</span>
+              </Link>
+            )}
           </motion.div>
         </motion.div>
 

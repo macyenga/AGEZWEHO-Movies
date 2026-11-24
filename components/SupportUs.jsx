@@ -10,7 +10,7 @@ export default function SupportUs({
   variant = 'full', // 'full' | 'card' | 'compact'
   title,
   subtitle,
-  merchantName = PAYPACK_CLIENT_CONFIG.merchantName || 'Agasobanuye',
+  merchantName = PAYPACK_CLIENT_CONFIG.merchantName || 'Iradukunda Didier',
   defaultAmount = 1000,
   presetAmounts = DEFAULT_PRESET_AMOUNTS,
   purpose = 'Donation / Support Us',

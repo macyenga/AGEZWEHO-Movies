@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { isValidRwandaPhone, normalizeRwandaPhone } from '../lib/paypack-client';
+import { UPLOADER_MONETIZATION_CONFIG } from '../lib/uploader-earnings';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { CATEGORY_GROUPS } from '../lib/categories';
-import { Plus, Trash2, Save, ArrowLeft, CheckCircle2, Package, Lock, Loader2, AlertTriangle, Image as ImageIcon, Globe, DollarSign, Phone, FileText, Hash, Star, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, CheckCircle2, Package, Lock, Loader2, AlertTriangle, Image as ImageIcon, Globe, DollarSign, Phone, FileText, Hash, Star, ChevronDown, Wallet, ArrowRight } from 'lucide-react';
 
 const PLATFORMS = [
   { name: 'Google Drive', color: '#4285F4' },
@@ -20,9 +24,10 @@ const PLATFORMS = [
 const EMPTY = { title:'', category:'', version:'', rating:'', cover_url:'', overview:'', premium:true, price:50, uploader_momo_number:'' };
 
 const validateUrl = u => !u || u.startsWith('http://') || u.startsWith('https://');
-const validateMomo = n => !n || /^0[1-9]\d{8}$/.test(n.replace(/\s/g, ''));
+const validateMomo = n => !n || isValidRwandaPhone(normalizeRwandaPhone(n));
 
 export default function SubmitGame() {
+  const { user } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,11 +58,19 @@ export default function SubmitGame() {
     if (!validate()) return;
     setLoading(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
       const res = await fetch('/api/games/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           ...form,
+          uploader_momo_number: form.uploader_momo_number.trim()
+            ? normalizeRwandaPhone(form.uploader_momo_number)
+            : '',
           price: Math.max(50, parseInt(form.price) || 50),
           links: links.filter(l => l.url?.trim()),
         }),
@@ -139,6 +152,43 @@ export default function SubmitGame() {
             </div>
           </div>
           <div className="divider-gold w-20" />
+        </motion.div>
+
+        {/* Creator Revenue Share Banner */}
+        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+          transition={{ delay:0.06 }}
+          className="mb-4 p-4 rounded-xl"
+          style={{ background:'rgba(34,197,94,0.06)', border:'1px solid rgba(34,197,94,0.22)' }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)' }}>
+                <Wallet size={16} style={{ color:'#22c55e' }} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold" style={{ color:'#e8f7ed' }}>
+                  Keep 70% of Every Paid Unlock
+                </p>
+                <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color:'#9fb3a5' }}>
+                  Every time a player unlocks your game or modded app, <strong className="tabular-nums" style={{ color:'#22c55e' }}>70%</strong> goes straight to your Creator Wallet (withdraw from {UPLOADER_MONETIZATION_CONFIG.minPayoutRwf.toLocaleString()} RWF).
+                  {!user && (
+                    <>
+                      {' '}
+                      <Link href="/auth/login?redirect=/submit-game" className="underline" style={{ color:'#e8f7ed' }}>
+                        Sign in
+                      </Link>{' '}
+                      before submitting to link earnings automatically.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+            <Link href="/earnings"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 px-3 py-2 rounded-lg"
+              style={{ background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.28)', color:'#86efac' }}>
+              View Creator Wallet & Rules <ArrowRight size={13} />
+            </Link>
+          </div>
         </motion.div>
 
         {/* Notice Banner */}

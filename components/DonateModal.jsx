@@ -20,7 +20,7 @@ export default function DonateModal({ isOpen, onClose, options = {} }) {
   const {
     title = t.donateModal.defaultTitle,
     subtitle = t.donateModal.defaultSubtitle,
-    merchantName = PAYPACK_CLIENT_CONFIG.merchantName || 'Agasobanuye',
+    merchantName = PAYPACK_CLIENT_CONFIG.merchantName || 'Iradukunda Didier',
     defaultAmount = 1000,
     purpose = 'Donation / Support Agasobanuye.rw',
     requestId = null,

@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { addMovie } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { isValidRwandaPhone, normalizeRwandaPhone } from '../lib/paypack-client';
+import { UPLOADER_MONETIZATION_CONFIG } from '../lib/uploader-earnings';
+import { classifyPreviewLink } from '../lib/media-preview';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
-import { Film, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Upload, Sparkles, Link2, Smartphone, User, Monitor } from 'lucide-react';
+import SmartMediaPlayer from '../components/SmartMediaPlayer';
+import {
+  Film, Plus, Trash2, ArrowLeft, CheckCircle2, Upload, Link2,
+  Smartphone, User, Monitor, Wallet, AlertTriangle, ArrowRight,
+  Subtitles, Play,
+} from 'lucide-react';
 import AdBanner from '../components/ads/AdBanner';
 
 const PLATFORMS = [
@@ -22,9 +31,12 @@ const PLATFORMS = [
 const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', uploaded_by:'', uploader_momo_number:'', featured:false, trailer_url:'' };
 
 export default function Submit() {
+  const { user } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const [links, setLinks] = useState([]);
   const [watchLinks, setWatchLinks] = useState([]);
+  const [subtitles, setSubtitles] = useState([]);
+  const [previewTestUrl, setPreviewTestUrl] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,6 +101,12 @@ export default function Submit() {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Title is required';
     if (!form.year?.trim()) errs.year = 'Year is required';
+    if (form.uploader_momo_number.trim()) {
+      const normalized = normalizeRwandaPhone(form.uploader_momo_number);
+      if (!isValidRwandaPhone(normalized)) {
+        errs.uploader_momo_number = 'Invalid Rwandan MoMo number (e.g. 0788123456)';
+      }
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -97,12 +115,33 @@ export default function Submit() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await addMovie({ ...form, links: links.filter(l => l.url), watch_links: watchLinks.filter(l=>l.url) });
-      setSubmittedBy(form.uploaded_by.trim());
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch('/api/movies/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          ...form,
+          uploader_momo_number: form.uploader_momo_number.trim()
+            ? normalizeRwandaPhone(form.uploader_momo_number)
+            : '',
+          links: links.filter(l => l.url),
+          watch_links: watchLinks.filter(l => l.url),
+          subtitles: subtitles.filter(s => s.url),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Submission failed');
+      setSubmittedBy(form.uploaded_by.trim() || user?.email?.split('@')[0] || '');
       setSuccess(true);
       setForm(EMPTY);
       setLinks([]);
       setWatchLinks([]);
+      setSubtitles([]);
+      setPreviewTestUrl('');
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -174,6 +213,45 @@ export default function Submit() {
           <div className="divider-gold w-16" />
         </motion.div>
 
+        {/* Uploader Monetization Callout */}
+        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.04 }}
+          className="mb-4 p-4 rounded-xl"
+          style={{ background:'rgba(201,168,76,0.06)', border:'1px solid rgba(201,168,76,0.22)' }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.25)' }}>
+                <Wallet size={16} style={{ color:'#c9a84c' }} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold" style={{ color:'#f5e4a8' }}>
+                  Earn on Every Approved Upload
+                </p>
+                <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color:'#a39e8d' }}>
+                  Earn <strong style={{ color:'#c9a84c' }}>50% of viewer Gurira MB tips</strong> plus{' '}
+                  <strong className="tabular-nums" style={{ color:'#22c55e' }}>
+                    {UPLOADER_MONETIZATION_CONFIG.movieViewBonusPer1k} RWF per 1,000 views
+                  </strong>.
+                  {!user && (
+                    <>
+                      {' '}
+                      <Link href="/auth/login?redirect=/submit" className="underline" style={{ color:'#f5e4a8' }}>
+                        Sign in
+                      </Link>{' '}
+                      to link this upload automatically to your Creator Wallet.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+            <Link href="/earnings"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 px-3 py-2 rounded-lg"
+              style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.28)', color:'#f5e4a8' }}>
+              View Creator Wallet & Rules <ArrowRight size={13} />
+            </Link>
+          </div>
+        </motion.div>
+
         {/* Notice Banner */}
         <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.06 }}
           className="mb-5 p-4 rounded-xl relative overflow-hidden"
@@ -183,7 +261,7 @@ export default function Submit() {
             animate={{ x:['-100%','200%'] }}
             transition={{ repeat:Infinity, duration:4, ease:'easeInOut', repeatDelay:3 }} />
           <div className="flex gap-3 items-start relative z-10">
-            <span className="text-base flex-shrink-0 mt-0.5">⚠️</span>
+            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color:'#fbbf24' }} />
             <div>
               <p className="text-[10px] font-semibold mb-1" style={{ color:'#fbbf24' }}>Dear Uploader — Please Read</p>
               <p className="text-[10px] leading-relaxed" style={{ color:'#8a8060' }}>
@@ -305,29 +383,118 @@ export default function Submit() {
               </motion.button>
             </div>
             <AnimatePresence>
-              {watchLinks.map((link, i) => (
+              {watchLinks.map((link, i) => {
+                const canPreview = classifyPreviewLink(link.url).playable;
+                return (
+                  <motion.div key={i} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
+                    className="mb-2.5 p-3 rounded-xl" style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.12)' }}>
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <input className="input-dark flex-1 min-w-[100px] px-2.5 py-1.5 rounded-lg text-xs"
+                        value={link.label} onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,label:e.target.value}:x))}
+                        placeholder="Label (e.g. Watch HD)" />
+                      <input className="input-dark flex-[2] min-w-[130px] px-2.5 py-1.5 rounded-lg text-xs"
+                        value={link.url} onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,url:e.target.value}:x))}
+                        placeholder="Stream URL (YouTube, Drive, Vimeo, .MP4)" />
+                      {canPreview && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewTestUrl(previewTestUrl === link.url ? '' : link.url)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"
+                          style={{ background:'rgba(74,222,128,0.14)', color:'#86efac' }}
+                        >
+                          <Play size={10} fill="currentColor" /> {previewTestUrl === link.url ? 'Hide' : 'Test Play'}
+                        </button>
+                      )}
+                      <button onClick={() => setWatchLinks(l=>l.filter((_,idx)=>idx!==i))}
+                        className="transition-colors" style={{ color:'#e05c3a44' }}
+                        onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
+                        onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+            {watchLinks.length === 0 && (
+              <div className="text-center py-3 rounded-xl text-[10px]" style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
+                No watch links yet
+              </div>
+            )}
+            {previewTestUrl && (
+              <div className="mt-3">
+                <SmartMediaPlayer
+                  movie={{
+                    title: form.title || 'Link Preview',
+                    watch_links: [{ label: 'Preview Link', url: previewTestUrl }],
+                    subtitles,
+                  }}
+                  compact
+                  onClose={() => setPreviewTestUrl('')}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Subtitles (.SRT / .VTT) */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <span className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
+                  <Subtitles size={10} className="inline mr-1" />Subtitles (.SRT / .VTT)
+                </span>
+                <span className="text-[9px] ml-1" style={{ color:'#3a3a2a' }}>optional</span>
+              </div>
+              <motion.button
+                type="button"
+                whileHover={{ scale:1.03 }}
+                whileTap={{ scale:0.97 }}
+                onClick={() => setSubtitles(s => [...s, { language:'Kinyarwanda', label:'Kinyarwanda (VTT)', url:'' }])}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium cursor-pointer"
+                style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.25)', color:'#e8c87a' }}
+              >
+                <Plus size={10} /> Add Subtitle
+              </motion.button>
+            </div>
+            <AnimatePresence>
+              {subtitles.map((sub, i) => (
                 <motion.div key={i} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-                  className="mb-2.5 p-3 rounded-xl" style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.12)' }}>
+                  className="mb-2.5 p-3 rounded-xl" style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.14)' }}>
                   <div className="flex gap-2 items-center flex-wrap">
-                    <input className="input-dark flex-1 min-w-[100px] px-2.5 py-1.5 rounded-lg text-xs"
-                      value={link.label} onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,label:e.target.value}:x))}
-                      placeholder="Label (e.g. Watch HD)" />
-                    <input className="input-dark flex-[2] min-w-[130px] px-2.5 py-1.5 rounded-lg text-xs"
-                      value={link.url} onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,url:e.target.value}:x))}
-                      placeholder="Stream URL" />
-                    <button onClick={() => setWatchLinks(l=>l.filter((_,idx)=>idx!==i))}
-                      className="transition-colors" style={{ color:'#e05c3a44' }}
-                      onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
-                      onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
+                    <select
+                      value={sub.language}
+                      onChange={e => setSubtitles(s => s.map((x, idx) => idx === i ? { ...x, language: e.target.value, label: `${e.target.value} Subtitle` } : x))}
+                      className="input-dark px-2.5 py-1.5 rounded-lg text-xs cursor-pointer"
+                      style={{ background:'#0f0f16' }}
+                    >
+                      <option value="Kinyarwanda">Kinyarwanda</option>
+                      <option value="English">English</option>
+                      <option value="French">French</option>
+                      <option value="Swahili">Swahili</option>
+                    </select>
+                    <input
+                      className="input-dark flex-[2] min-w-[160px] px-2.5 py-1.5 rounded-lg text-xs"
+                      value={sub.url}
+                      onChange={e => setSubtitles(s => s.map((x, idx) => idx === i ? { ...x, url: e.target.value } : x))}
+                      placeholder="Subtitle .vtt or .srt URL (https://...)"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSubtitles(s => s.filter((_, idx) => idx !== i))}
+                      className="transition-colors cursor-pointer"
+                      style={{ color:'#e05c3a44' }}
+                      onMouseEnter={e => e.currentTarget.style.color='#e05c3a'}
+                      onMouseLeave={e => e.currentTarget.style.color='#e05c3a44'}
+                    >
                       <Trash2 size={13} />
                     </button>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
-            {watchLinks.length === 0 && (
-              <div className="text-center py-3 rounded-xl text-[10px]" style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
-                No watch links yet
+            {subtitles.length === 0 && (
+              <div className="text-center py-3 rounded-xl text-[10px]" style={{ color:'#3a3a2a', border:'1px dashed rgba(201,168,76,0.14)' }}>
+                No subtitles attached — add .SRT or .VTT subtitle URLs above
               </div>
             )}
           </div>
@@ -335,14 +502,18 @@ export default function Submit() {
           {/* MoMo Number */}
           <div className="p-4 rounded-xl" style={{ background:'rgba(34,197,94,0.05)', border:'1px solid rgba(34,197,94,0.12)' }}>
             <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#22c55e' }}>
-              <Smartphone size={10} className="inline mr-1" />MoMo Number — for admin to credit you
+              <Smartphone size={10} className="inline mr-1" />MoMo Number — for creator payouts
             </label>
-            <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
+            <input className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.uploader_momo_number ? 'border-red-500/40' : ''}`}
               value={form.uploader_momo_number} onChange={e => set('uploader_momo_number', e.target.value)}
               placeholder="e.g. 0788123456" />
-            <p className="text-[9px] mt-1" style={{ color:'#3a3a2a' }}>
-              Optional — for rewards when admin approves your upload
-            </p>
+            {errors.uploader_momo_number ? (
+              <p className="text-red-400/80 text-[10px] mt-1">{errors.uploader_momo_number}</p>
+            ) : (
+              <p className="text-[9px] mt-1" style={{ color:'#8a8778' }}>
+                Optional — MTN MoMo or Airtel Money number for tip & view payouts (min {UPLOADER_MONETIZATION_CONFIG.minPayoutRwf.toLocaleString()} RWF)
+              </p>
+            )}
           </div>
 
           {/* Download Links */}

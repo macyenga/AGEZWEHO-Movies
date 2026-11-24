@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Save, X, Film } from 'lucide-react';
+import { Plus, Trash2, Save, X, Film, Subtitles, Play } from 'lucide-react';
+import { classifyPreviewLink } from '../lib/media-preview';
+import SmartMediaPlayer from './SmartMediaPlayer';
 
 const PLATFORMS = [
   { name: 'V-Cloud',  color: '#e05c3a' },
@@ -17,12 +19,14 @@ const PLATFORMS = [
   { name: 'Custom',      color: '#c9a84c' },
 ];
 
-const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', featured:false, platforms:[], watch_links:[], uploader_momo_number:'' };
+const EMPTY = { title:'', year:'', type:'Movie', language:'', genre:'', rating:'', poster_url:'', overview:'', featured:false, platforms:[], watch_links:[], subtitles:[], uploader_momo_number:'' };
 
 export default function AddMovieForm({ initial=null, onSave, onCancel, loading=false }) {
   const [form, setForm]     = useState(initial || EMPTY);
   const [links, setLinks] = useState(initial?.links || []);
   const [watchLinks, setWatchLinks] = useState(initial?.watch_links || []);
+  const [subtitles, setSubtitles] = useState(initial?.subtitles || []);
+  const [previewTestUrl, setPreviewTestUrl] = useState('');
   const [uploader_momo_number, setUploaderMomoNumber] = useState(initial?.uploader_momo_number || '');
   const [errors, setErrors] = useState({});
 
@@ -42,7 +46,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 
   const handleSubmit = () => {
     if (!validate()) return;
-    onSave({ ...form, links: links.filter(l=>l.url), platforms: form.platforms||[], watch_links: watchLinks.filter(l=>l.url), uploader_momo_number });
+    onSave({ ...form, links: links.filter(l=>l.url), platforms: form.platforms||[], watch_links: watchLinks.filter(l=>l.url), subtitles: subtitles.filter(s=>s.url), uploader_momo_number });
   };
 
   const F = (k, label, placeholder, opts={}) => (
@@ -168,24 +172,107 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
   </div>
 
   <AnimatePresence>
-    {watchLinks.map((link, i) => (
+    {watchLinks.map((link, i) => {
+      const canPreview = classifyPreviewLink(link.url).playable;
+      return (
+        <motion.div key={i}
+          initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
+          className="mb-3 p-3 rounded-xl space-y-2"
+          style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.15)' }}>
+          <div className="flex gap-2 items-center flex-wrap">
+            <input className="input-dark flex-1 min-w-[120px] px-2.5 py-1.5 rounded-lg text-xs"
+              value={link.label}
+              onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,label:e.target.value}:x))}
+              placeholder="Label (e.g. Watch HD, Watch 1080p)" />
+            <input className="input-dark flex-[2] min-w-[150px] px-2.5 py-1.5 rounded-lg text-xs"
+              value={link.url}
+              onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,url:e.target.value}:x))}
+              placeholder="Stream URL" />
+            {canPreview && (
+              <button
+                type="button"
+                onClick={() => setPreviewTestUrl(previewTestUrl === link.url ? '' : link.url)}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"
+                style={{ background:'rgba(74,222,128,0.14)', color:'#86efac' }}
+              >
+                <Play size={10} fill="currentColor" /> {previewTestUrl === link.url ? 'Hide' : 'Test'}
+              </button>
+            )}
+            <button onClick={() => setWatchLinks(l=>l.filter((_,idx)=>idx!==i))}
+              style={{ color:'#e05c3a44' }}
+              onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
+              onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </motion.div>
+      );
+    })}
+  </AnimatePresence>
+
+  {watchLinks.length === 0 && (
+    <div className="text-center py-3 rounded-xl text-xs mb-2"
+      style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
+      No watch links yet — click Add Link above
+    </div>
+  )}
+  {previewTestUrl && (
+    <div className="mt-3">
+      <SmartMediaPlayer
+        movie={{
+          title: form.title || 'Preview Link',
+          watch_links: [{ label: 'Test Stream', url: previewTestUrl }],
+          subtitles,
+        }}
+        compact
+        onClose={() => setPreviewTestUrl('')}
+      />
+    </div>
+  )}
+</div>
+
+{/* Subtitles (.SRT / .VTT) */}
+<div>
+  <div className="flex items-center justify-between mb-3">
+    <div>
+      <span className="text-[10px] font-medium tracking-[2px] uppercase flex items-center gap-1" style={{ color:'#6a6a5a' }}>
+        <Subtitles size={11} /> Subtitles (.SRT / .VTT) <span style={{ color:'#3a3a2a', letterSpacing: 0 }}>optional</span>
+      </span>
+    </div>
+    <motion.button type="button" whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
+      onClick={() => setSubtitles(s => [...s, { language:'Kinyarwanda', label:'Kinyarwanda (VTT)', url:'' }])}
+      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
+      style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.3)', color:'#e8c87a' }}>
+      <Plus size={11} /> Add Subtitle
+    </motion.button>
+  </div>
+
+  <AnimatePresence>
+    {subtitles.map((sub, i) => (
       <motion.div key={i}
         initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-        className="mb-3 p-3 rounded-xl space-y-2"
-        style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.15)' }}>
+        className="mb-3 p-3 rounded-xl"
+        style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.16)' }}>
         <div className="flex gap-2 items-center flex-wrap">
-          <input className="input-dark flex-1 min-w-[120px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.label}
-            onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,label:e.target.value}:x))}
-            placeholder="Label (e.g. Watch HD, Watch 1080p)" />
-          <input className="input-dark flex-[2] min-w-[150px] px-2.5 py-1.5 rounded-lg text-xs"
-            value={link.url}
-            onChange={e => setWatchLinks(l=>l.map((x,idx)=>idx===i?{...x,url:e.target.value}:x))}
-            placeholder="Stream URL" />
-          <button onClick={() => setWatchLinks(l=>l.filter((_,idx)=>idx!==i))}
+          <select
+            value={sub.language}
+            onChange={e => setSubtitles(s => s.map((x, idx) => idx === i ? { ...x, language: e.target.value, label: `${e.target.value} Subtitle` } : x))}
+            className="input-dark px-2.5 py-1.5 rounded-lg text-xs cursor-pointer"
+            style={{ background:'#0f0f16' }}
+          >
+            <option value="Kinyarwanda">Kinyarwanda</option>
+            <option value="English">English</option>
+            <option value="French">French</option>
+            <option value="Swahili">Swahili</option>
+          </select>
+          <input className="input-dark flex-[2] min-w-[160px] px-2.5 py-1.5 rounded-lg text-xs"
+            value={sub.url}
+            onChange={e => setSubtitles(s => s.map((x, idx) => idx === i ? { ...x, url: e.target.value } : x))}
+            placeholder="Subtitle URL (.vtt or .srt)" />
+          <button type="button" onClick={() => setSubtitles(s => s.filter((_, idx) => idx !== i))}
             style={{ color:'#e05c3a44' }}
-            onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
-            onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
+            onMouseEnter={e => e.currentTarget.style.color='#e05c3a'}
+            onMouseLeave={e => e.currentTarget.style.color='#e05c3a44'}>
             <Trash2 size={14} />
           </button>
         </div>
@@ -193,10 +280,10 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
     ))}
   </AnimatePresence>
 
-  {watchLinks.length === 0 && (
+  {subtitles.length === 0 && (
     <div className="text-center py-3 rounded-xl text-xs mb-2"
-      style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
-      No watch links yet — click Add Link above
+      style={{ color:'#3a3a2a', border:'1px dashed rgba(201,168,76,0.14)' }}>
+      No subtitles added yet — click Add Subtitle above
     </div>
   )}
 </div>

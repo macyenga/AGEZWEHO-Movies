@@ -135,7 +135,7 @@ export default function Subscribe() {
                       Activate Pro Membership
                     </h2>
                     <p className="text-xs tabular-nums" style={{ color: '#8a8060' }}>
-                      2,000 RWF / month — MoMo Pay ID 156833 (Agasobanuye)
+                      2,000 RWF / month — MoMo Pay ID 156833 (Iradukunda Didier)
                     </p>
                   </div>
                 </div>
@@ -176,12 +176,12 @@ export default function Subscribe() {
             <SupportUs
               variant="card"
               title="MoMo Pay 156833 / Support"
-              subtitle="Send a support transfer or donation via MoMo Pay 156833 (QR / USSD) or Paypack to merchant Agasobanuye."
+              subtitle="Send a support transfer or donation via MoMo Pay 156833 (QR / USSD) or Paypack to merchant Iradukunda Didier."
               defaultAmount={2000}
               presetAmounts={[2000, 5000, 10000]}
               purpose="Pro Membership (1 Month)"
               defaultEmail={user?.email || ''}
-              merchantName="Agasobanuye"
+              merchantName="Iradukunda Didier"
             />
           </>
         )}

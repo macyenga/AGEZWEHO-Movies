@@ -6,6 +6,7 @@ import CinematicBackground from '../components/CinematicBackground';
 import MovieCard from '../components/MovieCard';
 import AdBanner, { NativeBanner } from '../components/ads/AdBanner';
 import SupportCTA from '../components/SupportCTA';
+import NewsletterSignup from '../components/NewsletterSignup';
 import RecommendedForYou from '../components/RecommendedForYou';
 import ComingSoonSection from '../components/ComingSoonSection';
 import TrendingNowSection from '../components/TrendingNowSection';
@@ -21,7 +22,7 @@ import {
   Film, Inbox, ChevronLeft, ChevronRight, Download, Send, Heart, Upload,
   Newspaper, ShoppingBag, Sparkles, Star, Play, Eye, Tv, BookOpen, Compass,
   Swords, Theater, Laugh, Zap, Ghost, Rocket, Wand2, Siren, MessageSquare,
-  Bookmark, X, Bell, ArrowUpRight, MessageCircle, Camera, Music2, Globe, AtSign
+  Bookmark, X, Bell, ArrowUpRight, MessageCircle, Camera, Music2, Globe, AtSign, Subtitles
 } from 'lucide-react';
 
 const HERO_SOCIAL_ICONS = {
@@ -1082,6 +1083,61 @@ export default function Home({ movies: initial, comingSoon }) {
           );
         })}
 
+        {/* Latest Official Subtitles -> Kinyarwanda */}
+        <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14" aria-label="Official Subtitles Studio">
+          <div
+            className="p-5 sm:p-6 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5"
+            style={{
+              background: 'rgba(14,14,22,0.84)',
+              border: '1px solid rgba(201,168,76,0.24)',
+            }}
+          >
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: GOLD_LIGHT }}>
+                <Subtitles size={14} />
+                <span>Official Subtitles & Kinyarwanda Studio</span>
+              </div>
+              <h2 className="font-cinzel text-lg sm:text-xl font-bold" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+                Download Latest Official Subtitles & Translate to Kinyarwanda
+              </h2>
+              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: '#9c988b' }}>
+                Fetch the latest official .SRT tracks, translate cue lines into Kinyarwanda, and download ready-to-play .SRT or .VTT subtitles.
+              </p>
+              {movies.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  {movies.slice(0, 4).map((m) => (
+                    <Link
+                      key={m.id}
+                      href={`/subtitles?q=${encodeURIComponent(m.title)}`}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:text-[#f5e4a8]"
+                      style={{
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.09)',
+                        color: '#d4cfc0',
+                      }}
+                    >
+                      {m.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="/subtitles"
+              data-testid="home-subtitles-studio-cta"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold whitespace-nowrap shrink-0"
+              style={{
+                background: 'linear-gradient(135deg,#e8c87a,#c9a84c)',
+                color: '#09090f',
+              }}
+            >
+              <Subtitles size={14} />
+              <span>Browse Official Subtitles</span>
+            </Link>
+          </div>
+        </section>
+
         {/* 7. Upcoming Premieres */}
         <ComingSoonSection items={comingSoon || undefined} />
 
@@ -1132,7 +1188,10 @@ export default function Home({ movies: initial, comingSoon }) {
         {/* 10. Recommended For You */}
         <RecommendedForYou />
 
-        {/* 11. Keep Us Free / Support CTA */}
+        {/* 11. Newsletter Signup */}
+        <NewsletterSignup source="homepage" />
+
+        {/* 12. Keep Us Free / Support CTA */}
         <SupportCTA />
 
         {/* 12. Partner Placements */}

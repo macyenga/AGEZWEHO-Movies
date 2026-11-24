@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '../../../lib/server/supabase-admin';
 import { requireAdmin } from '../../../lib/server/admin-auth';
 
+import {
+  calculateGameUnlockShare,
+  calculateMovieViewBonus,
+} from '../../../lib/uploader-earnings';
+
 async function getAdminUserId(req) {
   const authHeader = req.headers.authorization || '';
   if (!authHeader.startsWith('Bearer ')) return null;
@@ -28,13 +33,13 @@ export default async function handler(req, res) {
     for (const tx of completedTxs || []) {
       if (tx.game_id) {
         const gameId = tx.game_id;
-        uploaderEarnings[gameId] = (uploaderEarnings[gameId] || 0) + (tx.amount || 0);
+        uploaderEarnings[gameId] = (uploaderEarnings[gameId] || 0) + calculateGameUnlockShare(tx.amount || 0);
       }
     }
 
     const { data: games } = await supabaseAdmin
       .from('games')
-      .select('id, title, uploader_momo_number, status');
+      .select('id, title, uploader_momo_number, uploader_earnings, status');
 
     const uploadersMap = {};
     for (const game of games || []) {
@@ -45,28 +50,32 @@ export default async function handler(req, res) {
           games: [],
           totalEarnings: 0,
         };
+        const gameEarned = Math.max(uploaderEarnings[game.id] || 0, Number(game.uploader_earnings) || 0);
         uploadersMap[key].games.push({
           id: game.id,
           title: game.title,
-          earnings: uploaderEarnings[game.id] || 0,
+          earnings: gameEarned,
         });
-        uploadersMap[key].totalEarnings += uploaderEarnings[game.id] || 0;
+        uploadersMap[key].totalEarnings += gameEarned;
       }
     }
 
     const { data: allMovies } = await supabaseAdmin
       .from('movies')
-      .select('id, title, uploaded_by, uploader_earnings, uploader_momo_number');
+      .select('id, title, status, views, uploaded_by, uploader_earnings, uploader_momo_number');
 
     const movieUploadersMap = {};
     for (const m of allMovies || []) {
-      if (m.uploaded_by && m.uploader_earnings > 0) {
+      const tipEarned = Number(m.uploader_earnings) || 0;
+      const viewBonus = m.status === 'approved' ? calculateMovieViewBonus(m.views) : 0;
+      const totalTitleEarnings = tipEarned + viewBonus;
+      if (m.uploaded_by && totalTitleEarnings > 0) {
         const key = m.uploaded_by;
         if (!movieUploadersMap[key]) {
           movieUploadersMap[key] = { name: key, momo_number: m.uploader_momo_number || '', movies: [], totalEarnings: 0 };
         }
-        movieUploadersMap[key].movies.push({ id: m.id, title: m.title, earnings: m.uploader_earnings });
-        movieUploadersMap[key].totalEarnings += m.uploader_earnings;
+        movieUploadersMap[key].movies.push({ id: m.id, title: m.title, earnings: totalTitleEarnings });
+        movieUploadersMap[key].totalEarnings += totalTitleEarnings;
       }
     }
 

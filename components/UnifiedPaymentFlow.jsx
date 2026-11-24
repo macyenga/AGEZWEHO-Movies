@@ -23,7 +23,7 @@ import MomoPayManualPanel from './MomoPayManualPanel';
 export default function UnifiedPaymentFlow({
   amount = 1000,
   minAmount = 100,
-  merchantName = PAYPACK_CLIENT_CONFIG.merchantName || 'Agasobanuye',
+  merchantName = PAYPACK_CLIENT_CONFIG.merchantName || 'Iradukunda Didier',
   purpose = 'Support Agasobanuye.rw',
   requestId = null,
   movieId = null,

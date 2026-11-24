@@ -354,6 +354,7 @@ export default function Admin() {
     subscriptions: subscriptions.length > 0 ? subscriptions : (data?.subscriptions || []),
     contacts: data?.contacts || [],
     admins: data?.admins || [],
+    payouts: data?.payouts || [],
   }), [data, subscriptions]);
 
   const movieGenres = useMemo(() => {
@@ -1015,6 +1016,7 @@ export default function Admin() {
 
   const getTabBadge = (tabId) => {
     if (tabId === 'movies' && summary.pendingMovies > 0) return { count: summary.pendingMovies, bg: '#ef4444', fg: '#fff' };
+    if (tabId === 'payouts' && summary.pendingPayoutsCount > 0) return { count: summary.pendingPayoutsCount, bg: '#f59e0b', fg: '#000' };
     if (tabId === 'transactions' && summary.pendingTransactions > 0) return { count: summary.pendingTransactions, bg: '#22c55e', fg: '#000' };
     if (tabId === 'subscriptions' && summary.pendingSubscriptions > 0) return { count: summary.pendingSubscriptions, bg: '#fbbf24', fg: '#000' };
     if (tabId === 'contacts' && summary.unresolvedContacts > 0) return { count: summary.unresolvedContacts, bg: '#3b82f6', fg: '#fff' };
@@ -1220,6 +1222,7 @@ export default function Admin() {
               {tab === 'overview' && (
                 <AdminOverview
                   summary={summary}
+                  data={data}
                   registeredUsersCount={data?.registeredUsers?.length || 0}
                   onNavigate={selectTab}
                   onQuickCreate={handleQuickCreate}

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { HeartHandshake, Users, TrendingUp } from 'lucide-react';
 import { useDonate } from '../contexts/DonateContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { PAYPACK_CLIENT_CONFIG } from '../lib/paypack-client';
 
 const GOLD = '#c9a84c';
 
@@ -42,7 +43,7 @@ export default function SupportCTA() {
               {t.supportCta.headlinePrefix} <span className="font-semibold" style={{ color: '#e8c87a' }}>{t.supportCta.headlineHighlight}</span> {t.supportCta.headlineSuffix}
             </p>
             <p className="text-xs mb-4" style={{ color: '#787467' }}>
-              {t.supportCta.paypackPrefix} <strong style={{ color: '#e8c87a' }}>{t.supportCta.paypackNetwork}</strong> {t.supportCta.paypackDetails} <strong style={{ color: '#ffcc00' }}>Agasobanuye</strong> {t.supportCta.paypackSuffix}
+              {t.supportCta.paypackPrefix} <strong style={{ color: '#e8c87a' }}>{t.supportCta.paypackNetwork}</strong> {t.supportCta.paypackDetails} <strong style={{ color: '#ffcc00' }}>{PAYPACK_CLIENT_CONFIG.merchantName}</strong> {t.supportCta.paypackSuffix}
             </p>
 
             <div className="flex items-center gap-6 flex-wrap tabular-nums">

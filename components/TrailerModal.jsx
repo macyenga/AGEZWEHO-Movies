@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { X, Play, ExternalLink, Film, Loader2 } from 'lucide-react';
@@ -7,12 +7,15 @@ import {
   buildYouTubeEmbedUrl,
   buildYouTubeWatchUrl,
 } from '../lib/trailers';
+import { collectPlayableSources } from '../lib/media-preview';
+import SmartMediaPlayer from './SmartMediaPlayer';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function TrailerModal({ movie, onClose }) {
   const { t } = useLanguage();
   const isOpen = Boolean(movie);
   const directVideoId = movie ? resolveMovieTrailerVideoId(movie) : null;
+  const playableSources = useMemo(() => (movie ? collectPlayableSources(movie) : []), [movie]);
   const [resolvedId, setResolvedId] = useState(directVideoId);
   const [resolving, setResolving] = useState(false);
 
@@ -24,7 +27,7 @@ export default function TrailerModal({ movie, onClose }) {
     }
 
     const immediate = resolveMovieTrailerVideoId(movie);
-    if (immediate) {
+    if (immediate || playableSources.length > 0) {
       setResolvedId(immediate);
       setResolving(false);
       return;
@@ -53,7 +56,7 @@ export default function TrailerModal({ movie, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [movie]);
+  }, [movie, playableSources.length]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,6 +70,19 @@ export default function TrailerModal({ movie, onClose }) {
   const activeVideoId = directVideoId || resolvedId;
   const embedUrl = activeVideoId ? buildYouTubeEmbedUrl(activeVideoId, { autoplay: true }) : null;
   const watchUrl = movie ? buildYouTubeWatchUrl(movie, activeVideoId) : '#';
+  const enhancedMovie = useMemo(() => {
+    if (!movie) return null;
+    if (playableSources.length > 0) return movie;
+    if (!activeVideoId) return movie;
+    return {
+      ...movie,
+      trailer_url: `https://www.youtube.com/watch?v=${activeVideoId}`,
+    };
+  }, [movie, playableSources.length, activeVideoId]);
+
+  const canUseSmartPlayer = Boolean(
+    enhancedMovie && (playableSources.length > 0 || activeVideoId)
+  );
 
   return (
     <AnimatePresence>
@@ -138,46 +154,52 @@ export default function TrailerModal({ movie, onClose }) {
               </button>
             </div>
 
-            {/* Embedded Autoplay YouTube Player */}
-            <div className="relative w-full aspect-video bg-black">
-              {embedUrl ? (
-                <iframe
-                  key={embedUrl}
-                  data-testid="trailer-youtube-iframe"
-                  src={embedUrl}
-                  title={`${movie.title} Official Trailer`}
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              ) : resolving ? (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-xs" style={{ color: '#8a8778' }}>
-                  <Loader2 size={24} className="animate-spin" style={{ color: '#c9a84c' }} />
-                  <span>{t.trailerModal.loading}</span>
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
-                  <Film size={32} style={{ color: '#c9a84c' }} />
-                  <p className="text-sm font-medium" style={{ color: '#e8e4d8' }}>
-                    {t.trailerModal.unavailable}
-                  </p>
-                  <a
-                    href={watchUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                    style={{
-                      background: 'rgba(201,168,76,0.2)',
-                      border: '1px solid rgba(201,168,76,0.45)',
-                      color: '#f5e4a8',
-                    }}
-                  >
-                    {t.trailerModal.watchOnYoutube} <ExternalLink size={12} />
-                  </a>
-                </div>
-              )}
-            </div>
+            {/* Smart Multi-Source + Subtitle Player or Fallback */}
+            {canUseSmartPlayer ? (
+              <div className="bg-black">
+                <SmartMediaPlayer movie={enhancedMovie} compact />
+              </div>
+            ) : (
+              <div className="relative w-full aspect-video bg-black">
+                {embedUrl ? (
+                  <iframe
+                    key={embedUrl}
+                    data-testid="trailer-youtube-iframe"
+                    src={embedUrl}
+                    title={`${movie.title} Official Trailer`}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                ) : resolving ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-xs" style={{ color: '#8a8778' }}>
+                    <Loader2 size={24} className="animate-spin" style={{ color: '#c9a84c' }} />
+                    <span>{t.trailerModal.loading}</span>
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
+                    <Film size={32} style={{ color: '#c9a84c' }} />
+                    <p className="text-sm font-medium" style={{ color: '#e8e4d8' }}>
+                      {t.trailerModal.unavailable}
+                    </p>
+                    <a
+                      href={watchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
+                      style={{
+                        background: 'rgba(201,168,76,0.2)',
+                        border: '1px solid rgba(201,168,76,0.45)',
+                        color: '#f5e4a8',
+                      }}
+                    >
+                      {t.trailerModal.watchOnYoutube} <ExternalLink size={12} />
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Footer */}
             <div

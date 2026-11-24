@@ -52,7 +52,15 @@ export default function CinematicBackground() {
     });
     const shootInterval = setInterval(spawnShoot, 3200 + Math.random() * 2000);
 
-    const draw = () => {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    let lastDraw = 0;
+
+    const drawFrame = (now = 0) => {
+      raf = requestAnimationFrame(drawFrame);
+      if (document.hidden) return;
+      if (now && now - lastDraw < 33) return;
+      lastDraw = now;
+
       t++;
       ctx.clearRect(0, 0, W, H);
 
@@ -122,10 +130,15 @@ export default function CinematicBackground() {
         ctx.lineTo(s.x - Math.cos(s.angle) * s.len, s.y - Math.sin(s.angle) * s.len);
         ctx.strokeStyle = tail; ctx.lineWidth = 1.2; ctx.stroke();
       }
-
-      raf = requestAnimationFrame(draw);
     };
-    draw();
+
+    if (reducedMotion) {
+      drawFrame(0);
+      cancelAnimationFrame(raf);
+      clearInterval(shootInterval);
+    } else {
+      drawFrame(0);
+    }
 
     return () => {
       cancelAnimationFrame(raf);

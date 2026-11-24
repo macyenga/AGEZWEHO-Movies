@@ -36,8 +36,10 @@ export default function Footer() {
   const footerLinks = [
     { href: '/', label: t.footer.links.explore },
     { href: '/finder', label: t.footer.links.finder },
+    { href: '/subtitles', label: 'Subtitles (RW)' },
     { href: '/requests', label: t.footer.links.requests },
     { href: '/collection', label: t.footer.links.watchlist },
+    { href: '/earnings', label: t.footer.links.earnings },
     { href: '/support', label: t.footer.links.support },
     { href: '/contact', label: t.footer.links.contact },
   ];

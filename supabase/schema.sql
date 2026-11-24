@@ -352,3 +352,61 @@ create policy "service_all_shop" on shop for all using (auth.role() = 'service_r
 
 create index if not exists shop_status_created_idx on shop (status, created_at desc);
 create index if not exists shop_category_idx on shop (category);
+
+-- ── User Watchlists Table (Authenticated Profile Sync) ──
+create table if not exists user_watchlists (
+  id          uuid default gen_random_uuid() primary key,
+  user_id     uuid references auth.users(id) on delete cascade unique not null,
+  items       jsonb default '[]'::jsonb,
+  updated_at  timestamptz default now(),
+  created_at  timestamptz default now()
+);
+
+create index if not exists user_watchlists_user_id_idx on user_watchlists (user_id);
+
+alter table user_watchlists enable row level security;
+
+drop policy if exists "auth_read_own_watchlist" on user_watchlists;
+create policy "auth_read_own_watchlist" on user_watchlists
+  for select using (auth.uid() = user_id or auth.role() = 'service_role');
+
+drop policy if exists "auth_insert_own_watchlist" on user_watchlists;
+create policy "auth_insert_own_watchlist" on user_watchlists
+  for insert with check (auth.uid() = user_id or auth.role() = 'service_role');
+
+drop policy if exists "auth_update_own_watchlist" on user_watchlists;
+create policy "auth_update_own_watchlist" on user_watchlists
+  for update using (auth.uid() = user_id or auth.role() = 'service_role');
+
+-- ── Newsletter Subscribers Table ──────────
+create table if not exists newsletter_subscribers (
+  id          uuid default gen_random_uuid() primary key,
+  email       text unique not null,
+  source      text default 'homepage',
+  language    text default 'en',
+  status      text default 'active',
+  created_at  timestamptz default now()
+);
+
+create unique index if not exists newsletter_subscribers_email_idx on newsletter_subscribers (lower(email));
+
+alter table newsletter_subscribers enable row level security;
+
+drop policy if exists "public_insert_newsletter" on newsletter_subscribers;
+create policy "public_insert_newsletter" on newsletter_subscribers
+  for insert with check (true);
+
+drop policy if exists "service_all_newsletter" on newsletter_subscribers;
+create policy "service_all_newsletter" on newsletter_subscribers
+  for all using (auth.role() = 'service_role');
+
+-- ── Uploader Attribution & Monetization Columns ──
+alter table movies add column if not exists uploader_id uuid references auth.users(id) on delete set null;
+alter table movies add column if not exists uploader_email text;
+alter table movies add column if not exists views integer default 0;
+create index if not exists movies_uploader_id_idx on movies (uploader_id);
+
+alter table games add column if not exists uploader_id uuid references auth.users(id) on delete set null;
+alter table games add column if not exists uploader_email text;
+alter table games add column if not exists uploader_earnings integer default 0;
+create index if not exists games_uploader_id_idx on games (uploader_id);

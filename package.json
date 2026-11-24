@@ -9,6 +9,7 @@
     "lint": "eslint . --ext .js,.jsx"
   },
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "@supabase/supabase-js": "^2.43.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",

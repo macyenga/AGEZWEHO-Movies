@@ -21,6 +21,8 @@ import {
   HeartHandshake,
   ChevronDown,
   Crown,
+  Wallet,
+  Subtitles,
 } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { useAuth } from '../contexts/AuthContext';
@@ -51,6 +53,8 @@ export default function Navbar() {
     { href: '/games', label: t.nav.exclusive, icon: Gamepad2 },
     { href: '/shop', label: t.nav.shop, icon: ShoppingBag },
     { href: '/submit', label: t.nav.upload, icon: Upload },
+    { href: '/subtitles', label: 'Subtitles (RW)', icon: Subtitles, accent: '#e8c87a' },
+    { href: '/earnings', label: t.nav.creatorProgram, icon: Wallet, accent: '#4ade80' },
     { href: '/finder', label: t.nav.finder, icon: Search },
     { href: '/contact', label: t.nav.contact, icon: Mail },
     { href: '/subscribe', label: t.nav.goPro, icon: Crown, accent: '#fbbf24' },
