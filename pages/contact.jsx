@@ -5,7 +5,6 @@ import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { submitContact } from '../lib/supabase';
 import { ArrowLeft, Send, CheckCircle2, Mail, MessageSquare, User, MessageCircle, Sparkles } from 'lucide-react';
-import AdBanner from '../components/ads/AdBanner';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const EMPTY = { name:'', email:'', subject:'', message:'' };
@@ -161,8 +160,6 @@ export default function Contact() {
             </motion.button>
           </motion.div>
         )}
-
-        <AdBanner size="728x90" className="mt-8" />
       </div>
     </div>
   );

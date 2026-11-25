@@ -5,7 +5,7 @@ import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { useCollection } from '../hooks/useCollection';
 import { Heart, Trash2, Film, ArrowRight, Star, BookOpen, Cloud, LogIn } from 'lucide-react';
-import AdBanner from '../components/ads/AdBanner';
+import { MovieGridSkeleton } from '../components/MovieSkeleton';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getMediaTypeLabel } from '../lib/i18n';
@@ -153,6 +153,14 @@ export default function Collection() {
           )}
         </AnimatePresence>
 
+        {/* Loading skeleton */}
+        {!loaded && (
+          <MovieGridSkeleton
+            count={5}
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8"
+          />
+        )}
+
         {/* Empty state */}
         {loaded && collection.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -274,8 +282,6 @@ export default function Collection() {
             </AnimatePresence>
           </motion.div>
         )}
-
-        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
     </div>
   );

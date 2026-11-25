@@ -10,6 +10,7 @@ export default function Custom404() {
         title="404 — Page Not Found"
         description="The page you are looking for does not exist. Return to Agasobanuye.rw — Rwanda's home for Agasobanuye entertainment."
         canonical="https://agasobanuye.rw/404"
+        noIndex
       />
       <CinematicBackground />
       <div className="relative z-10 text-center px-6 max-w-md">

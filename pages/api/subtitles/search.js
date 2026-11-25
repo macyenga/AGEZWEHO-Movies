@@ -1,11 +1,13 @@
 import { supabaseAdmin } from '../../../lib/server/supabase-admin';
 import { searchOfficialSubtitles } from '../../../lib/server/official-subtitles';
+import { dedupeLatestSubtitlesByMovie } from '../../../lib/subtitles';
 
 const LATEST_SEED_TITLES = [
   'Pushpa 2: The Rule',
   'Stree 2',
   'Mirzapur',
   'Animal',
+  'Solo Leveling',
   'Squid Game',
 ];
 
@@ -87,14 +89,14 @@ export default async function handler(req, res) {
       if (candidateTitles.length >= 3) break;
     }
     for (const fallbackTitle of LATEST_SEED_TITLES) {
-      if (!candidateTitles.includes(fallbackTitle) && candidateTitles.length < 4) {
+      if (!candidateTitles.includes(fallbackTitle) && candidateTitles.length < 6) {
         candidateTitles.push(fallbackTitle);
       }
     }
 
     const batches = await Promise.allSettled(
       candidateTitles.map((title) =>
-        searchOfficialSubtitles({ query: title, lang, limit: 4 })
+        searchOfficialSubtitles({ query: title, lang, limit: 3 })
       )
     );
 
@@ -115,11 +117,13 @@ export default async function handler(req, res) {
       return b.downloadsCount - a.downloadsCount;
     });
 
+    const diversified = dedupeLatestSubtitlesByMovie(combined, 20);
+
     return res.status(200).json({
       mode: 'latest',
       query: '',
       lang,
-      items: combined.slice(0, 20),
+      items: diversified,
       catalogQuickPicks: catalog.slice(0, 6).map((m) => ({
         id: m.id,
         title: m.title,

@@ -96,7 +96,7 @@ export default function Finder() {
         title="Finder — Agasobanuye Rocky 2026, Sankara & Amakuru Search"
         description="Search movies, games, news, shop and 15+ Kinyarwanda sites. Find agasobanuye rocky 2026, sankara, agent kim, mujyosi store, agasobanuye gashya 2026 netflix, amakuru agezweho, igihe amakuru mashya, amazina, M23 updates."
         keywords="agasobanuye rocky 2026, agasobanuye sankara 2026, agasobanuye agent kim, agent kim reactivated, mujyosi store download, agasobanuye gashya 2026 netflix, agasobanuye by rocky kimomo, agasobanuye by sankara, agasobanuye by fey 2025, agasobanuye by junior giti, agasobanuye by yanga, agasobanuye live.com, amakuru agezweho, igihe amakuru, amazina agezweho, M23 Rwanda, kigali today, movie finder, Rwanda movies"
-        canonical="https://agezweho.com/finder"
+        canonical="https://agasobanuye.rw/finder"
       />
       <CinematicBackground />
 

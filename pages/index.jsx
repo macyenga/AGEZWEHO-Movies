@@ -4,6 +4,7 @@ import SEOHead from '../components/SEOHead';
 import { getMovies, getComingSoonMovies } from '../lib/supabase';
 import CinematicBackground from '../components/CinematicBackground';
 import MovieCard from '../components/MovieCard';
+import { MovieGridSkeleton } from '../components/MovieSkeleton';
 import AdBanner, { NativeBanner } from '../components/ads/AdBanner';
 import SupportCTA from '../components/SupportCTA';
 import NewsletterSignup from '../components/NewsletterSignup';
@@ -687,11 +688,13 @@ export default function Home({ movies: initial, comingSoon }) {
     }
 
     fetch('/api/news').then((r) => r.json()).then((d) => {
-      if (d?.length) setNewsItems(d.slice(0, 8));
+      const list = Array.isArray(d) ? d : d?.news;
+      if (list?.length) setNewsItems(list.slice(0, 8));
     }).catch(() => {});
 
     fetch('/api/shop').then((r) => r.json()).then((d) => {
-      if (Array.isArray(d)) setShopItems(d.slice(0, 8));
+      const list = Array.isArray(d) ? d : d?.items;
+      if (list?.length) setShopItems(list.slice(0, 8));
     }).catch(() => {});
   }, [initial]);
 
@@ -775,7 +778,7 @@ export default function Home({ movies: initial, comingSoon }) {
     <>
       <SEOHead
         title="Agasobanuye.rw — Agasobanuye Rocky 2026, Sankara, Agent Kim & Amakuru Mashya"
-        description="Agasobanuye.rw — Rwanda's #1 home for Agasobanuye movies — Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim, Gashya 2026 Netflix, Fey, Junior Giti, Mujyosi Store. Watch, download, stream free."
+        description="Agasobanuye.rw — Rwanda's #1 editorial home for Agasobanuye movies — Rocky 2026, Rocky Kimomo, Sankara 2026, Agent Kim, trailers, reviews, and Kinyarwanda subtitles."
         keywords="agasobanuye rocky 2026, agasobanuye 2026, agasobanuye sankara 2026, agasobanuye gashya 2026 netflix, agasobanuye agent kim, agent kim reactivated, agasobanuye by rocky kimomo, agasobanuye by sankara, agasobanuye by fey 2025, agasobanuye by junior giti, mujyosi store download, agahinde agasobanuye na rocky, agasobanuye rocky new, amakuru agezweho, igihe amakuru mashya, amazina agezweho, M23 Rwanda, kigali today, Kinyarwanda movies, Rwanda movies"
         canonical="https://agasobanuye.rw"
         jsonLd={[
@@ -909,17 +912,7 @@ export default function Home({ movies: initial, comingSoon }) {
             label={t.homeSections.filterByCategoryAria}
           />
 
-          {loading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {[...Array(12)].map((_, i) => (
-                <div key={i}>
-                  <div className="shimmer aspect-[2/3] rounded-xl mb-2" />
-                  <div className="shimmer h-2.5 rounded w-3/4 mb-1.5" />
-                  <div className="shimmer h-2 rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          )}
+          {loading && <MovieGridSkeleton count={12} />}
 
           {!loading && noResult && (
             <div className="text-center py-16">

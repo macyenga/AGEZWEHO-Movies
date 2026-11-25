@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getCategoryLabel } from '../lib/i18n';
+import MovieSkeleton from './MovieSkeleton';
 
 const GOLD = '#c9a84c';
 const GOLD_LIGHT = '#e8c87a';
@@ -173,12 +174,10 @@ export default function RecommendedForYou() {
         )}
 
         {loading ? (
-          <div className="flex gap-3.5 overflow-hidden pb-3">
+          <div className="flex gap-3.5 overflow-hidden pb-3" role="status" aria-label="Loading recommendations">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="flex-shrink-0" style={{ width: 'clamp(155px, 17vw, 195px)' }}>
-                <div className="shimmer aspect-[2/3] rounded-xl mb-2" />
-                <div className="shimmer h-3 rounded w-3/4 mb-1.5" />
-                <div className="shimmer h-2 rounded w-1/2" />
+                <MovieSkeleton />
               </div>
             ))}
           </div>

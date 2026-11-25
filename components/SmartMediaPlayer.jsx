@@ -9,16 +9,44 @@ import {
   X,
   Check,
   Tv2,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import {
-  collectPlayableSources,
   normalizeSubtitles,
   srtToVtt,
   parseVttCues,
 } from '../lib/media-preview';
+import {
+  resolvePreviewSourcesWithTrailerFallback,
+  extractExternalDomain,
+} from '../lib/editorial';
 
 const GOLD = '#c9a84c';
 const GOLD_LIGHT = '#e8c87a';
+
+function withPlaybackParams(source, { mute = true } = {}) {
+  if (!source?.embedUrl) return '';
+  if (source.playerType === 'video') return source.embedUrl;
+
+  try {
+    const parsed = new URL(source.embedUrl);
+    if (source.kind === 'youtube') {
+      parsed.searchParams.set('autoplay', '1');
+      parsed.searchParams.set('playsinline', '1');
+      parsed.searchParams.set('mute', mute ? '1' : '0');
+    } else if (source.kind === 'vimeo') {
+      parsed.searchParams.set('autoplay', '1');
+      parsed.searchParams.set('muted', mute ? '1' : '0');
+    } else if (source.kind === 'dailymotion') {
+      parsed.searchParams.set('autoplay', '1');
+      parsed.searchParams.set('mute', mute ? 'true' : 'false');
+    }
+    return parsed.toString();
+  } catch {
+    return source.embedUrl;
+  }
+}
 
 export default function SmartMediaPlayer({
   movie,
@@ -26,9 +54,10 @@ export default function SmartMediaPlayer({
   initialSubtitleId = null,
   extraTracks = [],
   compact = false,
+  autoPlayMuted = true,
   onClose = null,
 }) {
-  const sources = useMemo(() => collectPlayableSources(movie), [movie]);
+  const sources = useMemo(() => resolvePreviewSourcesWithTrailerFallback(movie), [movie]);
   const movieTracks = useMemo(
     () => normalizeSubtitles(movie?.subtitles, movie?.subtitle_url, movie?.language || 'Kinyarwanda'),
     [movie?.subtitles, movie?.subtitle_url, movie?.language]
@@ -39,6 +68,7 @@ export default function SmartMediaPlayer({
   const [selectedSubId, setSelectedSubId] = useState(
     initialSubtitleId || movieTracks[0]?.id || 'off'
   );
+  const [mutedPreview, setMutedPreview] = useState(Boolean(autoPlayMuted));
   const [activeCueText, setActiveCueText] = useState('');
   const [cues, setCues] = useState([]);
   const [subError, setSubError] = useState('');
@@ -84,11 +114,23 @@ export default function SmartMediaPlayer({
 
   const activeSource = sources.find((s) => s.id === selectedSourceId) || sources[0] || null;
   const activeTrack = selectedSubId === 'off' ? null : allTracks.find((t) => t.id === selectedSubId) || null;
+  const resolvedEmbedUrl = useMemo(
+    () => withPlaybackParams(activeSource, { mute: mutedPreview }),
+    [activeSource, mutedPreview]
+  );
+  const externalHost = activeSource?.url ? extractExternalDomain(activeSource.url) : '';
 
   useEffect(() => {
     setIframeElapsedSec(0);
     setActiveCueText('');
   }, [activeSource?.id]);
+
+  // Keep HTML5 video element muted state synchronized when toggled
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = mutedPreview;
+    }
+  }, [mutedPreview, resolvedEmbedUrl]);
 
   // Load cue text for custom subtitle preview/overlay when track is local blob or same-origin /api/subtitles
   useEffect(() => {
@@ -212,6 +254,7 @@ export default function SmartMediaPlayer({
   return (
     <div
       data-testid="smart-media-player"
+      data-autoplay="true"
       className="rounded-2xl overflow-hidden"
       style={{
         background: 'rgba(12,12,20,0.92)',
@@ -226,7 +269,7 @@ export default function SmartMediaPlayer({
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide min-w-0">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold shrink-0 mr-1" style={{ color: GOLD_LIGHT }}>
             <Tv2 size={14} />
-            <span>{compact ? 'Preview Player' : 'Instant Preview'}</span>
+            <span>{compact ? 'Auto-Playing Preview' : 'Instant Auto-Preview'}</span>
           </span>
 
           {sources.map((src) => {
@@ -259,15 +302,31 @@ export default function SmartMediaPlayer({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setMutedPreview((v) => !v)}
+            data-testid="player-mute-toggle"
+            aria-label={mutedPreview ? 'Unmute preview sound' : 'Mute preview sound'}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-colors hover:bg-white/10 whitespace-nowrap"
+            style={{
+              background: mutedPreview ? 'rgba(201,168,76,0.12)' : 'rgba(74,222,128,0.14)',
+              border: mutedPreview ? '1px solid rgba(201,168,76,0.32)' : '1px solid rgba(74,222,128,0.36)',
+              color: mutedPreview ? GOLD_LIGHT : '#86efac',
+            }}
+          >
+            {mutedPreview ? <VolumeX size={12} /> : <Volume2 size={12} />}
+            <span>{mutedPreview ? 'Unmute' : 'Sound On'}</span>
+          </button>
+
           {activeSource?.url && (
             <a
               href={activeSource.url}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="noopener noreferrer nofollow"
               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:bg-white/10 whitespace-nowrap"
               style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#d4cfc0' }}
             >
-              <span>Open Original</span>
+              <span>{externalHost ? `Open (${externalHost})` : 'Open Source'}</span>
               <ExternalLink size={11} />
             </a>
           )}
@@ -275,7 +334,7 @@ export default function SmartMediaPlayer({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close preview player"
+              aria-label="Hide preview player"
               className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-white/10"
               style={{ color: '#9c988b' }}
             >
@@ -289,11 +348,12 @@ export default function SmartMediaPlayer({
       <div className="relative w-full aspect-video bg-black">
         {activeSource?.playerType === 'video' ? (
           <video
-            key={activeSource.embedUrl}
+            key={resolvedEmbedUrl}
             ref={videoRef}
-            src={activeSource.embedUrl}
+            src={resolvedEmbedUrl}
             controls
             autoPlay
+            muted={mutedPreview}
             playsInline
             crossOrigin="anonymous"
             onTimeUpdate={handleVideoTimeUpdate}
@@ -312,8 +372,8 @@ export default function SmartMediaPlayer({
           </video>
         ) : (
           <iframe
-            key={activeSource.embedUrl}
-            src={activeSource.embedUrl}
+            key={resolvedEmbedUrl}
+            src={resolvedEmbedUrl}
             title={`${movie.title} — ${activeSource.label}`}
             className="w-full h-full border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -1,26 +1,47 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Star, Download, Tv2, Heart, Play, Share2, Check } from 'lucide-react';
+import { useRouter } from 'next/router';
+import {
+  Star,
+  Download,
+  Heart,
+  Play,
+  Share2,
+  Check,
+  Subtitles,
+  Languages,
+  Loader2,
+} from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { useMovieRatings } from '../hooks/useMovieRatings';
 import { useTrailer } from '../contexts/TrailerContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getCategoryLabel, getMediaTypeLabel } from '../lib/i18n';
 import { shareMovieLink } from '../lib/share';
+import {
+  resolveMovieSubtitleAction,
+  getMovieThumbnailSlides,
+  parseSubtitleCues,
+  formatCuesToSrt,
+  sanitizeSubtitleFilename,
+} from '../lib/subtitles';
+import AnimatedThumbnail from './AnimatedThumbnail';
 
-const PLATFORM_COLORS = {
-  Netflix: '#E50914',
-  Amazon: '#00A8E1',
-  YouTube: '#FF0000',
-  JioCinema: '#6B4DE6',
-  Hotstar: '#1F80E0',
-  SonyLIV: '#0057A8',
-  ZEE5: '#7B2FBE',
-  MXPlayer: '#FF6C00',
-};
+function triggerClientSrtDownload(content, filename) {
+  const blob = new Blob([content], { type: 'application/x-subrip;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 export default function MovieCard({ movie }) {
+  const router = useRouter();
   const ref = useRef(null);
   const { toggleWatchlist, isInWatchlist } = useCollection();
   const { rateMovie, getMovieRatingSummary } = useMovieRatings();
@@ -28,20 +49,24 @@ export default function MovieCard({ movie }) {
   const { language, t, tr } = useLanguage();
   const [hoverStar, setHoverStar] = useState(0);
   const [shareStatus, setShareStatus] = useState('idle');
+  const [subStatus, setSubStatus] = useState('idle');
+  const [isCardHovered, setIsCardHovered] = useState(false);
   const shareTimerRef = useRef(null);
+  const subTimerRef = useRef(null);
 
   useEffect(() => {
     return () => {
-      if (shareTimerRef.current) {
-        clearTimeout(shareTimerRef.current);
-      }
+      if (shareTimerRef.current) clearTimeout(shareTimerRef.current);
+      if (subTimerRef.current) clearTimeout(subTimerRef.current);
     };
   }, []);
 
-  const links   = Array.isArray(movie.links) ? movie.links : [];
+  const links = Array.isArray(movie.links) ? movie.links : [];
   const inWatchlist = isInWatchlist(movie.id);
   const ratingSummary = getMovieRatingSummary(movie);
   const displayStars = hoverStar || ratingSummary.userStars || Math.round(ratingSummary.average);
+  const subtitleInfo = resolveMovieSubtitleAction(movie);
+  const thumbnailSlides = getMovieThumbnailSlides(movie);
 
   const handleToggleWatchlist = (e) => {
     e.preventDefault();
@@ -59,6 +84,60 @@ export default function MovieCard({ movie }) {
     e.preventDefault();
     e.stopPropagation();
     openTrailer(movie);
+  };
+
+  const handleDownloadSubtitles = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (subStatus === 'loading') return;
+
+    setSubStatus('loading');
+    try {
+      if (subtitleInfo.hasAttachedTrack && subtitleInfo.preferredTrack?.url) {
+        const res = await fetch(subtitleInfo.preferredTrack.url);
+        if (!res.ok) throw new Error('Track fetch failed');
+        const raw = await res.text();
+        const cues = parseSubtitleCues(raw);
+        const srtContent = cues.length > 0 ? formatCuesToSrt(cues) : raw;
+        triggerClientSrtDownload(srtContent, subtitleInfo.directDownloadFilename);
+      } else {
+        const searchParams = new URLSearchParams({
+          q: subtitleInfo.searchTitle || movie.title || '',
+          lang: 'eng',
+        });
+        const searchRes = await fetch(`/api/subtitles/search?${searchParams.toString()}`);
+        const searchData = await searchRes.json();
+        const topMatch = Array.isArray(searchData?.items) ? searchData.items[0] : null;
+
+        if (!topMatch?.downloadUrl) {
+          setSubStatus('idle');
+          router.push(subtitleInfo.studioHref);
+          return;
+        }
+
+        const dlParams = new URLSearchParams({
+          url: topMatch.downloadUrl,
+          filename: topMatch.fileName || movie.title || 'subtitle',
+          format: 'srt',
+        });
+        const dlRes = await fetch(`/api/subtitles/download?${dlParams.toString()}`);
+        if (!dlRes.ok) {
+          setSubStatus('idle');
+          router.push(subtitleInfo.studioHref);
+          return;
+        }
+        const srtText = await dlRes.text();
+        const finalName = sanitizeSubtitleFilename(topMatch.fileName || movie.title, 'srt');
+        triggerClientSrtDownload(srtText, finalName);
+      }
+
+      setSubStatus('saved');
+      if (subTimerRef.current) clearTimeout(subTimerRef.current);
+      subTimerRef.current = setTimeout(() => setSubStatus('idle'), 2400);
+    } catch {
+      setSubStatus('idle');
+      router.push(subtitleInfo.studioHref);
+    }
   };
 
   const handleShare = async (e) => {
@@ -97,10 +176,12 @@ export default function MovieCard({ movie }) {
         transition={{ type: 'spring', stiffness: 280, damping: 24 }}
         className="movie-card group relative rounded-xl overflow-hidden flex flex-col h-full transition-[border-color,box-shadow] duration-300 ease-out"
         onMouseEnter={e => {
+          setIsCardHovered(true);
           e.currentTarget.style.borderColor='rgba(201,168,76,0.35)';
           e.currentTarget.style.boxShadow='0 14px 40px rgba(0,0,0,0.68), 0 0 28px rgba(201,168,76,0.12)';
         }}
         onMouseLeave={e => {
+          setIsCardHovered(false);
           e.currentTarget.style.borderColor='rgba(255,255,255,0.07)';
           e.currentTarget.style.boxShadow='0 4px 24px rgba(0,0,0,0.5)';
         }}
@@ -131,22 +212,16 @@ export default function MovieCard({ movie }) {
         </motion.button>
 
         <Link href={`/movies/${movie.id}`} className="block cursor-pointer flex-1">
-          {/* Poster */}
+          {/* Animated Poster Slide */}
           <div className="relative aspect-[2/3] overflow-hidden">
-            {movie.poster_url ? (
-              <img src={movie.poster_url} alt={movie.title} loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
-              />
-            ) : null}
-            <div className="w-full h-full bg-[#13131e] items-center justify-center"
-              style={{ display: movie.poster_url ? 'none' : 'flex' }}>
-              <div className="text-center opacity-20">
-                <Tv2 size={32} className="mx-auto mb-1" style={{ color:'#c9a84c' }} />
-                <span className="text-[10px]" style={{ color:'#6a6a5a' }}>{movie.title}</span>
-              </div>
-            </div>
-            <div className="absolute inset-0 poster-fade" />
+            <AnimatedThumbnail
+              slides={thumbnailSlides}
+              alt={movie.title}
+              fallbackTitle={movie.title}
+              active={isCardHovered}
+              aspectClass="aspect-[2/3]"
+            />
+            <div className="absolute inset-0 poster-fade pointer-events-none" />
 
             {movie.featured ? (
               <div
@@ -172,18 +247,26 @@ export default function MovieCard({ movie }) {
               </div>
             )}
 
-            {/* Quiet unboxed source + download count footer over scrim */}
-            {((movie.platforms && movie.platforms.length > 0) || links.length > 0) && (
+            {/* Quiet unboxed source + subtitle + download count footer over scrim */}
+            {((movie.platforms && movie.platforms.length > 0) || links.length > 0 || subtitleInfo.hasAttachedTrack) && (
               <div className="absolute bottom-2 left-2.5 right-2.5 z-10 flex items-center justify-between gap-2 text-[10px]">
                 <span className="truncate font-medium" style={{ color: 'rgba(232,228,216,0.82)' }}>
                   {movie.platforms && movie.platforms.length > 0 ? movie.platforms[0] : ''}
                 </span>
-                {links.length > 0 && (
-                  <span className="inline-flex items-center gap-1 tabular-nums shrink-0 font-semibold" style={{ color: '#e8c87a' }}>
-                    <Download size={10} />
-                    {links.length}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 shrink-0 tabular-nums font-semibold">
+                  {subtitleInfo.hasAttachedTrack && (
+                    <span className="inline-flex items-center gap-0.5" style={{ color: '#86efac' }}>
+                      <Subtitles size={10} />
+                      <span>RW</span>
+                    </span>
+                  )}
+                  {links.length > 0 && (
+                    <span className="inline-flex items-center gap-1" style={{ color: '#e8c87a' }}>
+                      <Download size={10} />
+                      {links.length}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -328,6 +411,61 @@ export default function MovieCard({ movie }) {
                   : t.card.share}
               </span>
             </motion.button>
+          </div>
+
+          {/* Direct Subtitle (.SRT) Download & Kinyarwanda Studio */}
+          <div className="flex items-center gap-1.5">
+            <motion.button
+              type="button"
+              onClick={handleDownloadSubtitles}
+              disabled={subStatus === 'loading'}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              data-testid={`card-subtitles-btn-${movie.id}`}
+              aria-label={`Download Subtitles (.SRT) — ${movie.title}`}
+              title={`Download Subtitles (.SRT) — ${movie.title}`}
+              className="flex-1 min-w-0 py-1.5 px-1.5 sm:px-2 rounded-lg text-[10px] sm:text-[10.5px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors whitespace-nowrap disabled:opacity-60"
+              style={subStatus === 'saved' ? {
+                background: 'rgba(34,197,94,0.18)',
+                border: '1px solid rgba(74,222,128,0.42)',
+                color: '#86efac',
+              } : {
+                background: 'rgba(74,222,128,0.08)',
+                border: '1px solid rgba(74,222,128,0.26)',
+                color: '#86efac',
+              }}
+            >
+              {subStatus === 'loading' ? (
+                <Loader2 size={10} className="animate-spin flex-shrink-0" />
+              ) : subStatus === 'saved' ? (
+                <Check size={10} className="flex-shrink-0" />
+              ) : (
+                <Download size={10} className="flex-shrink-0" />
+              )}
+              <span className="truncate">
+                {subStatus === 'loading'
+                  ? t.card.subtitlesDownloading
+                  : subStatus === 'saved'
+                  ? t.card.subtitlesSaved
+                  : t.card.subtitlesDownload}
+              </span>
+            </motion.button>
+
+            <Link
+              href={subtitleInfo.studioHref}
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`card-subtitles-studio-${movie.id}`}
+              aria-label={`${t.card.subtitlesStudio} — ${movie.title}`}
+              title={t.card.subtitlesStudio}
+              className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center transition-colors hover:bg-amber-400/15"
+              style={{
+                background: 'rgba(201,168,76,0.08)',
+                border: '1px solid rgba(201,168,76,0.28)',
+                color: '#e8c87a',
+              }}
+            >
+              <Languages size={12} />
+            </Link>
           </div>
         </div>
       </motion.div>

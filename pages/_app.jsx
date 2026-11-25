@@ -7,9 +7,6 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { DonateProvider } from '../contexts/DonateContext';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import { TrailerProvider } from '../contexts/TrailerContext';
-import { Popunder, SocialBar, SmartLink } from '../components/ads/AdBanner';
-// import { Analytics } from '@vercel/analytics/next';
-// Cloudflare: Replace with Cloudflare Web Analytics snippet from dashboard
 
 const pageVariants = {
   initial: { opacity: 0, y: 18 },
@@ -38,10 +35,6 @@ export default function App({ Component, pageProps, router }) {
             </AnimatePresence>
             <Footer />
             <DonationFloat />
-            <SmartLink />
-            <Popunder />
-            <SocialBar />
-            {/* <Analytics /> */}
           </TrailerProvider>
         </DonateProvider>
       </AuthProvider>

@@ -14,7 +14,6 @@ import {
   Smartphone, User, Monitor, Wallet, AlertTriangle, ArrowRight,
   Subtitles, Play,
 } from 'lucide-react';
-import AdBanner from '../components/ads/AdBanner';
 
 const PLATFORMS = [
   { name: 'Telegram',     color: '#229ED9' },
@@ -601,8 +600,6 @@ export default function Submit() {
             {loading ? 'Adding...' : 'Add to Agasobanuye.rw'}
           </motion.button>
         </motion.div>
-
-        <AdBanner size="728x90" className="mt-8" />
       </div>
     </div>
   );

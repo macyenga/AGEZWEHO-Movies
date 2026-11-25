@@ -6,7 +6,6 @@ import SEOHead from '../../components/SEOHead';
 import CinematicBackground from '../../components/CinematicBackground';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft, LogIn, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
-import AdBanner from '../../components/ads/AdBanner';
 
 export default function Login() {
   const { user, loading: authLoading, login, isAdmin } = useAuth();
@@ -120,8 +119,6 @@ export default function Login() {
             </p>
           </div>
         </motion.div>
-
-        <AdBanner size="728x90" className="mt-8 mb-2" />
       </div>
     </div>
   );

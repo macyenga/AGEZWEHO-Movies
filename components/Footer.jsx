@@ -151,12 +151,28 @@ export default function Footer() {
 
         {/* Bottom Legal & Support Row */}
         <div
-          className="mt-8 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[11px]"
+          className="mt-8 pt-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-[11px]"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: '#6a6a5a' }}
         >
-          <p className="tabular-nums">
-            &copy; {currentYear} {config.merchantName} · Agasobanuye.rw. {t.footer.rights}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="tabular-nums">
+              &copy; {currentYear} {config.merchantName} · Agasobanuye.rw. {t.footer.rights}
+            </p>
+            <nav aria-label="Legal and compliance links" className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Link href="/about" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+                About
+              </Link>
+              <Link href="/privacy-policy" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+                Terms
+              </Link>
+              <Link href="/dmca" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+                DMCA
+              </Link>
+            </nav>
+          </div>
 
           <button
             type="button"

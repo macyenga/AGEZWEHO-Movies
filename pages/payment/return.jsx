@@ -64,6 +64,7 @@ export default function PaymentReturn() {
         title="Payment Status"
         description="Payment confirmation for your Agasobanuye.rw donation or Pro membership."
         canonical="https://agasobanuye.rw/payment/return"
+        noIndex
       />
       <CinematicBackground />
 
@@ -119,7 +120,7 @@ export default function PaymentReturn() {
                     <Crown size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5 }} /> Go Pro
                   </motion.div>
                 </Link>
-                <Link href="/movies">
+                <Link href="/#explore">
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     className="py-2.5 rounded-xl text-xs font-semibold"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e8e6f0' }}>

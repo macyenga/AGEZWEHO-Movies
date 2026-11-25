@@ -45,6 +45,7 @@ export default function Navbar() {
 
   const primaryLinks = [
     { href: '/', label: t.nav.explore, icon: Home },
+    { href: '/subtitles', label: t.nav.subtitles, icon: Subtitles },
     { href: '/requests', label: t.nav.requests, icon: Inbox },
     { href: '/news', label: t.nav.news, icon: Newspaper },
   ];
@@ -53,7 +54,6 @@ export default function Navbar() {
     { href: '/games', label: t.nav.exclusive, icon: Gamepad2 },
     { href: '/shop', label: t.nav.shop, icon: ShoppingBag },
     { href: '/submit', label: t.nav.upload, icon: Upload },
-    { href: '/subtitles', label: 'Subtitles (RW)', icon: Subtitles, accent: '#e8c87a' },
     { href: '/earnings', label: t.nav.creatorProgram, icon: Wallet, accent: '#4ade80' },
     { href: '/finder', label: t.nav.finder, icon: Search },
     { href: '/contact', label: t.nav.contact, icon: Mail },

@@ -3,12 +3,17 @@ import Link from 'next/link';
 import {
   Film, CalendarClock, Gamepad2, Heart, Newspaper, ShoppingBag,
   Wallet, Crown, Mail, Users, ArrowRight, CheckCircle2, Plus, BarChart3,
-  Eye, Star, ExternalLink, DollarSign, AlertTriangle, Tv2,
-  Monitor, LayoutGrid, Clock, Play, Subtitles,
+  Star, ExternalLink, DollarSign, AlertTriangle, Tv2,
+  Monitor, LayoutGrid, Clock, Subtitles, ShieldCheck, Globe,
 } from 'lucide-react';
 import { buildModerationQueue } from '../../lib/admin-helpers';
 import { calculateMovieViewBonus } from '../../lib/uploader-earnings';
-import { collectPlayableSources, normalizeSubtitles } from '../../lib/media-preview';
+import { normalizeSubtitles } from '../../lib/media-preview';
+import {
+  resolvePreviewSourcesWithTrailerFallback,
+  evaluateAdsenseReadiness,
+  extractExternalDomain,
+} from '../../lib/editorial';
 import SmartMediaPlayer from '../SmartMediaPlayer';
 
 const GOLD = '#c9a84c';
@@ -30,9 +35,8 @@ export default function AdminOverview({
 }) {
   const queue = buildModerationQueue(summary);
   const [previewFilter, setPreviewFilter] = useState('pending');
-  const [previewLayout, setPreviewLayout] = useState('card'); // 'card' | 'spotlight'
+  const [previewLayout, setPreviewLayout] = useState('autoplay'); // 'autoplay' | 'card'
   const [selectedKey, setSelectedKey] = useState('');
-  const [playingPreview, setPlayingPreview] = useState(false);
 
   const allMovies = data?.allMovies || [];
   const pendingMovies = data?.pendingMovies || [];
@@ -59,8 +63,9 @@ export default function AdminOverview({
         href: `/movies/${m.id}`,
         featured: Boolean(m.featured),
         rawMovie: m,
-        playableSources: collectPlayableSources(m),
+        playableSources: resolvePreviewSourcesWithTrailerFallback(m),
         subtitleTracks: normalizeSubtitles(m.subtitles, m.subtitle_url, m.language || 'Kinyarwanda'),
+        adsenseReadiness: evaluateAdsenseReadiness(m),
       }));
 
       const gameQueue = allGames
@@ -132,20 +137,19 @@ export default function AdminOverview({
       href: `/movies/${m.id}`,
       featured: Boolean(m.featured),
       rawMovie: m,
-      playableSources: collectPlayableSources(m),
+      playableSources: resolvePreviewSourcesWithTrailerFallback(m),
       subtitleTracks: normalizeSubtitles(m.subtitles, m.subtitle_url, m.language || 'Kinyarwanda'),
+      adsenseReadiness: evaluateAdsenseReadiness(m),
     }));
   }, [previewFilter, pendingMovies, allGames, allMovies, payouts]);
 
   useEffect(() => {
     if (previewItems.length === 0) {
       setSelectedKey('');
-      setPlayingPreview(false);
       return;
     }
     if (!previewItems.some((item) => item.key === selectedKey)) {
       setSelectedKey(previewItems[0].key);
-      setPlayingPreview(false);
     }
   }, [previewItems, selectedKey]);
 
@@ -378,11 +382,12 @@ export default function AdminOverview({
         </div>
       </div>
 
-      {/* 3. Main Split: Live Show Preview Studio (60%) + Moderation Queue (40%) */}
+      {/* 3. Main Split: Auto-Playing Show Preview Studio (60%) + Moderation Queue (40%) */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
-        {/* Live Show Preview Studio */}
+        {/* Show Preview Studio */}
         <section
           aria-label="Show Preview Studio"
+          data-testid="show-preview-studio"
           className="xl:col-span-7 rounded-2xl overflow-hidden flex flex-col"
           style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}
         >
@@ -392,7 +397,7 @@ export default function AdminOverview({
                 Show Preview & Release Inspector
               </h2>
               <p className="text-xs mt-0.5" style={{ color: '#8a8778' }}>
-                Inspect how titles, uploader MoMo accounts, and payouts appear live
+                Auto-playing external stream preview, subtitle verification, and AdSense content checks
               </p>
             </div>
 
@@ -400,6 +405,19 @@ export default function AdminOverview({
               className="inline-flex items-center p-0.5 rounded-lg"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
+              <button
+                type="button"
+                onClick={() => setPreviewLayout('autoplay')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors whitespace-nowrap"
+                style={
+                  previewLayout === 'autoplay'
+                    ? { background: 'rgba(201,168,76,0.16)', color: GOLD_LIGHT }
+                    : { color: '#8a8778' }
+                }
+              >
+                <Monitor size={12} />
+                <span>Auto Preview</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setPreviewLayout('card')}
@@ -411,20 +429,7 @@ export default function AdminOverview({
                 }
               >
                 <LayoutGrid size={12} />
-                <span>Card</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreviewLayout('spotlight')}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors whitespace-nowrap"
-                style={
-                  previewLayout === 'spotlight'
-                    ? { background: 'rgba(201,168,76,0.16)', color: GOLD_LIGHT }
-                    : { color: '#8a8778' }
-                }
-              >
-                <Monitor size={12} />
-                <span>Spotlight</span>
+                <span>Poster Card</span>
               </button>
             </div>
           </div>
@@ -453,7 +458,7 @@ export default function AdminOverview({
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-white/[0.07]">
             {/* Item Selector Column */}
-            <div className="md:col-span-5 divide-y divide-white/[0.05] max-h-[360px] overflow-y-auto">
+            <div className="md:col-span-4 divide-y divide-white/[0.05] max-h-[520px] overflow-y-auto">
               {previewItems.length === 0 ? (
                 <div className="p-6 text-xs" style={{ color: '#8a8778' }}>
                   No items match this view right now.
@@ -465,10 +470,7 @@ export default function AdminOverview({
                     <button
                       key={item.key}
                       type="button"
-                      onClick={() => {
-                        setSelectedKey(item.key);
-                        setPlayingPreview(false);
-                      }}
+                      onClick={() => setSelectedKey(item.key)}
                       className="w-full text-left px-4 py-3 transition-colors cursor-pointer flex items-start justify-between gap-2"
                       style={{
                         background: selected ? 'rgba(201,168,76,0.08)' : 'transparent',
@@ -504,154 +506,152 @@ export default function AdminOverview({
               )}
             </div>
 
-            {/* Live Preview Canvas */}
-            <div className="md:col-span-7 p-5 flex flex-col justify-between gap-4">
+            {/* Live Auto-Playing Preview Canvas */}
+            <div className="md:col-span-8 p-5 flex flex-col justify-between gap-4">
               {activePreview ? (
                 <>
-                  {playingPreview && activePreview.rawMovie && activePreview.playableSources?.length > 0 ? (
-                    <SmartMediaPlayer
-                      movie={activePreview.rawMovie}
-                      compact
-                      onClose={() => setPlayingPreview(false)}
-                    />
-                  ) : (
-                    <div
-                      className={
-                        previewLayout === 'spotlight'
-                          ? 'space-y-4'
-                          : 'flex gap-4 items-start'
-                      }
-                    >
-                      <div
-                        className={
-                          previewLayout === 'spotlight'
-                            ? 'relative w-full aspect-[16/9] rounded-xl overflow-hidden bg-[#101019]'
-                            : 'relative w-24 aspect-[2/3] rounded-xl overflow-hidden shrink-0 bg-[#101019]'
-                        }
-                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-                      >
-                        {activePreview.poster ? (
-                          <img
-                            src={activePreview.poster}
-                            alt={activePreview.title}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
+                  <div className="space-y-4">
+                    {/* Auto-play stage immediately when playable sources exist and Auto Preview mode is active */}
+                    {previewLayout === 'autoplay' && activePreview.rawMovie && activePreview.playableSources?.length > 0 ? (
+                      <SmartMediaPlayer
+                        key={activePreview.key}
+                        movie={activePreview.rawMovie}
+                        compact
+                        autoPlayMuted
+                      />
+                    ) : (
+                      <div className="flex gap-4 items-start">
                         <div
-                          className="w-full h-full items-center justify-center flex-col gap-1.5 text-center p-2"
-                          style={{
-                            display: activePreview.poster ? 'none' : 'flex',
-                            background: 'linear-gradient(145deg, #171724 0%, #0d0d14 100%)',
-                          }}
+                          className="relative w-24 aspect-[2/3] rounded-xl overflow-hidden shrink-0 bg-[#101019]"
+                          style={{ border: '1px solid rgba(255,255,255,0.1)' }}
                         >
-                          {activePreview.kind === 'payout' ? (
-                            <Wallet size={22} style={{ color: GOLD }} />
-                          ) : (
-                            <Tv2 size={22} style={{ color: GOLD, opacity: 0.6 }} />
-                          )}
-                        </div>
-                        {previewLayout === 'spotlight' && (
+                          {activePreview.poster ? (
+                            <img
+                              src={activePreview.poster}
+                              alt={activePreview.title}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
                           <div
-                            className="absolute inset-0 pointer-events-none"
-                            style={{ background: 'linear-gradient(180deg, transparent 35%, rgba(8,8,14,0.92) 100%)' }}
-                          />
+                            className="w-full h-full items-center justify-center flex-col gap-1.5 text-center p-2"
+                            style={{
+                              display: activePreview.poster ? 'none' : 'flex',
+                              background: 'linear-gradient(145deg, #171724 0%, #0d0d14 100%)',
+                            }}
+                          >
+                            {activePreview.kind === 'payout' ? (
+                              <Wallet size={22} style={{ color: GOLD }} />
+                            ) : (
+                              <Tv2 size={22} style={{ color: GOLD, opacity: 0.6 }} />
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-xs leading-relaxed" style={{ color: '#a5a193' }}>
+                          {activePreview.overview}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Title, Editorial Overview & External Links / AdSense Readiness Ledger */}
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] tabular-nums" style={{ color: '#9c988b' }}>
+                        <span className="capitalize font-semibold" style={{ color: activePreview.status === 'pending' ? '#fbbf24' : '#4ade80' }}>
+                          {activePreview.status}
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span>{activePreview.subtitle}</span>
+                        {activePreview.rating && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <span className="inline-flex items-center gap-0.5" style={{ color: GOLD_LIGHT }}>
+                              <Star size={10} fill="currentColor" /> {activePreview.rating}
+                            </span>
+                          </>
                         )}
                       </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] tabular-nums mb-1" style={{ color: '#9c988b' }}>
-                          <span className="capitalize font-semibold" style={{ color: activePreview.status === 'pending' ? '#fbbf24' : '#4ade80' }}>
-                            {activePreview.status}
-                          </span>
-                          <span aria-hidden="true">·</span>
-                          <span>{activePreview.subtitle}</span>
-                          {activePreview.rating && (
-                            <>
-                              <span aria-hidden="true">·</span>
-                              <span className="inline-flex items-center gap-0.5" style={{ color: GOLD_LIGHT }}>
-                                <Star size={10} fill="currentColor" /> {activePreview.rating}
-                              </span>
-                            </>
-                          )}
-                        </div>
+                      <h3 className="font-cinzel text-base font-bold leading-snug" style={{ fontFamily: 'Cinzel, serif', color: '#f7f4eb' }}>
+                        {activePreview.title}
+                      </h3>
 
-                        <h3 className="font-cinzel text-base font-bold leading-snug mb-1.5" style={{ fontFamily: 'Cinzel, serif', color: '#f7f4eb' }}>
-                          {activePreview.title}
-                        </h3>
-
-                        <p className="text-xs leading-relaxed line-clamp-3" style={{ color: '#a5a193' }}>
+                      {previewLayout === 'autoplay' && (
+                        <p className="text-xs leading-relaxed line-clamp-2" style={{ color: '#a5a193' }}>
                           {activePreview.overview}
                         </p>
-
-                        {activePreview.subtitleTracks?.length > 0 && (
-                          <div className="mt-2.5 flex items-center gap-1.5 text-[11px]" style={{ color: '#86efac' }}>
-                            <Subtitles size={12} />
-                            <span>
-                              Subtitles: {activePreview.subtitleTracks.map((s) => s.language).join(', ')}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="mt-3 pt-3 grid grid-cols-2 gap-3 text-xs tabular-nums border-t border-white/[0.06]">
-                          <div>
-                            <div className="text-[11px]" style={{ color: '#787467' }}>Creator / Uploader</div>
-                            <div className="font-medium truncate mt-0.5" style={{ color: '#e8e4d8' }}>
-                              {activePreview.uploader}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[11px]" style={{ color: '#787467' }}>
-                              {activePreview.kind === 'payout' ? 'MoMo Destination' : 'Reach & Earnings'}
-                            </div>
-                            <div className="font-medium mt-0.5" style={{ color: '#4ade80' }}>
-                              {activePreview.kind === 'payout'
-                                ? activePreview.momo || 'Not set'
-                                : `${activePreview.views.toLocaleString()} views · ${activePreview.earnings.toLocaleString()} RWF`}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/[0.06]">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {activePreview.playableSources?.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setPlayingPreview((v) => !v)}
-                          data-testid="admin-play-preview-btn"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap"
-                          style={
-                            playingPreview
-                              ? { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', color: '#f7f4eb' }
-                              : { background: `linear-gradient(135deg, ${GOLD_LIGHT} 0%, ${GOLD} 100%)`, color: '#09080b' }
-                          }
-                        >
-                          <Play size={12} fill={playingPreview ? 'none' : 'currentColor'} />
-                          <span>{playingPreview ? 'Back to Card Details' : `Play Preview (${activePreview.playableSources.length})`}</span>
-                        </button>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => onNavigate(activePreview.tab)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap"
-                        style={{
-                          background: 'rgba(201,168,76,0.16)',
-                          border: '1px solid rgba(201,168,76,0.38)',
-                          color: GOLD_LIGHT,
-                        }}
-                      >
-                        <span>Open in Moderation Tab</span>
-                        <ArrowRight size={13} />
-                      </button>
+                      <div className="pt-2.5 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs tabular-nums border-t border-white/[0.06]">
+                        <div>
+                          <div className="text-[11px]" style={{ color: '#787467' }}>Creator / Uploader</div>
+                          <div className="font-medium truncate mt-0.5" style={{ color: '#e8e4d8' }}>
+                            {activePreview.uploader}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[11px]" style={{ color: '#787467' }}>
+                            {activePreview.kind === 'payout' ? 'MoMo Destination' : 'Reach & Earnings'}
+                          </div>
+                          <div className="font-medium mt-0.5" style={{ color: '#4ade80' }}>
+                            {activePreview.kind === 'payout'
+                              ? activePreview.momo || 'Not set'
+                              : `${activePreview.views.toLocaleString()} views · ${activePreview.earnings.toLocaleString()} RWF`}
+                          </div>
+                        </div>
+                        {activePreview.adsenseReadiness && (
+                          <div>
+                            <div className="text-[11px] flex items-center gap-1" style={{ color: '#787467' }}>
+                              <ShieldCheck size={11} style={{ color: GOLD_LIGHT }} />
+                              <span>AdSense Content</span>
+                            </div>
+                            <div
+                              className="font-semibold mt-0.5"
+                              style={{ color: activePreview.adsenseReadiness.passed ? '#4ade80' : '#fbbf24' }}
+                            >
+                              {activePreview.adsenseReadiness.score}% Ready
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Subtitles & External Mirror Hosts Strip */}
+                      {(activePreview.subtitleTracks?.length > 0 || activePreview.playableSources?.length > 0) && (
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] pt-1" style={{ color: '#b8b4a8' }}>
+                          {activePreview.subtitleTracks?.length > 0 && (
+                            <span className="inline-flex items-center gap-1" style={{ color: '#86efac' }}>
+                              <Subtitles size={11} />
+                              Subtitles: {activePreview.subtitleTracks.map((s) => s.language).join(', ')}
+                            </span>
+                          )}
+                          {activePreview.playableSources?.length > 0 && (
+                            <span className="inline-flex items-center gap-1" style={{ color: GOLD_LIGHT }}>
+                              <Globe size={11} />
+                              Source: {extractExternalDomain(activePreview.playableSources[0].url) || activePreview.playableSources[0].label}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/[0.06]">
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(activePreview.tab)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap"
+                      style={{
+                        background: 'rgba(201,168,76,0.16)',
+                        border: '1px solid rgba(201,168,76,0.38)',
+                        color: GOLD_LIGHT,
+                      }}
+                    >
+                      <span>Open in Moderation Tab</span>
+                      <ArrowRight size={13} />
+                    </button>
 
                     <Link
                       href={activePreview.href}

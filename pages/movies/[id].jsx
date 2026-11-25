@@ -13,13 +13,21 @@ import { useTrailer } from '../../contexts/TrailerContext';
 import { calculateMovieViewBonus } from '../../lib/uploader-earnings';
 import {
   classifyPreviewLink,
-  collectPlayableSources,
   normalizeSubtitles,
 } from '../../lib/media-preview';
 import {
+  resolvePreviewSourcesWithTrailerFallback,
+  buildMovieEditorialGuide,
+  classifyExternalLinkAttribution,
+  buildMovieFaqs,
+  buildMovieFaqJsonLd,
+} from '../../lib/editorial';
+import MovieFaqSection from '../../components/MovieFaqSection';
+import WatchProgressBar from '../../components/WatchProgressBar';
+import {
   ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2,
   Share2, Copy, Check, Play, Bookmark, HeartHandshake, Wallet,
-  HelpCircle, Eye, Globe, Subtitles, Languages,
+  HelpCircle, Eye, Globe, Subtitles, Languages, BookOpen, ShieldCheck,
 } from 'lucide-react';
 
 const SITE_URL = 'https://agasobanuye.rw';
@@ -45,8 +53,17 @@ const OFFICIAL_PLATFORMS = [
 ];
 
 export default function MovieDetail({ movie }) {
+  const playableSources = useMemo(() => resolvePreviewSourcesWithTrailerFallback(movie), [movie]);
+  const subtitleTracks = useMemo(
+    () => normalizeSubtitles(movie?.subtitles, movie?.subtitle_url, movie?.language || 'Kinyarwanda'),
+    [movie?.subtitles, movie?.subtitle_url, movie?.language]
+  );
+  const editorialGuide = useMemo(() => buildMovieEditorialGuide(movie), [movie]);
+  const movieFaqs = useMemo(() => buildMovieFaqs(movie), [movie]);
+  const movieFaqJsonLd = useMemo(() => buildMovieFaqJsonLd(movie), [movie]);
+
   const [copiedShare, setCopiedShare] = useState(false);
-  const [showInlinePlayer, setShowInlinePlayer] = useState(false);
+  const [showInlinePlayer, setShowInlinePlayer] = useState(playableSources.length > 0);
   const [selectedSourceId, setSelectedSourceId] = useState(null);
   const [selectedSubtitleId, setSelectedSubtitleId] = useState(null);
   const [showOfficialSubFinder, setShowOfficialSubFinder] = useState(false);
@@ -58,11 +75,10 @@ export default function MovieDetail({ movie }) {
   const { t } = useLanguage();
   const inWatchlist = movie?.id ? isInWatchlist(movie.id) : false;
 
-  const playableSources = useMemo(() => collectPlayableSources(movie), [movie]);
-  const subtitleTracks = useMemo(
-    () => normalizeSubtitles(movie?.subtitles, movie?.subtitle_url, movie?.language || 'Kinyarwanda'),
-    [movie?.subtitles, movie?.subtitle_url, movie?.language]
-  );
+  useEffect(() => {
+    setShowInlinePlayer(playableSources.length > 0);
+    setSelectedSourceId(playableSources[0]?.id || null);
+  }, [movie?.id, playableSources]);
 
   const launchInlinePreview = (sourceUrl = null, subtitleId = null) => {
     if (sourceUrl) {
@@ -189,7 +205,8 @@ export default function MovieDetail({ movie }) {
         { '@type': 'ListItem', position: 2, name: movie.title, item: pageUrl },
       ],
     },
-  ];
+    movieFaqJsonLd,
+  ].filter(Boolean);
 
   const officialMatches = OFFICIAL_PLATFORMS.filter((p) => (movie.platforms || []).includes(p.name));
 
@@ -206,6 +223,8 @@ export default function MovieDetail({ movie }) {
         canonical={pageUrl}
         jsonLd={jsonLd}
       />
+
+      <WatchProgressBar label={`${movie.title} page progress`} />
 
       <CinematicBackground />
 
@@ -517,15 +536,17 @@ export default function MovieDetail({ movie }) {
               </div>
             </header>
 
-            {/* Inline Theater Preview & Subtitle Player */}
+            {/* Inline Auto-Playing Theater Preview & Subtitle Player */}
             {(showInlinePlayer || playableSources.length > 0) && (
-              <section ref={playerSectionRef} aria-label="Inline Theater Preview">
+              <section ref={playerSectionRef} aria-label="Auto-Playing Theater Preview" data-testid="movie-auto-preview-section">
                 {showInlinePlayer ? (
                   <SmartMediaPlayer
+                    key={`player-${movie.id}`}
                     movie={movie}
                     initialSourceId={selectedSourceId}
                     initialSubtitleId={selectedSubtitleId}
                     extraTracks={generatedSubtitles}
+                    autoPlayMuted
                     onClose={() => setShowInlinePlayer(false)}
                   />
                 ) : (
@@ -539,10 +560,10 @@ export default function MovieDetail({ movie }) {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: GOLD_LIGHT }}>
                         <Play size={13} fill="currentColor" />
-                        <span>{playableSources.length} Playable Preview {playableSources.length === 1 ? 'Link' : 'Links'} Detected</span>
+                        <span>{playableSources.length} Playable Preview {playableSources.length === 1 ? 'Link' : 'Links'} Ready</span>
                       </div>
                       <p className="text-xs mt-1" style={{ color: '#9c988b' }}>
-                        Watch directly on Agasobanuye.rw with {subtitleTracks.length > 0 ? `${subtitleTracks.length} subtitle tracks` : '.SRT / .VTT subtitle support'}.
+                        Watch inline on Agasobanuye.rw with {subtitleTracks.length > 0 ? `${subtitleTracks.length} subtitle tracks` : '.SRT / .VTT subtitle support'}.
                       </p>
                     </div>
                     <button
@@ -557,26 +578,48 @@ export default function MovieDetail({ movie }) {
                       }}
                     >
                       <Play size={12} fill="currentColor" />
-                      <span>Open Inline Player</span>
+                      <span>Show Auto-Preview</span>
                     </button>
                   </div>
                 )}
               </section>
             )}
 
-            {/* Editorial Synopsis Overview */}
+            {/* Editorial Synopsis & Cultural Commentary (AdSense Original Value-Add) */}
             <section
-              aria-label="Story Overview"
-              className="p-6 rounded-2xl"
+              aria-label="Story Overview and Editorial Guide"
+              data-testid="movie-editorial-guide"
+              className="p-6 rounded-2xl space-y-4"
               style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
-              <h2 className="text-xs font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: GOLD_LIGHT }}>
-                Overview
-              </h2>
-              <p className="text-sm sm:text-[15px] leading-[1.72]" style={{ color: '#c8c3b6' }}>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.16em] flex items-center gap-2" style={{ color: GOLD_LIGHT }}>
+                  <BookOpen size={14} />
+                  <span>Overview & Editorial Viewing Guide</span>
+                </h2>
+                <span className="text-[11px]" style={{ color: '#8a8778' }}>
+                  {movie.language || 'Kinyarwanda'} Edition
+                </span>
+              </div>
+
+              <p className="text-sm sm:text-[15px] leading-[1.72]" style={{ color: '#e6e2d5' }}>
                 {movie.overview ||
                   `Stream and download ${movie.title} translated in ${movie.language || 'Kinyarwanda'} on Agasobanuye.rw.`}
               </p>
+
+              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: '#a5a193' }}>
+                {editorialGuide.narrationNote} {editorialGuide.editorialSummary}
+              </p>
+
+              <div className="pt-3 border-t border-white/[0.06] flex items-start gap-2 text-[11px] leading-relaxed" style={{ color: '#8a8778' }}>
+                <ShieldCheck size={14} className="shrink-0 mt-0.5" style={{ color: GOLD }} />
+                <span>
+                  {editorialGuide.externalLinkDisclosure}{' '}
+                  <Link href="/dmca" className="underline hover:text-[#e8c87a]" style={{ color: '#b8b4a8' }}>
+                    DMCA & Link Policy
+                  </Link>
+                </span>
+              </div>
             </section>
 
             {/* Stream Online Links */}
@@ -585,15 +628,16 @@ export default function MovieDetail({ movie }) {
                 <div className="flex items-center justify-between pb-2.5 mb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                   <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#f3efe3' }}>
                     <Tv2 size={15} style={{ color: '#4ade80' }} />
-                    <span>Watch Online Mirrors</span>
+                    <span>External Watch & Preview Links</span>
                   </h2>
                   <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
-                    {watchLinks.length} {watchLinks.length === 1 ? 'stream' : 'streams'}
+                    {watchLinks.length} {watchLinks.length === 1 ? 'source' : 'sources'}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {watchLinks.map((l, i) => {
                     const previewInfo = classifyPreviewLink(l.url, l.label);
+                    const linkMeta = classifyExternalLinkAttribution(l.url, l.label);
                     return (
                       <div
                         key={i}
@@ -608,11 +652,9 @@ export default function MovieDetail({ movie }) {
                             <Play size={14} fill="#4ade80" style={{ color: '#4ade80' }} />
                             <span className="truncate">{l.label || `Stream Server ${i + 1}`}</span>
                           </div>
-                          {previewInfo.playable && (
-                            <div className="text-[11px] mt-0.5" style={{ color: '#86efac' }}>
-                              Ready to play inline
-                            </div>
-                          )}
+                          <div className="text-[11px] mt-0.5 truncate" style={{ color: previewInfo.playable ? '#86efac' : '#9c988b' }}>
+                            {linkMeta.domain} · {previewInfo.playable ? 'Auto-playable inline' : linkMeta.category}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {previewInfo.playable && (
@@ -628,8 +670,8 @@ export default function MovieDetail({ movie }) {
                           <a
                             href={l.url}
                             target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Open ${l.label || 'stream'} in new tab`}
+                            rel={linkMeta.rel}
+                            aria-label={`Open ${l.label || 'stream'} on ${linkMeta.domain}`}
                             className="p-2 rounded-lg transition-colors hover:bg-white/10"
                             style={{ color: '#4ade80' }}
                           >
@@ -644,7 +686,7 @@ export default function MovieDetail({ movie }) {
             )}
 
             {/* Subtitles & Captions (.VTT / .SRT) */}
-            <section aria-label="Movie Subtitles" className="space-y-3">
+            <section id="subtitles" aria-label="Movie Subtitles" className="space-y-3 scroll-mt-24">
               <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 <div className="flex items-center gap-3">
                   <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#f3efe3' }}>
@@ -802,6 +844,7 @@ export default function MovieDetail({ movie }) {
                 <div className="divide-y divide-white/[0.06] rounded-2xl overflow-hidden" style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   {links.map((l, i) => {
                     const previewInfo = classifyPreviewLink(l.url, l.label);
+                    const linkMeta = classifyExternalLinkAttribution(l.url, l.label);
                     return (
                       <div
                         key={i}
@@ -818,11 +861,10 @@ export default function MovieDetail({ movie }) {
                             <div className="text-sm font-semibold truncate" style={{ color: '#f3efe3' }}>
                               {l.label || `Download Mirror ${i + 1}`}
                             </div>
-                            {l.info && (
-                              <div className="text-xs truncate mt-0.5" style={{ color: '#8a8778' }}>
-                                {l.info}
-                              </div>
-                            )}
+                            <div className="text-xs truncate mt-0.5" style={{ color: '#8a8778' }}>
+                              {linkMeta.domain ? `${linkMeta.domain} · ${linkMeta.category}` : linkMeta.category}
+                              {l.info ? ` · ${l.info}` : ''}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -840,8 +882,8 @@ export default function MovieDetail({ movie }) {
                           <a
                             href={l.url}
                             target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Open ${l.label || 'download'} link`}
+                            rel={linkMeta.rel}
+                            aria-label={`Open ${l.label || 'download'} link on ${linkMeta.domain}`}
                             className="p-2 rounded-lg transition-colors hover:bg-white/10"
                             style={{ color: l.color || GOLD_LIGHT }}
                           >
@@ -929,6 +971,8 @@ export default function MovieDetail({ movie }) {
                 </button>
               </div>
             </section>
+
+            <MovieFaqSection faqs={movieFaqs} movieTitle={movie.title} />
 
             <AdBanner size="300x250" />
           </main>
