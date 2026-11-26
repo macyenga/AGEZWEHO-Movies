@@ -21,6 +21,7 @@ export default async function handler(req, res) {
     comingSoon,
     subscriptions,
     payouts,
+    premiumAccessRequests,
   ] = await Promise.all([
     supabaseAdmin.from('movies').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(100),
     supabaseAdmin.from('transactions').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(100),
@@ -36,6 +37,7 @@ export default async function handler(req, res) {
     supabaseAdmin.from('coming_soon').select('*').order('releaseDate', { ascending: true }).limit(100),
     supabaseAdmin.from('subscriptions').select('*').order('created_at', { ascending: false }).limit(100),
     supabaseAdmin.from('payouts').select('*').order('created_at', { ascending: false }).limit(100),
+    supabaseAdmin.from('premium_access_requests').select('*').order('created_at', { ascending: false }).limit(200),
   ]);
 
   let registeredUsers = [];
@@ -91,6 +93,7 @@ export default async function handler(req, res) {
     comingSoon: comingSoon.data || [],
     subscriptions: subscriptions.data || [],
     payouts: payouts.data || [],
+    premiumAccessRequests: premiumAccessRequests?.data || [],
     gameEarnings,
     requestDonations,
     movieDonations,

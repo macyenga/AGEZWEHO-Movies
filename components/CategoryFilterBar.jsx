@@ -90,9 +90,9 @@ export default function CategoryFilterBar({
           aria-label="Scroll categories left"
           className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer disabled:opacity-25 disabled:cursor-default"
           style={{
-            background: 'rgba(20,20,30,0.85)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            color: canScrollLeft ? '#e8c87a' : '#4a4a3a',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            color: canScrollLeft ? 'var(--gold2)' : 'var(--muted)',
           }}
         >
           <ChevronLeft size={14} />
@@ -103,13 +103,13 @@ export default function CategoryFilterBar({
           {canScrollLeft && (
             <div
               className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 z-10"
-              style={{ background: 'linear-gradient(90deg, rgba(10,10,15,0.95), transparent)' }}
+              style={{ background: 'linear-gradient(90deg, var(--bg), transparent)' }}
             />
           )}
           {canScrollRight && (
             <div
               className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 z-10"
-              style={{ background: 'linear-gradient(270deg, rgba(10,10,15,0.95), transparent)' }}
+              style={{ background: 'linear-gradient(270deg, var(--bg), transparent)' }}
             />
           )}
 
@@ -137,27 +137,27 @@ export default function CategoryFilterBar({
                     type="button"
                     onClick={(e) => handleSelect(category, e)}
                     aria-pressed={isActive}
-                    className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap cursor-pointer"
+                    className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer"
                     style={
                       isActive
                         ? {
-                            background: 'rgba(201,168,76,0.16)',
-                            border: '1px solid rgba(201,168,76,0.48)',
-                            color: '#f5e4a8',
+                            background: 'var(--accent-bg)',
+                            border: '1px solid var(--accent-border)',
+                            color: 'var(--gold2)',
                           }
                         : {
-                            background: 'rgba(255,255,255,0.03)',
-                            border: '1px solid rgba(255,255,255,0.07)',
-                            color: '#a39f92',
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text2)',
                           }
                     }
                   >
-                    <Icon size={12} style={{ color: isActive ? '#e8c87a' : '#787467' }} />
+                    <Icon size={12} style={{ color: isActive ? 'var(--gold)' : 'var(--muted)' }} />
                     <span>{getCategoryLabel(category, language)}</span>
                     {count !== null && (
                       <span
                         className="text-[11px] tabular-nums"
-                        style={{ color: isActive ? '#e8c87a' : '#6c685c' }}
+                        style={{ color: isActive ? 'var(--gold2)' : 'var(--muted)' }}
                       >
                         {count}
                       </span>
@@ -176,9 +176,9 @@ export default function CategoryFilterBar({
           aria-label="Scroll categories right"
           className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer disabled:opacity-25 disabled:cursor-default"
           style={{
-            background: 'rgba(20,20,30,0.85)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            color: canScrollRight ? '#e8c87a' : '#4a4a3a',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            color: canScrollRight ? 'var(--gold2)' : 'var(--muted)',
           }}
         >
           <ChevronRight size={14} />

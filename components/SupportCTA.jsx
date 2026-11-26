@@ -6,7 +6,7 @@ import { useDonate } from '../contexts/DonateContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { PAYPACK_CLIENT_CONFIG } from '../lib/paypack-client';
 
-const GOLD = '#c9a84c';
+const GOLD = 'var(--gold)';
 
 export default function SupportCTA() {
   const [stats, setStats] = useState(null);
@@ -30,43 +30,43 @@ export default function SupportCTA() {
     <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
       <div
         className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
-        style={{ background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.16)' }}
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border2)', boxShadow: 'var(--shadow-card)' }}
       >
-        <div className="orb absolute -top-24 right-0 w-[280px] h-[280px]" style={{ background: 'rgba(201,168,76,0.05)' }} />
+        <div className="orb absolute -top-24 right-0 w-[280px] h-[280px]" style={{ background: 'var(--accent-bg)' }} />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center gap-6">
           <div className="flex-1 min-w-0">
             <div className="section-tag mb-2 flex items-center gap-2">
               <HeartHandshake size={11} style={{ color: GOLD }} /> {t.supportCta.tag}
             </div>
-            <p className="text-xs sm:text-sm leading-relaxed mb-1" style={{ color: '#a5a193' }}>
-              {t.supportCta.headlinePrefix} <span className="font-semibold" style={{ color: '#e8c87a' }}>{t.supportCta.headlineHighlight}</span> {t.supportCta.headlineSuffix}
+            <p className="text-xs sm:text-sm leading-relaxed mb-1" style={{ color: 'var(--text2)' }}>
+              {t.supportCta.headlinePrefix} <span className="font-semibold" style={{ color: 'var(--gold2)' }}>{t.supportCta.headlineHighlight}</span> {t.supportCta.headlineSuffix}
             </p>
-            <p className="text-xs mb-4" style={{ color: '#787467' }}>
-              {t.supportCta.paypackPrefix} <strong style={{ color: '#e8c87a' }}>{t.supportCta.paypackNetwork}</strong> {t.supportCta.paypackDetails} <strong style={{ color: '#ffcc00' }}>{PAYPACK_CLIENT_CONFIG.merchantName}</strong> {t.supportCta.paypackSuffix}
+            <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>
+              {t.supportCta.paypackPrefix} <strong style={{ color: 'var(--gold2)' }}>{t.supportCta.paypackNetwork}</strong> {t.supportCta.paypackDetails} <strong style={{ color: 'var(--gold)' }}>{PAYPACK_CLIENT_CONFIG.merchantName}</strong> {t.supportCta.paypackSuffix}
             </p>
 
             <div className="flex items-center gap-6 flex-wrap tabular-nums">
               <div>
-                <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#787467' }}>{t.supportCta.raisedThisMonth}</div>
+                <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--muted)' }}>{t.supportCta.raisedThisMonth}</div>
                 <div className="text-lg font-bold" style={{ color: GOLD }}>
-                  {stats.monthlyTotal.toLocaleString()} <span style={{ color: '#8a8778', fontSize: 12, fontWeight: 400 }}>/ {stats.monthlyGoal.toLocaleString()} RWF</span>
+                  {stats.monthlyTotal.toLocaleString()} <span style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 400 }}>/ {stats.monthlyGoal.toLocaleString()} RWF</span>
                 </div>
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: '#787467' }}><Users size={10} /> {t.supportCta.supporters}</div>
-                <div className="text-lg font-bold" style={{ color: '#e8e6f0' }}>{(stats.totalDonors || 0).toLocaleString()}</div>
+                <div className="text-[10px] uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: 'var(--muted)' }}><Users size={10} /> {t.supportCta.supporters}</div>
+                <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{(stats.totalDonors || 0).toLocaleString()}</div>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: '#e8c87a' }}>
+              <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--gold2)' }}>
                 <TrendingUp size={13} style={{ color: GOLD }} />
                 <span>{tr('supportCta.goalPct', { pct })}</span>
               </div>
             </div>
 
-            <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg4)' }}>
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #a07828, #e8c87a)' }}
+                style={{ width: `${pct}%`, background: 'var(--gold2)' }}
               />
             </div>
           </div>
@@ -78,11 +78,11 @@ export default function SupportCTA() {
               whileHover={{ scale: 1.04, y: -2 }}
               whileTap={{ scale: 0.96 }}
               className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.9), rgba(160,120,40,0.9))', color: '#0a0808', boxShadow: '0 12px 30px rgba(201,168,76,0.18)' }}
+              style={{ background: 'var(--gold2)', color: 'var(--accent-ink)', boxShadow: '0 8px 24px rgba(180, 134, 11, 0.22)' }}
             >
               <HeartHandshake size={16} /> {t.supportCta.donateNow}
             </motion.button>
-            <Link href="/support" className="text-center text-[11px] underline text-stone-400 hover:text-amber-300 transition-colors">
+            <Link href="/support" className="text-center text-[11px] underline hover:opacity-80 transition-opacity" style={{ color: 'var(--muted)' }}>
               {t.supportCta.fullSupportPage}
             </Link>
           </div>

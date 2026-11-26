@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function CinematicBackground() {
   const canvasRef = useRef(null);
+  const { isLight } = useTheme();
 
   useEffect(() => {
+    if (isLight) return undefined;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -145,7 +148,20 @@ export default function CinematicBackground() {
       clearInterval(shootInterval);
       window.removeEventListener('resize', resize);
     };
-  }, []);
+  }, [isLight]);
+
+  if (isLight) {
+    return (
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 50% at 15% 0%, rgba(180,83,9,0.04) 0%, transparent 60%), linear-gradient(180deg, #eef1f6 0%, #e7ebf2 100%)',
+        }}
+      />
+    );
+  }
 
   return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" style={{ opacity: 0.85 }} />;
 }

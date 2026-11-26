@@ -8,6 +8,11 @@ import {
   AlertCircle,
   MessageCircle,
   ExternalLink,
+  Globe,
+  Send,
+  Copy,
+  Check,
+  Mail,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
@@ -17,6 +22,7 @@ import {
   isValidRwandaPhone,
   buildWhatsAppConfirmationUrl,
 } from '../lib/paypack-client';
+import { ABROAD_TRANSFER_APPS, getSocialConfig } from '../lib/social-config';
 import { useLanguage } from '../contexts/LanguageContext';
 import MomoPayManualPanel from './MomoPayManualPanel';
 
@@ -46,11 +52,12 @@ export default function UnifiedPaymentFlow({
 }) {
   const { t, tr } = useLanguage();
 
-  // Unified tabs: 'manual' (MoMo Pay 156833 & QR) | 'paypack' (Auto Push via Paypack)
+  // Unified tabs: 'manual' (MoMo Pay 156833 & QR) | 'paypack' (Auto Push via Paypack) | 'abroad' (Diaspora & Direct Chat)
   const [paymentMethod, setPaymentMethod] = useState('manual');
   const [phone, setPhone] = useState(defaultPhone);
   const [payerName, setPayerName] = useState('');
   const [email, setEmail] = useState(defaultEmail);
+  const [copiedPhone, setCopiedPhone] = useState(false);
 
   // Paypack states: 'idle' | 'initiating' | 'waiting_pin' | 'completed' | 'manual_needed' | 'failed'
   const [status, setStatus] = useState('idle');
@@ -58,6 +65,8 @@ export default function UnifiedPaymentFlow({
   const [paypackRef, setPaypackRef] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
+
+  const socialCfg = getSocialConfig({ merchantName });
 
   const effectiveAmount = Number.isFinite(Number(amount)) ? Math.round(Number(amount)) : 0;
   const resolvedWhatsappButtonText =
@@ -220,7 +229,7 @@ export default function UnifiedPaymentFlow({
         <div
           role="tablist"
           aria-label="Payment method"
-          className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-black/45 border border-white/10"
+          className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-black/45 border border-white/10"
         >
           <button
             type="button"
@@ -231,14 +240,14 @@ export default function UnifiedPaymentFlow({
               setPaymentMethod('manual');
               setErrorMessage('');
             }}
-            className={`py-2 px-2.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`py-2 px-2 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               paymentMethod === 'manual'
                 ? 'bg-amber-400/20 text-amber-200 border border-amber-400/40'
                 : 'text-stone-400 hover:text-stone-200 border border-transparent'
             }`}
           >
             <QrCode size={13} />
-            <span>{t.momoManual.tabManual}</span>
+            <span className="truncate">{t.momoManual.tabManual}</span>
           </button>
           <button
             type="button"
@@ -249,14 +258,32 @@ export default function UnifiedPaymentFlow({
               setPaymentMethod('paypack');
               setErrorMessage('');
             }}
-            className={`py-2 px-2.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`py-2 px-2 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               paymentMethod === 'paypack'
                 ? 'bg-amber-400/20 text-amber-200 border border-amber-400/40'
                 : 'text-stone-400 hover:text-stone-200 border border-transparent'
             }`}
           >
             <Zap size={13} />
-            <span>{t.momoManual.tabGateway}</span>
+            <span className="truncate">{t.momoManual.tabGateway}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={paymentMethod === 'abroad'}
+            data-testid="payment-tab-abroad"
+            onClick={() => {
+              setPaymentMethod('abroad');
+              setErrorMessage('');
+            }}
+            className={`py-2 px-2 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              paymentMethod === 'abroad'
+                ? 'bg-sky-500/20 text-sky-200 border border-sky-400/40'
+                : 'text-stone-400 hover:text-stone-200 border border-transparent'
+            }`}
+          >
+            <Globe size={13} />
+            <span className="truncate">Abroad / Global</span>
           </button>
         </div>
       )}
@@ -280,6 +307,94 @@ export default function UnifiedPaymentFlow({
           onConfirmed={onConfirmed}
           onDone={onDone}
         />
+      ) : paymentMethod === 'abroad' ? (
+        <div
+          data-testid="abroad-support-panel"
+          className="p-4 sm:p-5 rounded-xl bg-black/35 border border-sky-400/25 space-y-4"
+        >
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-bold text-sky-300 uppercase tracking-wider">
+              <Globe size={14} />
+              <span>Support From Abroad (Diaspora &amp; International)</span>
+            </div>
+            <p className="text-xs text-stone-300 leading-relaxed">
+              Outside Rwanda? Send support via{' '}
+              <strong className="text-amber-200">{ABROAD_TRANSFER_APPS.join(', ')}</strong> directly to Rwanda MTN Mobile Money, or talk to us directly on Telegram for card/PayPal/Wise help.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-black/45 border border-white/10 space-y-2 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-stone-400">Country / Network</span>
+              <span className="font-semibold text-stone-100">Rwanda · MTN Mobile Money</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-stone-400">Recipient Name</span>
+              <span className="font-semibold text-amber-200">{merchantName}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-stone-400">Phone / Telegram</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-bold text-sky-300">{socialCfg.telegramPhone}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(socialCfg.telegramPhone);
+                    setCopiedPhone(true);
+                    setTimeout(() => setCopiedPhone(false), 2000);
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold bg-white/10 hover:bg-white/15 text-stone-100 cursor-pointer"
+                >
+                  {copiedPhone ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                  <span>{copiedPhone ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <a
+              href={socialCfg.telegramDirectUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="abroad-telegram-direct-link"
+              className="py-2.5 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 no-underline transition-opacity hover:opacity-90"
+              style={{
+                background: 'linear-gradient(135deg, #229ED9, #1d4ed8)',
+                color: '#ffffff',
+              }}
+            >
+              <Send size={14} />
+              <span>Telegram: {socialCfg.telegramPhone}</span>
+            </a>
+
+            <a
+              href={resolvedWhatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="abroad-whatsapp-direct-link"
+              className="py-2.5 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 no-underline transition-opacity hover:opacity-90"
+              style={{
+                background: 'linear-gradient(135deg, #25D366, #128C7E)',
+                color: '#ffffff',
+              }}
+            >
+              <MessageCircle size={14} />
+              <span>WhatsApp: {socialCfg.whatsappPhoneDisplay}</span>
+            </a>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10 text-[11px] text-stone-400">
+            <a
+              href={`mailto:${socialCfg.contactEmail}`}
+              className="inline-flex items-center gap-1.5 text-amber-300 hover:underline"
+            >
+              <Mail size={12} />
+              <span>{socialCfg.contactEmail}</span>
+            </a>
+            <span>Mention your email after transfer so we activate Pro/Vault!</span>
+          </div>
+        </div>
       ) : (
         <div className="space-y-4">
           {status === 'idle' || status === 'initiating' ? (

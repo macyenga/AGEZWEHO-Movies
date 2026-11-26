@@ -163,9 +163,9 @@ export default function MovieCard({ movie }) {
         data-testid={`movie-card-${movie.id}`}
         style={{
           willChange: 'transform',
-          background:'linear-gradient(160deg,rgba(26,26,40,0.92) 0%,rgba(15,15,22,0.96) 100%)',
-          border:'1px solid rgba(255,255,255,0.07)',
-          boxShadow:'0 4px 24px rgba(0,0,0,0.5)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-card)',
         }}
         whileHover={{
           scale: 1.04,
@@ -177,13 +177,13 @@ export default function MovieCard({ movie }) {
         className="movie-card group relative rounded-xl overflow-hidden flex flex-col h-full transition-[border-color,box-shadow] duration-300 ease-out"
         onMouseEnter={e => {
           setIsCardHovered(true);
-          e.currentTarget.style.borderColor='rgba(201,168,76,0.35)';
-          e.currentTarget.style.boxShadow='0 14px 40px rgba(0,0,0,0.68), 0 0 28px rgba(201,168,76,0.12)';
+          e.currentTarget.style.borderColor='var(--border2)';
+          e.currentTarget.style.boxShadow='0 14px 36px rgba(15,23,42,0.22)';
         }}
         onMouseLeave={e => {
           setIsCardHovered(false);
-          e.currentTarget.style.borderColor='rgba(255,255,255,0.07)';
-          e.currentTarget.style.boxShadow='0 4px 24px rgba(0,0,0,0.5)';
+          e.currentTarget.style.borderColor='var(--border)';
+          e.currentTarget.style.boxShadow='var(--shadow-card)';
         }}
       >
         {/* ── Watchlist Heart Button ── */}
@@ -273,26 +273,26 @@ export default function MovieCard({ movie }) {
 
           {/* Info */}
           <div className="px-3 pt-3 pb-2">
-            <h3 className="font-semibold text-sm leading-snug mb-1.5 line-clamp-2 text-[#f1ede2] group-hover:text-[#f5e4a8] transition-colors">
+            <h3 className="font-semibold text-sm leading-snug mb-1.5 line-clamp-2 text-[var(--text)] group-hover:text-[var(--gold2)] transition-colors">
               {movie.title}
             </h3>
-            <div className="flex items-center gap-1.5 text-[11px] truncate tabular-nums" style={{ color: '#8f8b7e' }}>
+            <div className="flex items-center gap-1.5 text-[11px] truncate tabular-nums" style={{ color: 'var(--muted)' }}>
               {movie.year && <span>{movie.year}</span>}
-              {movie.year && movie.genre && <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>}
+              {movie.year && movie.genre && <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>}
               {movie.genre && (
-                <span style={{ color: '#b5b0a2' }}>
+                <span style={{ color: 'var(--text2)' }}>
                   {getCategoryLabel(movie.genre.split(',')[0].trim(), language)}
                 </span>
               )}
               {movie.language && (
                 <>
-                  <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
+                  <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
                   <span className="truncate">{movie.language}</span>
                 </>
               )}
             </div>
             {movie.uploaded_by && (
-              <div className="mt-1 text-[10px] truncate" style={{ color: '#6b685c' }}>
+              <div className="mt-1 text-[10px] truncate" style={{ color: 'var(--muted)' }}>
                 {t.card.byPrefix} {movie.uploaded_by}
               </div>
             )}
@@ -302,7 +302,7 @@ export default function MovieCard({ movie }) {
         {/* Interactive 5-Star Rating & Play Trailer Footer */}
         <div
           className="px-2.5 sm:px-3 pb-2.5 pt-2 space-y-2"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ borderTop: '1px solid var(--border-subtle)' }}
         >
           {/* 5-Star Rating Row */}
           <div
@@ -331,13 +331,13 @@ export default function MovieCard({ movie }) {
                   >
                     <Star
                       size={12}
-                      fill={filled ? '#c9a84c' : 'none'}
+                      fill={filled ? 'var(--gold)' : 'none'}
                       style={{
                         color: isUserChoice
-                          ? '#f5e4a8'
+                          ? 'var(--gold2)'
                           : filled
-                          ? '#c9a84c'
-                          : '#5a584c',
+                          ? 'var(--gold)'
+                          : 'var(--dim)',
                       }}
                     />
                   </button>
@@ -349,10 +349,10 @@ export default function MovieCard({ movie }) {
               className="flex items-center gap-1 text-[11px] font-semibold tabular-nums flex-shrink-0"
               data-testid={`avg-rating-${movie.id}`}
               title={`Average rating: ${ratingSummary.average.toFixed(1)} / 5 (${ratingSummary.count} rating${ratingSummary.count === 1 ? '' : 's'})`}
-              style={{ color: ratingSummary.userStars > 0 ? '#f5e4a8' : '#c9a84c' }}
+              style={{ color: ratingSummary.userStars > 0 ? 'var(--gold2)' : 'var(--gold)' }}
             >
               <span>{ratingSummary.average > 0 ? ratingSummary.average.toFixed(1) : '—'}</span>
-              <span className="text-[9px] font-normal" style={{ color: '#6a6a5a' }}>
+              <span className="text-[9px] font-normal" style={{ color: 'var(--muted)' }}>
                 ({ratingSummary.count})
               </span>
             </div>
@@ -370,9 +370,9 @@ export default function MovieCard({ movie }) {
               title={t.card.playTrailer}
               className="flex-1 min-w-0 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
               style={{
-                background: 'rgba(201,168,76,0.12)',
-                border: '1px solid rgba(201,168,76,0.32)',
-                color: '#e8c87a',
+                background: 'var(--accent-bg)',
+                border: '1px solid var(--accent-border)',
+                color: 'var(--gold2)',
               }}
             >
               <Play size={10} fill="currentColor" className="flex-shrink-0" />
@@ -389,13 +389,13 @@ export default function MovieCard({ movie }) {
               title={tr('card.shareAria', { title: movie.title })}
               className="flex-shrink-0 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
               style={shareStatus !== 'idle' ? {
-                background: 'rgba(74,222,128,0.14)',
-                border: '1px solid rgba(74,222,128,0.4)',
-                color: '#86efac',
+                background: 'var(--green-bg)',
+                border: '1px solid var(--green-border)',
+                color: 'var(--green)',
               } : {
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                color: '#d6d2c4',
+                background: 'var(--bg-ghost)',
+                border: '1px solid var(--border)',
+                color: 'var(--text2)',
               }}
             >
               {shareStatus !== 'idle' ? (
@@ -425,14 +425,10 @@ export default function MovieCard({ movie }) {
               aria-label={`Download Subtitles (.SRT) — ${movie.title}`}
               title={`Download Subtitles (.SRT) — ${movie.title}`}
               className="flex-1 min-w-0 py-1.5 px-1.5 sm:px-2 rounded-lg text-[10px] sm:text-[10.5px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors whitespace-nowrap disabled:opacity-60"
-              style={subStatus === 'saved' ? {
-                background: 'rgba(34,197,94,0.18)',
-                border: '1px solid rgba(74,222,128,0.42)',
-                color: '#86efac',
-              } : {
-                background: 'rgba(74,222,128,0.08)',
-                border: '1px solid rgba(74,222,128,0.26)',
-                color: '#86efac',
+              style={{
+                background: 'var(--green-bg)',
+                border: '1px solid var(--green-border)',
+                color: 'var(--green)',
               }}
             >
               {subStatus === 'loading' ? (
@@ -457,11 +453,11 @@ export default function MovieCard({ movie }) {
               data-testid={`card-subtitles-studio-${movie.id}`}
               aria-label={`${t.card.subtitlesStudio} — ${movie.title}`}
               title={t.card.subtitlesStudio}
-              className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center transition-colors hover:bg-amber-400/15"
+              className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center transition-colors hover:opacity-85"
               style={{
-                background: 'rgba(201,168,76,0.08)',
-                border: '1px solid rgba(201,168,76,0.28)',
-                color: '#e8c87a',
+                background: 'var(--accent-bg)',
+                border: '1px solid var(--accent-border)',
+                color: 'var(--gold2)',
               }}
             >
               <Languages size={12} />

@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import {
   OFFICIAL_SUBTITLE_LANGUAGES,
+  STUDIO_TARGET_LANGUAGES,
+  resolveStudioTargetLanguage,
   parseSubtitleCues,
   formatCuesToSrt,
   formatCuesToVtt,
@@ -23,8 +25,8 @@ import {
   sanitizeSubtitleFilename,
 } from '../lib/subtitles';
 
-const GOLD = '#c9a84c';
-const GOLD_LIGHT = '#e8c87a';
+const GOLD = 'var(--gold)';
+const GOLD_LIGHT = 'var(--gold2)';
 
 function triggerBlobDownload(content, filename, mimeType) {
   const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
@@ -61,11 +63,14 @@ export default function OfficialSubtitleStudio({
   const [activeFilename, setActiveFilename] = useState('official_subtitle');
 
   // Translation state
+  const [targetLanguage, setTargetLanguage] = useState('Kinyarwanda');
   const [translating, setTranslating] = useState(false);
   const [translateProgress, setTranslateProgress] = useState({ done: 0, total: 0 });
   const [translateError, setTranslateError] = useState('');
   const [hasTranslated, setHasTranslated] = useState(false);
   const [appliedToast, setAppliedToast] = useState(false);
+
+  const selectedTarget = resolveStudioTargetLanguage(targetLanguage);
 
   const fileInputRef = useRef(null);
   const cancelTranslationRef = useRef(false);
@@ -107,9 +112,15 @@ export default function OfficialSubtitleStudio({
     runSearch(initialQuery, 'eng');
   }, [initialQuery, runSearch]);
 
-  const translateCuesList = async (sourceCues, movieTitle, sourceLang) => {
+  const translateCuesList = async (
+    sourceCues,
+    movieTitle,
+    sourceLang,
+    requestedTarget = targetLanguage
+  ) => {
     if (!Array.isArray(sourceCues) || sourceCues.length === 0) return;
 
+    const targetObj = resolveStudioTargetLanguage(requestedTarget);
     cancelTranslationRef.current = false;
     setTranslating(true);
     setTranslateError('');
@@ -130,11 +141,12 @@ export default function OfficialSubtitleStudio({
             cues: batch,
             movieTitle,
             sourceLanguage: sourceLang,
+            targetLanguage: targetObj.label,
           }),
         });
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data?.error || 'Kinyarwanda translation failed');
+          throw new Error(data?.error || `${targetObj.label} translation failed`);
         }
 
         const translatedMap = new Map(
@@ -234,9 +246,10 @@ export default function OfficialSubtitleStudio({
     setHasTranslated(true);
   };
 
-  const handleDownloadKinyarwanda = (format) => {
+  const handleDownloadTranslated = (format) => {
     if (cues.length === 0) return;
-    const baseName = `${activeFilename || activeTitle || 'agasobanuye'}_kinyarwanda`;
+    const langSlug = selectedTarget.label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const baseName = `${activeFilename || activeTitle || 'agasobanuye'}_${langSlug}`;
     const filename = sanitizeSubtitleFilename(baseName, format);
     const content =
       format === 'vtt'
@@ -250,9 +263,9 @@ export default function OfficialSubtitleStudio({
     if (!onApplyKinyarwandaTrack || cues.length === 0) return;
     const vttText = formatCuesToVtt(cues, { useTranslated: true });
     onApplyKinyarwandaTrack({
-      id: `rw-studio-${Date.now()}`,
-      language: 'Kinyarwanda',
-      label: `${activeTitle || 'Official'} · Kinyarwanda`,
+      id: `${selectedTarget.id}-studio-${Date.now()}`,
+      language: selectedTarget.label,
+      label: `${activeTitle || 'Official'} · ${selectedTarget.label}`,
       rawText: vttText,
       format: 'vtt',
     });
@@ -270,8 +283,9 @@ export default function OfficialSubtitleStudio({
         }}
         className="p-4 rounded-2xl space-y-3"
         style={{
-          background: 'rgba(14,14,22,0.86)',
-          border: '1px solid rgba(201,168,76,0.22)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--accent-border)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         <div className="flex flex-col sm:flex-row gap-2.5">
@@ -279,7 +293,7 @@ export default function OfficialSubtitleStudio({
             <Search
               size={15}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: '#8a8778' }}
+              style={{ color: 'var(--muted)' }}
             />
             <input
               type="text"
@@ -300,7 +314,6 @@ export default function OfficialSubtitleStudio({
             }}
             aria-label="Official subtitle source language"
             className="input-dark px-3.5 py-2.5 rounded-xl text-xs font-medium cursor-pointer"
-            style={{ background: '#0f0f17' }}
           >
             {OFFICIAL_SUBTITLE_LANGUAGES.map((l) => (
               <option key={l.id} value={l.id}>
@@ -314,8 +327,8 @@ export default function OfficialSubtitleStudio({
             disabled={searching}
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-opacity disabled:opacity-60 whitespace-nowrap"
             style={{
-              background: 'linear-gradient(135deg,#e8c87a,#c9a84c)',
-              color: '#09090f',
+              background: 'linear-gradient(135deg, var(--gold2), var(--gold))',
+              color: 'var(--accent-ink)',
             }}
           >
             {searching ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
@@ -329,12 +342,7 @@ export default function OfficialSubtitleStudio({
               runSearch('', lang);
             }}
             disabled={searching}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap"
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: '#d4cfc0',
-            }}
+            className="btn-ghost inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap"
           >
             <RefreshCw size={13} />
             <span>Latest</span>
@@ -343,7 +351,7 @@ export default function OfficialSubtitleStudio({
 
         {!compact && quickPicks.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="text-[11px] font-medium" style={{ color: '#8a8778' }}>
+            <span className="text-[11px] font-medium" style={{ color: 'var(--muted)' }}>
               Latest on site:
             </span>
             {quickPicks.map((pick) => (
@@ -354,12 +362,7 @@ export default function OfficialSubtitleStudio({
                   setQuery(pick.searchHint);
                   runSearch(pick.searchHint, lang);
                 }}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-medium cursor-pointer transition-colors hover:text-[#f5e4a8]"
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: '#c8c3b6',
-                }}
+                className="btn-ghost px-2.5 py-1 rounded-lg text-[11px] font-medium cursor-pointer"
               >
                 {pick.searchHint}
               </button>
@@ -374,13 +377,14 @@ export default function OfficialSubtitleStudio({
         <div
           className={`${compact ? '' : 'lg:col-span-6'} rounded-2xl overflow-hidden`}
           style={{
-            background: 'rgba(14,14,22,0.84)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <div
             className="px-4 py-3 flex items-center justify-between gap-2"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+            style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-card-subtle)' }}
           >
             <div className="flex items-center gap-2 min-w-0">
               <Subtitles size={15} style={{ color: GOLD_LIGHT }} />
@@ -388,7 +392,7 @@ export default function OfficialSubtitleStudio({
                 {modeLabel}
               </h2>
             </div>
-            <span className="text-xs tabular-nums shrink-0" style={{ color: '#8a8778' }}>
+            <span className="text-xs tabular-nums shrink-0" style={{ color: 'var(--muted)' }}>
               {searching ? 'Loading...' : `${items.length} found`}
             </span>
           </div>
@@ -397,9 +401,9 @@ export default function OfficialSubtitleStudio({
             <div
               className="m-4 p-3.5 rounded-xl flex items-start gap-2.5 text-xs"
               style={{
-                background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(239,68,68,0.25)',
-                color: '#fca5a5',
+                background: 'var(--danger-bg)',
+                border: '1px solid var(--danger-border)',
+                color: 'var(--danger)',
               }}
             >
               <AlertCircle size={15} className="shrink-0 mt-0.5" />
@@ -408,21 +412,21 @@ export default function OfficialSubtitleStudio({
           )}
 
           {searching ? (
-            <div className="p-6 flex items-center justify-center gap-2 text-xs" style={{ color: '#9c988b' }}>
+            <div className="p-6 flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--muted)' }}>
               <Loader2 size={16} className="animate-spin" style={{ color: GOLD_LIGHT }} />
               <span>Fetching latest official subtitle tracks...</span>
             </div>
           ) : items.length === 0 ? (
             <div className="p-6 text-center space-y-2">
-              <p className="text-xs font-medium" style={{ color: '#c8c3b6' }}>
+              <p className="text-xs font-medium" style={{ color: 'var(--text)' }}>
                 No official subtitle tracks matched that query.
               </p>
-              <p className="text-[11px]" style={{ color: '#8a8778' }}>
+              <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
                 Try another title spelling or upload any .SRT / .VTT file in the Kinyarwanda Studio panel.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-white/[0.06] max-h-[540px] overflow-y-auto">
+            <div className="divide-y divide-[var(--border-subtle)] max-h-[540px] overflow-y-auto">
               {items.map((item) => {
                 const isSelected = selectedItem?.id === item.id;
                 const downloadHref = `/api/subtitles/download?url=${encodeURIComponent(
@@ -435,19 +439,19 @@ export default function OfficialSubtitleStudio({
                     data-testid={`official-sub-row-${item.id}`}
                     className="p-4 transition-colors"
                     style={{
-                      background: isSelected ? 'rgba(201,168,76,0.08)' : 'transparent',
+                      background: isSelected ? 'var(--accent-bg)' : 'transparent',
                     }}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold truncate" style={{ color: '#f3efe3' }}>
+                        <div className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
                           {item.movieName}
                           {item.year ? ` (${item.year})` : ''}
                         </div>
-                        <div className="text-[11px] truncate mt-0.5" style={{ color: '#b8b4a8' }}>
+                        <div className="text-[11px] truncate mt-0.5" style={{ color: 'var(--text2)' }}>
                           {item.fileName}
                         </div>
-                        <div className="text-[11px] mt-1 tabular-nums" style={{ color: '#8a8778' }}>
+                        <div className="text-[11px] mt-1 tabular-nums" style={{ color: 'var(--muted)' }}>
                           {item.language} · {item.format.toUpperCase()} · {item.downloadsCount.toLocaleString()} downloads
                           {item.addedAt ? ` · ${item.addedAt.slice(0, 10)}` : ''}
                         </div>
@@ -457,7 +461,7 @@ export default function OfficialSubtitleStudio({
                         <Link
                           href={`/movies/${item.matchedMovieId}`}
                           className="inline-flex items-center gap-1 text-[11px] font-medium shrink-0 hover:underline"
-                          style={{ color: '#86efac' }}
+                          style={{ color: 'var(--green)' }}
                         >
                           <span>Movie Page</span>
                           <ExternalLink size={11} />
@@ -471,27 +475,17 @@ export default function OfficialSubtitleStudio({
                         onClick={() => handleLoadOfficialSubtitle(item, { autoTranslate: true })}
                         disabled={loadingSub || translating}
                         data-testid={`translate-rw-btn-${item.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-opacity disabled:opacity-50"
-                        style={{
-                          background: 'rgba(201,168,76,0.16)',
-                          border: '1px solid rgba(201,168,76,0.4)',
-                          color: '#f5e4a8',
-                        }}
+                        className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-opacity disabled:opacity-50"
                       >
                         <Languages size={13} />
-                        <span>Translate to Kinyarwanda</span>
+                        <span>Translate to {selectedTarget.label}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleLoadOfficialSubtitle(item, { autoTranslate: false })}
                         disabled={loadingSub}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
-                        style={{
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          color: '#d4cfc0',
-                        }}
+                        className="btn-ghost inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
                       >
                         <span>Inspect Cues</span>
                       </button>
@@ -499,10 +493,11 @@ export default function OfficialSubtitleStudio({
                       <a
                         href={downloadHref}
                         data-testid={`download-official-srt-${item.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/[0.06]"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                         style={{
-                          border: '1px solid rgba(74,222,128,0.28)',
-                          color: '#86efac',
+                          background: 'var(--green-bg)',
+                          border: '1px solid var(--green-border)',
+                          color: 'var(--green)',
                         }}
                       >
                         <Download size={12} />
@@ -516,27 +511,46 @@ export default function OfficialSubtitleStudio({
           )}
         </div>
 
-        {/* Kinyarwanda Studio Column */}
+        {/* Multi-Language Subtitle Studio Column */}
         <div
           className={`${compact ? '' : 'lg:col-span-6'} rounded-2xl overflow-hidden`}
           data-testid="kinyarwanda-subtitle-studio"
           style={{
-            background: 'rgba(14,14,22,0.88)',
-            border: '1px solid rgba(201,168,76,0.24)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--accent-border)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <div
             className="px-4 py-3 flex flex-wrap items-center justify-between gap-2"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+            style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-card-subtle)' }}
           >
             <div className="flex items-center gap-2 min-w-0">
               <Sparkles size={15} style={{ color: GOLD_LIGHT }} />
               <h2 className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: GOLD_LIGHT }}>
-                Kinyarwanda Subtitle Studio
+                Multi-Language Subtitle Studio
               </h2>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <label htmlFor="studio-target-lang" className="text-[11px] font-medium" style={{ color: 'var(--muted)' }}>
+                To:
+              </label>
+              <select
+                id="studio-target-lang"
+                data-testid="studio-target-lang-select"
+                value={selectedTarget.label}
+                onChange={(e) => setTargetLanguage(e.target.value)}
+                aria-label="Target subtitle translation language"
+                className="input-dark px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer"
+              >
+                {STUDIO_TARGET_LANGUAGES.map((tl) => (
+                  <option key={tl.id} value={tl.label}>
+                    {tl.label}
+                  </option>
+                ))}
+              </select>
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -547,12 +561,7 @@ export default function OfficialSubtitleStudio({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium cursor-pointer"
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#d4cfc0',
-                }}
+                className="btn-ghost inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium cursor-pointer"
               >
                 <Upload size={11} />
                 <span>Load Local .SRT/.VTT</span>
@@ -573,16 +582,16 @@ export default function OfficialSubtitleStudio({
                 data-testid="subtitle-translate-error"
                 className="p-3.5 rounded-xl flex items-start gap-2.5 text-xs"
                 style={{
-                  background: 'rgba(239,68,68,0.1)',
-                  border: '1px solid rgba(239,68,68,0.28)',
-                  color: '#fca5a5',
+                  background: 'var(--danger-bg)',
+                  border: '1px solid var(--danger-border)',
+                  color: 'var(--danger)',
                 }}
               >
                 <AlertCircle size={15} className="shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <p className="font-semibold">{translateError}</p>
                   {cues.length > 0 && (
-                    <p style={{ color: '#e5e7eb' }}>
+                    <p style={{ color: 'var(--text2)' }}>
                       You can still edit lines manually below and download the .SRT or .VTT subtitle file.
                     </p>
                   )}
@@ -593,11 +602,11 @@ export default function OfficialSubtitleStudio({
             {!loadingSub && cues.length === 0 ? (
               <div className="py-10 text-center space-y-2">
                 <Languages size={26} className="mx-auto" style={{ color: GOLD, opacity: 0.7 }} />
-                <p className="text-xs font-medium" style={{ color: '#e8e4d8' }}>
+                <p className="text-xs font-medium" style={{ color: 'var(--text)' }}>
                   Select any official subtitle release on the left or load your own .SRT / .VTT file.
                 </p>
-                <p className="text-[11px] max-w-md mx-auto" style={{ color: '#8a8778' }}>
-                  Cues are translated into Kinyarwanda while preserving original timestamps, ready to download as .SRT or .VTT.
+                <p className="text-[11px] max-w-md mx-auto" style={{ color: 'var(--muted)' }}>
+                  Cues are translated into {selectedTarget.label} (or any supported language) while preserving original timestamps, ready to download as .SRT or .VTT.
                 </p>
               </div>
             ) : !loadingSub ? (
@@ -606,16 +615,16 @@ export default function OfficialSubtitleStudio({
                 <div
                   className="p-3.5 rounded-xl flex flex-wrap items-center justify-between gap-3"
                   style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--bg-card-subtle)',
+                    border: '1px solid var(--border)',
                   }}
                 >
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold truncate" style={{ color: '#f3efe3' }}>
+                    <div className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>
                       {activeTitle}
                     </div>
-                    <div className="text-[11px] mt-0.5 tabular-nums" style={{ color: '#8a8778' }}>
-                      {cues.length} cues · {activeLangName} → Kinyarwanda
+                    <div className="text-[11px] mt-0.5 tabular-nums" style={{ color: 'var(--muted)' }}>
+                      {cues.length} cues · {activeLangName} → {selectedTarget.label}
                       {translating
                         ? ` · Translating ${translateProgress.done}/${translateProgress.total}`
                         : hasTranslated
@@ -633,9 +642,9 @@ export default function OfficialSubtitleStudio({
                         }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
                         style={{
-                          background: 'rgba(239,68,68,0.14)',
-                          border: '1px solid rgba(239,68,68,0.3)',
-                          color: '#fca5a5',
+                          background: 'var(--danger-bg)',
+                          border: '1px solid var(--danger-border)',
+                          color: 'var(--danger)',
                         }}
                       >
                         <Loader2 size={12} className="animate-spin" />
@@ -644,16 +653,18 @@ export default function OfficialSubtitleStudio({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => translateCuesList(cues, activeTitle, activeLangName)}
+                        onClick={() => translateCuesList(cues, activeTitle, activeLangName, selectedTarget.label)}
                         data-testid="studio-translate-btn"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
                         style={{
-                          background: 'linear-gradient(135deg,#e8c87a,#c9a84c)',
-                          color: '#09090f',
+                          background: 'linear-gradient(135deg, var(--gold2), var(--gold))',
+                          color: 'var(--accent-ink)',
                         }}
                       >
                         <Languages size={12} />
-                        <span>{hasTranslated ? 'Re-translate to RW' : 'Translate to Kinyarwanda'}</span>
+                        <span>
+                          {hasTranslated ? `Re-translate (${selectedTarget.label})` : `Translate to ${selectedTarget.label}`}
+                        </span>
                       </button>
                     )}
                   </div>
@@ -663,29 +674,24 @@ export default function OfficialSubtitleStudio({
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => handleDownloadKinyarwanda('srt')}
+                    onClick={() => handleDownloadTranslated('srt')}
                     data-testid="download-rw-srt-btn"
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer"
                     style={{
-                      background: 'rgba(34,197,94,0.15)',
-                      border: '1px solid rgba(74,222,128,0.35)',
-                      color: '#86efac',
+                      background: 'var(--green-bg)',
+                      border: '1px solid var(--green-border)',
+                      color: 'var(--green)',
                     }}
                   >
                     <Download size={13} />
-                    <span>Download Kinyarwanda .SRT</span>
+                    <span>Download {selectedTarget.label} .SRT</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => handleDownloadKinyarwanda('vtt')}
+                    onClick={() => handleDownloadTranslated('vtt')}
                     data-testid="download-rw-vtt-btn"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer"
-                    style={{
-                      background: 'rgba(201,168,76,0.14)',
-                      border: '1px solid rgba(201,168,76,0.32)',
-                      color: GOLD_LIGHT,
-                    }}
+                    className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer"
                   >
                     <Download size={13} />
                     <span>Download .VTT</span>
@@ -698,9 +704,9 @@ export default function OfficialSubtitleStudio({
                       data-testid="apply-rw-player-btn"
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer"
                       style={{
-                        background: 'rgba(56,189,248,0.14)',
-                        border: '1px solid rgba(56,189,248,0.35)',
-                        color: '#7dd3fc',
+                        background: 'var(--blue-bg)',
+                        border: '1px solid var(--blue-border)',
+                        color: 'var(--blue)',
                       }}
                     >
                       {appliedToast ? <Check size={13} /> : <Play size={13} fill="currentColor" />}
@@ -709,33 +715,33 @@ export default function OfficialSubtitleStudio({
                   )}
                 </div>
 
-                {/* Cue Preview & Inline Kinyarwanda Editor (shows first 40 cues for snappy editing) */}
-                <div className="divide-y divide-white/[0.06] rounded-xl overflow-hidden max-h-[380px] overflow-y-auto"
-                  style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(8,8,14,0.75)' }}>
+                {/* Cue Preview & Inline Editor (shows first 60 cues for snappy editing) */}
+                <div className="divide-y divide-[var(--border-subtle)] rounded-xl overflow-hidden max-h-[380px] overflow-y-auto"
+                  style={{ border: '1px solid var(--border)', background: 'var(--bg-card-subtle)' }}>
                   {cues.slice(0, 60).map((cue) => (
                     <div key={cue.index} className="p-3 space-y-1.5">
-                      <div className="flex items-center justify-between text-[10px] tabular-nums" style={{ color: '#8a8778' }}>
+                      <div className="flex items-center justify-between text-[10px] tabular-nums" style={{ color: 'var(--muted)' }}>
                         <span>#{cue.index}</span>
                         <span>
                           {cue.startTime} → {cue.endTime}
                         </span>
                       </div>
-                      <p className="text-xs leading-snug" style={{ color: '#9c988b' }}>
+                      <p className="text-xs leading-snug" style={{ color: 'var(--text2)' }}>
                         {cue.text}
                       </p>
                       <input
                         type="text"
                         value={cue.translatedText ?? ''}
                         onChange={(e) => handleCueEdit(cue.index, e.target.value)}
-                        placeholder="Kinyarwanda subtitle line..."
-                        aria-label={`Kinyarwanda translation for cue ${cue.index}`}
+                        placeholder={`${selectedTarget.label} subtitle line...`}
+                        aria-label={`${selectedTarget.label} translation for cue ${cue.index}`}
                         className="input-dark w-full px-2.5 py-1.5 rounded-lg text-xs"
-                        style={{ color: '#f5e4a8' }}
+                        style={{ color: GOLD_LIGHT }}
                       />
                     </div>
                   ))}
                   {cues.length > 60 && (
-                    <div className="p-3 text-center text-[11px] tabular-nums" style={{ color: '#8a8778' }}>
+                    <div className="p-3 text-center text-[11px] tabular-nums" style={{ color: 'var(--muted)' }}>
                       Showing first 60 cues in preview editor — all {cues.length} cues are included in downloads.
                     </div>
                   )}

@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Loader2, Save, X } from 'lucide-react';
+import CATEGORIES from '../../lib/categories';
+import { PREMIUM_CONTENT_TYPES } from '../../lib/premium-content';
 
 const GENRES = ['Action', 'Drama', 'Comedy', 'Thriller', 'Horror', 'Adventure', 'Fantasy', 'Sci-Fi', 'Romance'];
 const TYPES = ['Movie', 'Series', 'Anime', 'Documentary', 'Short Film'];
 const NEWS_CATEGORIES = ['Amakuru', 'Entertainment', 'Tech & AI', 'Sports', 'Reviews'];
 const SHOP_CATEGORIES = ['Gaming', 'Subscriptions', 'Electronics', 'Accessories', 'Services', 'Other'];
-const GAME_TYPES = ['Game', 'App', 'Mod', 'Resource'];
-const GAME_CATEGORIES = ['Action', 'Sports', 'Adventure', 'Racing', 'Puzzle', 'Utility'];
+const GAME_TYPES = PREMIUM_CONTENT_TYPES;
+const GAME_CATEGORIES = ['Action', 'Sports', 'Entertainment', 'Education', 'Courses', 'Tutorials', 'Technology', ...CATEGORIES.filter((c) => !['Action', 'Sports', 'Entertainment', 'Education', 'Courses', 'Tutorials', 'Technology'].includes(c))];
 
 function FieldLabel({ htmlFor, label, required }) {
   return (
-    <label htmlFor={htmlFor} className="block text-xs font-medium mb-1.5" style={{ color: '#b8b4a8' }}>
-      {label} {required && <span style={{ color: '#f87171' }}>*</span>}
+    <label htmlFor={htmlFor} className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text2)' }}>
+      {label} {required && <span style={{ color: 'var(--danger)' }}>*</span>}
     </label>
   );
 }
@@ -21,22 +23,22 @@ function FormShell({ title, onCancel, onSubmit, loading, submitLabel = 'Save', c
     <form
       onSubmit={onSubmit}
       className="p-5 rounded-xl space-y-4 mb-5"
-      style={{ background: 'rgba(14,14,22,0.88)', border: '1px solid rgba(201,168,76,0.28)' }}
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border2)', boxShadow: 'var(--shadow-card)' }}
     >
-      <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-        <h3 className="text-sm font-semibold" style={{ color: '#e8c87a' }}>{title}</h3>
+      <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: 'var(--border)' }}>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--gold2)' }}>{title}</h3>
         <button
           type="button"
           onClick={onCancel}
           aria-label={`Close ${title}`}
-          className="p-1.5 rounded-lg hover:bg-white/[0.06]"
-          style={{ color: '#8e8a7e' }}
+          className="p-1.5 rounded-lg hover:bg-[var(--bg-ghost)]"
+          style={{ color: 'var(--muted)' }}
         >
           <X size={15} />
         </button>
       </div>
       {children}
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.06]">
+      <div className="flex items-center justify-end gap-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
         <button
           type="button"
           onClick={onCancel}
@@ -98,14 +100,14 @@ export function ComingSoonForm({ initial = null, onSave, onCancel, loading }) {
           <FieldLabel htmlFor="cs-type" label="Format" />
           <select id="cs-type" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.type} onChange={(e) => set('type', e.target.value)}>
-            {TYPES.map((t) => <option key={t} value={t} style={{ background: '#0f0f16' }}>{t}</option>)}
+            {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>
           <FieldLabel htmlFor="cs-genre" label="Genre" />
           <select id="cs-genre" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.genre} onChange={(e) => set('genre', e.target.value)}>
-            {GENRES.map((g) => <option key={g} value={g} style={{ background: '#0f0f16' }}>{g}</option>)}
+            {GENRES.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
         </div>
         <div>
@@ -141,13 +143,14 @@ export function ComingSoonForm({ initial = null, onSave, onCancel, loading }) {
 export function GameForm({ initial = null, onSave, onCancel, loading }) {
   const [form, setForm] = useState({
     title: initial?.title || '',
-    type: initial?.type || 'Game',
-    category: initial?.category || 'Action',
+    type: initial?.type || 'Video',
+    category: initial?.category || 'Entertainment',
     version: initial?.version || '1.0',
     rating: initial?.rating || '4.8',
     cover_url: initial?.cover_url || '',
+    video_url: initial?.video_url || '',
     overview: initial?.overview || '',
-    premium: Boolean(initial?.premium),
+    premium: initial ? Boolean(initial.premium) : true,
     price: initial?.price ?? 500,
     uploader_momo_number: initial?.uploader_momo_number || '',
     status: initial?.status || 'approved',
@@ -158,27 +161,29 @@ export function GameForm({ initial = null, onSave, onCancel, loading }) {
 
   return (
     <FormShell
-      title={initial ? 'Edit Game / Premium Item' : 'Add Game / Premium Item'}
+      title={initial ? 'Edit Private Video / Premium Item' : 'Add Private Video / Premium Item'}
       onCancel={onCancel}
       loading={loading}
       submitLabel={initial ? 'Update Item' : 'Create Item'}
       onSubmit={(e) => {
         e.preventDefault();
         if (!form.title.trim()) return;
+        const remainingLinks = Array.isArray(initial?.links) ? initial.links.slice(1) : [];
         const links = form.download_url.trim()
-          ? [{ label: form.download_label.trim() || 'Download', url: form.download_url.trim() }]
-          : (initial?.links || []);
+          ? [{ label: form.download_label.trim() || 'Download', url: form.download_url.trim() }, ...remainingLinks]
+          : remainingLinks;
         onSave({
           title: form.title.trim(),
           type: form.type,
           category: form.category,
           version: form.version,
           rating: form.rating,
-          cover_url: form.cover_url,
+          cover_url: form.cover_url.trim(),
+          video_url: form.video_url.trim(),
           overview: form.overview,
           premium: form.premium,
           price: form.premium ? Number(form.price) || 0 : 0,
-          uploader_momo_number: form.uploader_momo_number,
+          uploader_momo_number: form.uploader_momo_number.trim(),
           status: form.status,
           links,
         });
@@ -188,27 +193,27 @@ export function GameForm({ initial = null, onSave, onCancel, loading }) {
         <div>
           <FieldLabel htmlFor="game-title" label="Title" required />
           <input id="game-title" required className="input-dark w-full px-3 py-2 rounded-lg text-xs"
-            value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. FIFA 25 PPSSPP" />
+            value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. VIP Dubbing Masterclass" />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <FieldLabel htmlFor="game-type" label="Type" />
             <select id="game-type" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
               value={form.type} onChange={(e) => set('type', e.target.value)}>
-              {GAME_TYPES.map((t) => <option key={t} value={t} style={{ background: '#0f0f16' }}>{t}</option>)}
+              {GAME_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
             <FieldLabel htmlFor="game-cat" label="Category" />
             <select id="game-cat" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
               value={form.category} onChange={(e) => set('category', e.target.value)}>
-              {GAME_CATEGORIES.map((c) => <option key={c} value={c} style={{ background: '#0f0f16' }}>{c}</option>)}
+              {GAME_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <FieldLabel htmlFor="game-ver" label="Version" />
+            <FieldLabel htmlFor="game-ver" label="Version / Quality" />
             <input id="game-ver" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
               value={form.version} onChange={(e) => set('version', e.target.value)} />
           </div>
@@ -216,23 +221,28 @@ export function GameForm({ initial = null, onSave, onCancel, loading }) {
             <FieldLabel htmlFor="game-status" label="Status" />
             <select id="game-status" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
               value={form.status} onChange={(e) => set('status', e.target.value)}>
-              <option value="approved" style={{ background: '#0f0f16' }}>Approved</option>
-              <option value="pending" style={{ background: '#0f0f16' }}>Pending</option>
-              <option value="rejected" style={{ background: '#0f0f16' }}>Rejected</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 items-end">
-          <label className="flex items-center gap-2 py-2 cursor-pointer text-xs" style={{ color: '#e8e6f0' }}>
+          <label className="flex items-center gap-2 py-2 cursor-pointer text-xs" style={{ color: 'var(--text)' }}>
             <input type="checkbox" checked={form.premium} onChange={(e) => set('premium', e.target.checked)} className="w-4 h-4 accent-amber-400" />
-            Premium (Paid)
+            Paid Unlock (RWF)
           </label>
           <div>
             <FieldLabel htmlFor="game-price" label="Price (RWF)" />
             <input id="game-price" type="number" min="0" disabled={!form.premium}
-              className="input-dark w-full px-3 py-2 rounded-lg text-xs disabled:opacity-40"
+              className="input-dark w-full px-3 py-2 rounded-lg text-xs disabled:opacity-40 tabular-nums"
               value={form.price} onChange={(e) => set('price', e.target.value)} />
           </div>
+        </div>
+        <div className="sm:col-span-2">
+          <FieldLabel htmlFor="game-video" label="Private Video Stream URL (.mp4, YouTube, Vimeo, Google Drive)" />
+          <input id="game-video" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
+            value={form.video_url} onChange={(e) => set('video_url', e.target.value)} placeholder="https://..." />
         </div>
         <div>
           <FieldLabel htmlFor="game-cover" label="Cover Image URL" />
@@ -250,7 +260,7 @@ export function GameForm({ initial = null, onSave, onCancel, loading }) {
             value={form.download_label} onChange={(e) => set('download_label', e.target.value)} />
         </div>
         <div>
-          <FieldLabel htmlFor="game-dl-url" label="Download URL" />
+          <FieldLabel htmlFor="game-dl-url" label="Download URL (Optional)" />
           <input id="game-dl-url" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.download_url} onChange={(e) => set('download_url', e.target.value)} placeholder="https://..." />
         </div>
@@ -318,7 +328,7 @@ export function RequestForm({ initial = null, onSave, onCancel, loading }) {
             <input id="req-lang" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
               value={form.language} onChange={(e) => set('language', e.target.value)} />
           </div>
-          <label className="flex items-center gap-2 py-2 cursor-pointer text-xs" style={{ color: '#e8e6f0' }}>
+          <label className="flex items-center gap-2 py-2 cursor-pointer text-xs" style={{ color: 'var(--text)' }}>
             <input type="checkbox" checked={form.fulfilled} onChange={(e) => set('fulfilled', e.target.checked)} className="w-4 h-4 accent-emerald-400" />
             Fulfilled
           </label>
@@ -372,16 +382,16 @@ export function NewsForm({ initial = null, onSave, onCancel, loading }) {
           <FieldLabel htmlFor="news-cat" label="Category" />
           <select id="news-cat" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.category} onChange={(e) => set('category', e.target.value)}>
-            {NEWS_CATEGORIES.map((c) => <option key={c} value={c} style={{ background: '#0f0f16' }}>{c}</option>)}
+            {NEWS_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
           <FieldLabel htmlFor="news-status" label="Status" />
           <select id="news-status" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.status} onChange={(e) => set('status', e.target.value)}>
-            <option value="approved" style={{ background: '#0f0f16' }}>Approved</option>
-            <option value="pending" style={{ background: '#0f0f16' }}>Pending</option>
-            <option value="rejected" style={{ background: '#0f0f16' }}>Rejected</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
         <div>
@@ -452,15 +462,15 @@ export function ShopForm({ initial = null, onSave, onCancel, loading }) {
           <FieldLabel htmlFor="shop-cat" label="Category" />
           <select id="shop-cat" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.category} onChange={(e) => set('category', e.target.value)}>
-            {SHOP_CATEGORIES.map((c) => <option key={c} value={c} style={{ background: '#0f0f16' }}>{c}</option>)}
+            {SHOP_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
           <FieldLabel htmlFor="shop-status" label="Status" />
           <select id="shop-status" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.status} onChange={(e) => set('status', e.target.value)}>
-            <option value="active" style={{ background: '#0f0f16' }}>Active</option>
-            <option value="sold" style={{ background: '#0f0f16' }}>Sold</option>
+            <option value="active">Active</option>
+            <option value="sold">Sold</option>
           </select>
         </div>
         <div>
@@ -530,14 +540,14 @@ export function ManualDonationForm({ requests = [], onSave, onCancel, loading })
           <FieldLabel htmlFor="don-req" label="Linked Movie Request" />
           <select id="don-req" className="input-dark w-full px-3 py-2 rounded-lg text-xs"
             value={form.request_id} onChange={(e) => set('request_id', e.target.value)}>
-            <option value="" style={{ background: '#0f0f16' }}>General Support</option>
+            <option value="">General Support</option>
             {requests.map((r) => (
-              <option key={r.id} value={r.id} style={{ background: '#0f0f16' }}>{r.title}</option>
+              <option key={r.id} value={r.id}>{r.title}</option>
             ))}
           </select>
         </div>
       </div>
-      <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: '#e8e6f0' }}>
+      <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: 'var(--text)' }}>
         <input type="checkbox" checked={form.confirmed} onChange={(e) => set('confirmed', e.target.checked)} className="w-4 h-4 accent-emerald-400" />
         Mark as Confirmed immediately (credits votes & total if linked to a request)
       </label>

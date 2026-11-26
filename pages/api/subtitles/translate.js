@@ -1,4 +1,4 @@
-import { translateCuesToKinyarwanda } from '../../../lib/server/subtitle-translator';
+import { translateCues } from '../../../lib/server/subtitle-translator';
 import {
   formatCuesToSrt,
   formatCuesToVtt,
@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     rawText,
     movieTitle = '',
     sourceLanguage = 'English',
+    targetLanguage = 'Kinyarwanda',
   } = req.body || {};
 
   try {
@@ -28,15 +29,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Provide subtitle cues or raw .SRT/.VTT text to translate.' });
     }
 
-    const result = await translateCuesToKinyarwanda({
+    const result = await translateCues({
       cues: cuesToTranslate,
       movieTitle: String(movieTitle || '').slice(0, 140),
       sourceLanguage: String(sourceLanguage || 'English').slice(0, 40),
+      targetLanguage: String(targetLanguage || 'Kinyarwanda').slice(0, 40),
     });
 
     return res.status(200).json({
       cues: result.cues,
       model: result.model,
+      targetLanguage: result.targetLanguage,
+      targetLanguageCode: result.targetLanguageCode,
       translatedCount: result.translatedCount,
       srt: formatCuesToSrt(result.cues, { useTranslated: true }),
       vtt: formatCuesToVtt(result.cues, { useTranslated: true }),
@@ -44,7 +48,7 @@ export default async function handler(req, res) {
   } catch (err) {
     const status = Number.isInteger(err?.statusCode) ? err.statusCode : 500;
     return res.status(status).json({
-      error: err?.message || 'Kinyarwanda translation failed.',
+      error: err?.message || 'Subtitle translation failed.',
     });
   }
 }

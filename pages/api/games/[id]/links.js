@@ -1,56 +1,60 @@
 import { supabaseAdmin } from '../../../../lib/server/supabase-admin';
-
-async function getUser(req) {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!token) return null;
-
-  const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-  return user || null;
-}
+import {
+  getRequestUser,
+  resolvePremiumAccessForUser,
+  checkUserGameAccess,
+} from '../../../../lib/server/premium-access';
+import {
+  normalizePremiumLinks,
+  sanitizeHttpUrl,
+} from '../../../../lib/premium-content';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+
   const { id } = req.query;
-  const user = await getUser(req);
+  if (!id || typeof id !== 'string') {
+    return res.status(400).json({ error: 'Invalid item ID' });
+  }
+
+  const user = await getRequestUser(req);
   if (!user) return res.status(401).json({ error: 'Sign in required' });
 
   const { data: game, error: gameError } = await supabaseAdmin
     .from('games')
-    .select('id,links,premium')
+    .select('id,title,type,links,video_url,premium,price,uploader_id,status')
     .eq('id', id)
     .single();
 
-  if (gameError || !game) return res.status(404).json({ error: 'Game not found' });
+  if (gameError || !game) return res.status(404).json({ error: 'Content not found' });
 
-  if (!game.premium) return res.status(200).json({ links: game.links || [] });
+  const accessContext = await resolvePremiumAccessForUser(user);
 
-  const { data: sub } = await supabaseAdmin
-    .from('subscriptions')
-    .select('id, expires_at')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .maybeSingle();
-
-  if (sub) {
-    const expiresAt = new Date(sub.expires_at);
-    if (expiresAt > new Date()) {
-      return res.status(200).json({ links: game.links || [] });
-    }
+  if (
+    game.status &&
+    game.status !== 'approved' &&
+    !accessContext.isAdmin &&
+    String(game.uploader_id || '') !== String(user.id)
+  ) {
+    return res.status(404).json({ error: 'Content not found' });
   }
 
-  const { data: access } = await supabaseAdmin
-    .from('transactions')
-    .select('id')
-    .eq('game_id', id)
-    .eq('user_id', user.id)
-    .eq('status', 'completed')
-    .limit(1);
-
-  if (!access?.length) {
-    return res.status(403).json({ error: 'Payment confirmation required' });
+  const access = checkUserGameAccess(accessContext, game);
+  if (!access.unlocked) {
+    return res.status(403).json({
+      error: accessContext.hasPendingPayment
+        ? 'Your payment is pending admin approval.'
+        : 'Paid and approved membership or unlock required.',
+      accessState: accessContext.hasPendingPayment ? 'pending_approval' : 'payment_required',
+    });
   }
 
-  return res.status(200).json({ links: game.links || [] });
+  return res.status(200).json({
+    unlocked: true,
+    accessSource: access.reason,
+    video_url: sanitizeHttpUrl(game.video_url),
+    links: normalizePremiumLinks(game.links),
+  });
 }

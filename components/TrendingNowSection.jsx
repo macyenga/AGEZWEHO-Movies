@@ -78,11 +78,11 @@ export default function TrendingNowSection({ movies = [], limit = 5 }) {
         <div className="flex items-baseline gap-3 flex-wrap">
           <h2
             className="font-cinzel text-lg sm:text-xl font-bold tracking-wide"
-            style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}
+            style={{ fontFamily: 'Cinzel, serif', color: 'var(--text)' }}
           >
             {t.trending.heading}
           </h2>
-          <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
+          <span className="text-xs tabular-nums" style={{ color: 'var(--muted)' }}>
             {tr('trending.subtitle', { count: trendingMovies.length })}
           </span>
         </div>
@@ -92,7 +92,8 @@ export default function TrendingNowSection({ movies = [], limit = 5 }) {
             type="button"
             onClick={() => setIsPaused((p) => !p)}
             aria-label={isPaused ? 'Resume thumbnail slide' : 'Pause thumbnail slide'}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.04] hover:bg-amber-500/15 border border-white/10 hover:border-amber-400/40 text-stone-300 hover:text-amber-200 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text2)' }}
           >
             {isPaused ? <Play size={12} fill="currentColor" /> : <Pause size={12} />}
           </button>
@@ -100,7 +101,8 @@ export default function TrendingNowSection({ movies = [], limit = 5 }) {
             type="button"
             onClick={() => scroll(-1)}
             aria-label={t.trending.scrollLeftAria}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.04] hover:bg-amber-500/15 border border-white/10 hover:border-amber-400/40 text-stone-300 hover:text-amber-200 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text2)' }}
           >
             <ChevronLeft size={15} />
           </button>
@@ -108,7 +110,8 @@ export default function TrendingNowSection({ movies = [], limit = 5 }) {
             type="button"
             onClick={() => scroll(1)}
             aria-label={t.trending.scrollRightAria}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/[0.04] hover:bg-amber-500/15 border border-white/10 hover:border-amber-400/40 text-stone-300 hover:text-amber-200 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text2)' }}
           >
             <ChevronRight size={15} />
           </button>

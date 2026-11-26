@@ -8,16 +8,16 @@ export default function MovieSkeleton({ className = '' }) {
       <div
         className="movie-card relative rounded-xl overflow-hidden flex flex-col h-full"
         style={{
-          background: 'linear-gradient(160deg,rgba(26,26,40,0.92) 0%,rgba(15,15,22,0.96) 100%)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         {/* Poster placeholder */}
         <div className="relative aspect-[2/3] overflow-hidden shimmer">
           <div
             className="absolute top-2 left-2 w-8 h-8 rounded-full shimmer"
-            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ border: '1px solid var(--border-subtle)' }}
           />
           <div className="absolute top-2.5 right-2.5 w-14 h-4 rounded shimmer" />
           <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2">
@@ -36,7 +36,7 @@ export default function MovieSkeleton({ className = '' }) {
         {/* Rating & action footer placeholders */}
         <div
           className="px-2.5 sm:px-3 pb-2.5 pt-2 space-y-2"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ borderTop: '1px solid var(--border-subtle)' }}
         >
           <div className="flex items-center justify-between gap-2">
             <div className="shimmer h-3 rounded w-20" />

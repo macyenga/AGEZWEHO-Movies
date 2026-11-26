@@ -107,17 +107,17 @@ export default function GlobalSearchInput({
         <div
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all"
           style={{
-            background: focused ? 'rgba(20,20,32,0.95)' : 'rgba(255,255,255,0.04)',
+            background: focused ? 'var(--bg-card)' : 'var(--bg-input)',
             border: focused
-              ? '1px solid rgba(201,168,76,0.5)'
-              : '1px solid rgba(255,255,255,0.09)',
-            boxShadow: focused ? '0 0 18px rgba(201,168,76,0.12)' : 'none',
+              ? '1px solid var(--gold)'
+              : '1px solid var(--border)',
+            boxShadow: focused ? '0 0 0 2px var(--accent-bg)' : 'none',
           }}
         >
           <Search
             size={14}
             className="flex-shrink-0"
-            style={{ color: focused ? '#c9a84c' : '#6a6a5a' }}
+            style={{ color: focused ? 'var(--gold)' : 'var(--muted)' }}
           />
           <input
             ref={inputRef}
@@ -137,16 +137,18 @@ export default function GlobalSearchInput({
             placeholder={resolvedPlaceholder}
             aria-label={t.search.inputAria}
             autoComplete="off"
-            className="w-full min-w-0 bg-transparent outline-none text-xs text-stone-100 placeholder:text-stone-500 [&::-webkit-search-cancel-button]:hidden"
+            className="w-full min-w-0 bg-transparent outline-none text-xs [&::-webkit-search-cancel-button]:hidden"
+            style={{ color: 'var(--text)' }}
           />
           {loading ? (
-            <Loader2 size={13} className="animate-spin flex-shrink-0 text-amber-400" />
+            <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: 'var(--gold)' }} />
           ) : query ? (
             <button
               type="button"
               onClick={handleClear}
               aria-label={t.search.clearAria}
-              className="flex-shrink-0 p-0.5 rounded text-stone-400 hover:text-stone-100 cursor-pointer"
+              className="flex-shrink-0 p-0.5 rounded cursor-pointer"
+              style={{ color: 'var(--muted)' }}
             >
               <X size={13} />
             </button>
@@ -162,15 +164,15 @@ export default function GlobalSearchInput({
           aria-label="Search results"
           className="absolute left-0 right-0 top-full mt-2 rounded-xl overflow-hidden z-[80]"
           style={{
-            background: 'rgba(14,14,22,0.98)',
-            border: '1px solid rgba(201,168,76,0.28)',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.8)',
+            background: 'var(--bg-dropdown)',
+            border: '1px solid var(--border2)',
+            boxShadow: 'var(--shadow-card)',
             backdropFilter: 'blur(20px)',
             minWidth: '280px',
           }}
         >
-          <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between text-[10px]">
-            <span className="uppercase tracking-wider font-semibold text-amber-400/90">
+          <div className="px-3 py-2 flex items-center justify-between text-[10px]" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+            <span className="uppercase tracking-wider font-semibold" style={{ color: 'var(--gold2)' }}>
               {t.search.dropdownTitle}
             </span>
             <span className="text-stone-500">

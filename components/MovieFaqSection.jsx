@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ChevronDown, HelpCircle } from 'lucide-react';
 
-const GOLD = '#c9a84c';
-const GOLD_LIGHT = '#e8c87a';
+const GOLD = 'var(--gold)';
+const GOLD_LIGHT = 'var(--gold2)';
 
 export default function MovieFaqSection({ faqs = [], movieTitle = '' }) {
   const [openIds, setOpenIds] = useState(() => (faqs[0]?.id ? [faqs[0].id] : []));
@@ -22,33 +22,34 @@ export default function MovieFaqSection({ faqs = [], movieTitle = '' }) {
     >
       <div
         className="flex flex-wrap items-center justify-between gap-2 pb-2.5"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <h2
           id="movie-faq-heading"
           className="text-sm font-semibold flex items-center gap-2"
-          style={{ color: '#f3efe3' }}
+          style={{ color: 'var(--text)' }}
         >
           <HelpCircle size={15} style={{ color: GOLD_LIGHT }} />
           <span>Frequently Asked Questions{movieTitle ? ` — ${movieTitle}` : ''}</span>
         </h2>
-        <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
+        <span className="text-xs tabular-nums" style={{ color: 'var(--muted)' }}>
           {faqs.length} answers
         </span>
       </div>
 
       <div
-        className="divide-y divide-white/[0.06] rounded-2xl overflow-hidden"
+        className="divide-y divide-[var(--border-subtle)] rounded-2xl overflow-hidden"
         style={{
-          background: 'rgba(14,14,22,0.82)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         {faqs.map((faq) => {
           const isOpen = openIds.includes(faq.id);
           const panelId = `movie-faq-panel-${faq.id}`;
           return (
-            <div key={faq.id} className="transition-colors hover:bg-white/[0.02]">
+            <div key={faq.id} className="transition-colors hover:bg-[var(--bg-ghost)]">
               <h3 className="m-0">
                 <button
                   type="button"
@@ -57,7 +58,7 @@ export default function MovieFaqSection({ faqs = [], movieTitle = '' }) {
                   aria-controls={panelId}
                   className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left cursor-pointer"
                 >
-                  <span className="text-sm font-semibold leading-snug" style={{ color: isOpen ? GOLD_LIGHT : '#f3efe3' }}>
+                  <span className="text-sm font-semibold leading-snug" style={{ color: isOpen ? GOLD_LIGHT : 'var(--text)' }}>
                     {faq.question}
                   </span>
                   <ChevronDown
@@ -65,7 +66,7 @@ export default function MovieFaqSection({ faqs = [], movieTitle = '' }) {
                     aria-hidden="true"
                     className="shrink-0 transition-transform duration-200"
                     style={{
-                      color: isOpen ? GOLD : '#8a8778',
+                      color: isOpen ? GOLD : 'var(--muted)',
                       transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                     }}
                   />
@@ -75,7 +76,7 @@ export default function MovieFaqSection({ faqs = [], movieTitle = '' }) {
                 id={panelId}
                 hidden={!isOpen}
                 className="px-5 pb-4 text-xs sm:text-sm leading-relaxed"
-                style={{ color: '#b8b4a8' }}
+                style={{ color: 'var(--text2)' }}
               >
                 {faq.answer}
               </div>

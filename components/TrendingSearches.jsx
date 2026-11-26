@@ -5,19 +5,19 @@ import { TOP_QUERIES, RISING_QUERIES, getQueryUrl } from '../lib/trending';
 
 const BreakoutBadge = () => (
   <span className="text-[8px] px-1.5 py-0.5 rounded-md font-semibold"
-    style={{ background:'rgba(239,68,68,0.12)', color:'#f87171', border:'1px solid rgba(239,68,68,0.25)' }}>
+    style={{ background:'var(--danger-bg)', color:'var(--danger)', border:'1px solid var(--danger-border)' }}>
     Breakout
   </span>
 );
 
 const RisingBadge = ({ percent }) => (
   <span className="text-[8px] px-1.5 py-0.5 rounded-md font-semibold"
-    style={{ background:'rgba(201,168,76,0.12)', color:'#c9a84c', border:'1px solid rgba(201,168,76,0.25)' }}>
+    style={{ background:'var(--accent-bg)', color:'var(--gold2)', border:'1px solid var(--accent-border)' }}>
     {percent}
   </span>
 );
 
-function QueryItem({ q, index, badge }) {
+function QueryItem({ q, index }) {
   const isBreakout = q.trend === 'Breakout';
   return (
     <motion.div
@@ -28,13 +28,13 @@ function QueryItem({ q, index, badge }) {
       className="flex items-center gap-3 group"
     >
       <Link href={getQueryUrl(q.query)} className="flex-1 flex items-center gap-3 min-w-0">
-        <span className="text-[11px] font-medium truncate" style={{ color: '#b8b4a8' }}>
+        <span className="text-[11px] font-medium truncate hover:underline" style={{ color: 'var(--text2)' }}>
           {q.query}
         </span>
       </Link>
       <div className="flex items-center gap-2 flex-shrink-0">
         {isBreakout ? <BreakoutBadge /> : <RisingBadge percent={q.trend} />}
-        <span className="text-[9px] tabular-nums" style={{ color: '#4a4a3a' }}>{q.interest}</span>
+        <span className="text-[9px] tabular-nums" style={{ color: 'var(--muted)' }}>{q.interest}</span>
       </div>
     </motion.div>
   );
@@ -45,8 +45,8 @@ export default function TrendingSearches({ compact = false }) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
         <div className="flex items-center gap-2 mb-3">
-          <TrendingUp size={12} style={{ color: '#c9a84c' }} />
-          <span className="section-tag" style={{ color: '#c9a84c' }}>Trending Searches</span>
+          <TrendingUp size={12} style={{ color: 'var(--gold)' }} />
+          <span className="section-tag" style={{ color: 'var(--gold)' }}>Trending Searches</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {TOP_QUERIES.slice(0, 6).map((q, i) => (
@@ -55,15 +55,14 @@ export default function TrendingSearches({ compact = false }) {
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all"
               style={{
-                background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)', color: '#c9a84c',
+                background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: 'var(--gold2)',
               }}>
               <Search size={10} /> {q.query}
             </motion.a>
           ))}
           <Link href="/finder">
             <motion.span whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all cursor-pointer"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8a8778' }}>
+              className="btn-ghost inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium cursor-pointer">
               <ArrowRight size={10} /> More
             </motion.span>
           </Link>
@@ -75,20 +74,20 @@ export default function TrendingSearches({ compact = false }) {
   return (
     <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-10">
       <div className="flex items-center gap-3 mb-5">
-        <Flame size={14} style={{ color: '#c9a84c' }} />
-        <span className="section-tag" style={{ color: '#c9a84c' }}>Trending Agasobanuye Searches</span>
+        <Flame size={14} style={{ color: 'var(--gold)' }} />
+        <span className="section-tag" style={{ color: 'var(--gold)' }}>Trending Agasobanuye Searches</span>
         <div className="flex-1 divider-soft" />
         <Link href="/finder">
-          <span className="text-[10px] cursor-pointer hover:underline" style={{ color: '#6a6a5a' }}>Search all →</span>
+          <span className="text-[10px] cursor-pointer hover:underline" style={{ color: 'var(--muted)' }}>Search all →</span>
         </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top Queries */}
-        <div className="rounded-xl p-4" style={{ background: 'rgba(14,14,22,0.5)', border: '1px solid rgba(201,168,76,0.1)' }}>
+        <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={12} style={{ color: '#c9a84c' }} />
-            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#e8c87a' }}>Top Queries</span>
+            <TrendingUp size={12} style={{ color: 'var(--gold)' }} />
+            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--gold2)' }}>Top Queries</span>
           </div>
           <div className="space-y-2">
             {TOP_QUERIES.map((q, i) => (
@@ -98,10 +97,10 @@ export default function TrendingSearches({ compact = false }) {
         </div>
 
         {/* Rising Queries */}
-        <div className="rounded-xl p-4" style={{ background: 'rgba(14,14,22,0.5)', border: '1px solid rgba(251,191,36,0.1)' }}>
+        <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--warn-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center gap-2 mb-3">
-            <Flame size={12} style={{ color: '#fbbf24' }} />
-            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#fbbf24' }}>Rising Queries</span>
+            <Flame size={12} style={{ color: 'var(--warn)' }} />
+            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--warn)' }}>Rising Queries</span>
           </div>
           <div className="space-y-2">
             {RISING_QUERIES.map((q, i) => (

@@ -38,13 +38,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let active = true;
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!active) return;
       if (session?.user) {
         setUser(session.user);
-        checkAdminStatus(session.user.id);
-        checkProStatus(session.user.id);
+        await Promise.all([
+          checkAdminStatus(session.user.id),
+          checkProStatus(session.user.id),
+        ]);
       }
-      setLoading(false);
+      if (active) setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -59,7 +63,10 @@ export function AuthProvider({ children }) {
       }
     });
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
   }, [checkAdminStatus, checkProStatus]);
 
   const login = async (email, password) => {

@@ -8,8 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { getComingSoonCountdownLabel, getCategoryLabel, getMediaTypeLabel } from '../lib/i18n';
 
 const REMINDER_KEY = 'agasobanuye_coming_soon_reminders';
-const GOLD = '#c9a84c';
-const MUTED = '#6a6a5a';
+const GOLD = 'var(--gold)';
 
 export default function ComingSoonSection({ items }) {
   const { openTrailer } = useTrailer();
@@ -47,16 +46,16 @@ export default function ComingSoonSection({ items }) {
       className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14 scroll-mt-44 md:scroll-mt-32"
     >
       {/* Section Header */}
-      <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-baseline gap-3 flex-wrap">
-          <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+          <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: 'var(--text)' }}>
             {t.comingSoon.heading}
           </h2>
-          <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
+          <span className="text-xs tabular-nums" style={{ color: 'var(--muted)' }}>
             {tr('comingSoon.upcomingCount', { count: upcoming.length })}
           </span>
         </div>
-        <Link href="/requests" className="text-xs font-medium hover:text-amber-300 transition-colors whitespace-nowrap" style={{ color: '#a5a193' }}>
+        <Link href="/requests" className="text-xs font-medium hover:opacity-80 transition-opacity whitespace-nowrap" style={{ color: 'var(--gold2)' }}>
           {t.comingSoon.requestTitle}
         </Link>
       </div>
@@ -77,10 +76,11 @@ export default function ComingSoonSection({ items }) {
               whileTap={{ scale: 0.99 }}
               style={{
                 willChange: 'transform',
-                background: 'rgba(15,15,24,0.82)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                boxShadow: 'var(--shadow-card)',
               }}
-              className="group relative hover:z-20 rounded-2xl p-3.5 flex gap-3.5 items-stretch transition-colors hover:border-amber-400/35"
+              className="group relative hover:z-20 rounded-2xl p-3.5 flex gap-3.5 items-stretch transition-colors hover:border-[var(--border2)]"
             >
               {/* Poster */}
               <div className="relative w-24 sm:w-28 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 bg-[#13131e]">
@@ -122,13 +122,13 @@ export default function ComingSoonSection({ items }) {
                     <span
                       data-testid={`coming-soon-date-${movie.id}`}
                       className="inline-flex items-center gap-1 font-semibold"
-                      style={{ color: '#e8c87a' }}
+                      style={{ color: 'var(--gold2)' }}
                     >
                       <Calendar size={11} />
                       <span>{movie.formattedReleaseDate}</span>
                     </span>
-                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
-                    <span className="inline-flex items-center gap-1" style={{ color: '#8a8778' }}>
+                    <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
+                    <span className="inline-flex items-center gap-1" style={{ color: 'var(--muted)' }}>
                       <Clock size={10} />
                       <span>{getComingSoonCountdownLabel(movie.daysUntilRelease, language)}</span>
                     </span>
@@ -136,37 +136,37 @@ export default function ComingSoonSection({ items }) {
 
                   <h3
                     className="font-cinzel text-sm font-semibold leading-snug line-clamp-2 mb-1"
-                    style={{ color: '#f0eee8' }}
+                    style={{ color: 'var(--text)' }}
                   >
                     {movie.title}
                   </h3>
 
-                  <div className="flex items-center flex-wrap gap-1.5 mb-1.5 text-[11px]" style={{ color: '#8f8b7e' }}>
+                  <div className="flex items-center flex-wrap gap-1.5 mb-1.5 text-[11px]" style={{ color: 'var(--muted)' }}>
                     {movie.genre && (
-                      <span style={{ color: '#b5b0a2' }}>{getCategoryLabel(movie.genre, language)}</span>
+                      <span style={{ color: 'var(--text2)' }}>{getCategoryLabel(movie.genre, language)}</span>
                     )}
-                    {movie.genre && movie.interpreter && <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>}
+                    {movie.genre && movie.interpreter && <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>}
                     {movie.interpreter && <span className="truncate">{t.comingSoon.byPrefix} {movie.interpreter}</span>}
                   </div>
 
                   {movie.overview && (
-                    <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: '#8a8778' }}>
+                    <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: 'var(--muted)' }}>
                       {movie.overview}
                     </p>
                   )}
                 </div>
 
                 {/* Action Row */}
-                <div className="flex items-center gap-2 mt-3 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center gap-2 mt-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
                   <button
                     type="button"
                     onClick={() => openTrailer({ ...movie, year: movie.releaseDate?.slice(0, 4) })}
                     data-testid={`coming-soon-trailer-${movie.id}`}
                     className="flex-1 py-1.5 px-2.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                     style={{
-                      background: 'rgba(201,168,76,0.12)',
-                      border: '1px solid rgba(201,168,76,0.32)',
-                      color: '#e8c87a',
+                      background: 'var(--accent-bg)',
+                      border: '1px solid var(--accent-border)',
+                      color: 'var(--gold2)',
                     }}
                   >
                     <Play size={10} fill="currentColor" />
@@ -182,14 +182,14 @@ export default function ComingSoonSection({ items }) {
                     style={
                       reminded
                         ? {
-                            background: 'rgba(72,199,120,0.14)',
-                            border: '1px solid rgba(72,199,120,0.35)',
-                            color: '#7de0a8',
+                            background: 'var(--green-bg)',
+                            border: '1px solid var(--green-border)',
+                            color: 'var(--green)',
                           }
                         : {
-                            background: 'rgba(255,255,255,0.04)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: '#b8b4a8',
+                            background: 'var(--bg-ghost)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text2)',
                           }
                     }
                   >

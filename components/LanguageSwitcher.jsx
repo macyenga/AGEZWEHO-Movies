@@ -25,8 +25,8 @@ export default function LanguageSwitcher({
         isExpanded ? 'w-full justify-between px-1.5 py-1' : ''
       } ${className}`}
       style={{
-        background: 'rgba(255, 255, 255, 0.04)',
-        border: '1px solid rgba(201, 168, 76, 0.24)',
+        background: 'var(--bg-ghost)',
+        border: '1px solid var(--border)',
         backdropFilter: 'blur(12px)',
       }}
     >
@@ -34,7 +34,7 @@ export default function LanguageSwitcher({
         className={`inline-flex items-center gap-1.5 pl-1.5 pr-0.5 ${
           isExpanded ? 'text-xs font-medium' : 'hidden sm:inline-flex'
         }`}
-        style={{ color: '#c9a84c' }}
+        style={{ color: 'var(--gold)' }}
         aria-hidden="true"
       >
         <Languages size={isExpanded ? 14 : 13} />
@@ -61,13 +61,12 @@ export default function LanguageSwitcher({
               style={
                 active
                   ? {
-                      background: 'linear-gradient(135deg, #f5e4a8 0%, #c9a84c 100%)',
-                      color: '#0a0808',
-                      boxShadow: '0 2px 10px rgba(201, 168, 76, 0.28)',
+                      background: 'var(--gold)',
+                      color: 'var(--accent-ink)',
                     }
                   : {
                       background: 'transparent',
-                      color: '#b8b4a8',
+                      color: 'var(--text2)',
                     }
               }
             >

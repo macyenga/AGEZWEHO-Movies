@@ -52,13 +52,13 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
   const F = (k, label, placeholder, opts={}) => (
     <div>
       <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase"
-        style={{ color: '#6a6a5a' }}>
-        {label} {opts.required && <span style={{ color: '#e05c3a' }}>*</span>}
-        {!opts.required && <span style={{ color: '#4a4a3a', letterSpacing: 0 }}> — optional</span>}
+        style={{ color: 'var(--muted)' }}>
+        {label} {opts.required && <span style={{ color: 'var(--danger)' }}>*</span>}
+        {!opts.required && <span style={{ color: 'var(--dim)', letterSpacing: 0 }}> — optional</span>}
       </label>
       <input className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors[k]?'border-red-500/40':''}`}
         value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={placeholder} />
-      {errors[k] && <p className="text-red-400/80 text-xs mt-1">{errors[k]}</p>}
+      {errors[k] && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors[k]}</p>}
     </div>
   );
 
@@ -71,14 +71,13 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
       <div className="grid grid-cols-2 gap-3">
         {F('year', 'Year', '2024')}
         <div>
-          <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color: '#6a6a5a' }}>
-            Type — <span style={{ color: '#4a4a3a', letterSpacing: 0 }}>optional</span>
+          <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color: 'var(--muted)' }}>
+            Type — <span style={{ color: 'var(--dim)', letterSpacing: 0 }}>optional</span>
           </label>
           <select className="input-dark w-full px-3 py-2 rounded-lg text-sm cursor-pointer"
-            value={form.type} onChange={e=>set('type',e.target.value)}
-            style={{ background: 'rgba(255,255,255,0.03)' }}>
+            value={form.type} onChange={e=>set('type',e.target.value)}>
             {['Movie','Series','Anime','Documentary','Short Film'].map(t=>
-              <option key={t} value={t} style={{ background: '#0f0f16' }}>{t}</option>
+              <option key={t} value={t}>{t}</option>
             )}
           </select>
         </div>
@@ -94,8 +93,8 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
         <div className="flex items-end pb-1">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={form.featured} onChange={e=>set('featured',e.target.checked)}
-              className="w-4 h-4 rounded accent-amber-400" />
-            <span className="text-xs" style={{ color: '#b8b4a8' }}>Mark as Featured</span>
+              className="w-4 h-4 rounded accent-amber-500" />
+            <span className="text-xs" style={{ color: 'var(--text2)' }}>Mark as Featured</span>
           </label>
         </div>
       </div>
@@ -105,15 +104,15 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
       {form.poster_url && (
         <div className="flex gap-3 items-start">
           <img src={form.poster_url} alt="preview"
-            className="w-14 h-20 object-cover rounded-lg border" style={{ borderColor: 'rgba(201,168,76,0.2)' }}
+            className="w-14 h-20 object-cover rounded-lg border" style={{ borderColor: 'var(--border2)' }}
             onError={e=>e.target.style.display='none'} />
-          <p className="text-[11px] mt-1" style={{ color: '#6a6a5a' }}>Poster preview</p>
+          <p className="text-[11px] mt-1" style={{ color: 'var(--muted)' }}>Poster preview</p>
         </div>
       )}
 
       <div>
-        <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color: '#6a6a5a' }}>
-          Overview — <span style={{ color: '#4a4a3a', letterSpacing: 0 }}>optional</span>
+        <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color: 'var(--muted)' }}>
+          Overview — <span style={{ color: 'var(--dim)', letterSpacing: 0 }}>optional</span>
         </label>
         <textarea className="input-dark w-full px-3 py-2 rounded-lg text-sm resize-none" rows={3}
           value={form.overview} onChange={e=>set('overview',e.target.value)}
@@ -122,7 +121,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 
       {/* Platform Availability */}
 <div>
-  <label className="block text-[10px] font-medium mb-2 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
+  <label className="block text-[10px] font-medium mb-2 tracking-[2px] uppercase" style={{ color:'var(--muted)' }}>
     Available On (select platforms)
   </label>
   <div className="flex flex-wrap gap-2">
@@ -145,9 +144,9 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
           }}
           className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
           style={{
-            background: selected ? p.color+'25' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${selected ? p.color+'60' : 'rgba(255,255,255,0.08)'}`,
-            color: selected ? p.color : '#6a6a5a',
+            background: selected ? p.color+'25' : 'var(--bg-ghost)',
+            border: `1px solid ${selected ? p.color+'60' : 'var(--border)'}`,
+            color: selected ? p.color : 'var(--muted)',
           }}>
           {selected ? '✓ ' : ''}{p.name}
         </button>
@@ -160,13 +159,13 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 <div>
   <div className="flex items-center justify-between mb-3">
     <div>
-      <span className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>Watch Online Links </span>
-      <span className="text-[10px]" style={{ color:'#3a3a2a' }}>optional</span>
+      <span className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color:'var(--muted)' }}>Watch Online Links </span>
+      <span className="text-[10px]" style={{ color:'var(--dim)' }}>optional</span>
     </div>
     <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
       onClick={() => setWatchLinks(l=>[...l,{label:'',url:''}])}
       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
-      style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', color:'#60a5fa' }}>
+      style={{ background:'var(--blue-bg)', border:'1px solid var(--blue-border)', color:'var(--blue)' }}>
       <Plus size={11} /> Add Link
     </motion.button>
   </div>
@@ -178,7 +177,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
         <motion.div key={i}
           initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
           className="mb-3 p-3 rounded-xl space-y-2"
-          style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.15)' }}>
+          style={{ background:'var(--blue-bg)', border:'1px solid var(--blue-border)' }}>
           <div className="flex gap-2 items-center flex-wrap">
             <input className="input-dark flex-1 min-w-[120px] px-2.5 py-1.5 rounded-lg text-xs"
               value={link.label}
@@ -193,15 +192,15 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
                 type="button"
                 onClick={() => setPreviewTestUrl(previewTestUrl === link.url ? '' : link.url)}
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"
-                style={{ background:'rgba(74,222,128,0.14)', color:'#86efac' }}
+                style={{ background:'var(--green-bg)', border:'1px solid var(--green-border)', color:'var(--green)' }}
               >
                 <Play size={10} fill="currentColor" /> {previewTestUrl === link.url ? 'Hide' : 'Test'}
               </button>
             )}
             <button onClick={() => setWatchLinks(l=>l.filter((_,idx)=>idx!==i))}
-              style={{ color:'#e05c3a44' }}
-              onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
-              onMouseLeave={e=>e.currentTarget.style.color='#e05c3a44'}>
+              style={{ color:'var(--dim)' }}
+              onMouseEnter={e=>e.currentTarget.style.color='var(--danger)'}
+              onMouseLeave={e=>e.currentTarget.style.color='var(--dim)'}>
               <Trash2 size={14} />
             </button>
           </div>
@@ -212,7 +211,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 
   {watchLinks.length === 0 && (
     <div className="text-center py-3 rounded-xl text-xs mb-2"
-      style={{ color:'#3a3a2a', border:'1px dashed rgba(59,130,246,0.12)' }}>
+      style={{ color:'var(--muted)', border:'1px dashed var(--blue-border)' }}>
       No watch links yet — click Add Link above
     </div>
   )}
@@ -235,14 +234,14 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 <div>
   <div className="flex items-center justify-between mb-3">
     <div>
-      <span className="text-[10px] font-medium tracking-[2px] uppercase flex items-center gap-1" style={{ color:'#6a6a5a' }}>
-        <Subtitles size={11} /> Subtitles (.SRT / .VTT) <span style={{ color:'#3a3a2a', letterSpacing: 0 }}>optional</span>
+      <span className="text-[10px] font-medium tracking-[2px] uppercase flex items-center gap-1" style={{ color:'var(--muted)' }}>
+        <Subtitles size={11} /> Subtitles (.SRT / .VTT) <span style={{ color:'var(--dim)', letterSpacing: 0 }}>optional</span>
       </span>
     </div>
     <motion.button type="button" whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
       onClick={() => setSubtitles(s => [...s, { language:'Kinyarwanda', label:'Kinyarwanda (VTT)', url:'' }])}
       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
-      style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.3)', color:'#e8c87a' }}>
+      style={{ background:'var(--accent-bg)', border:'1px solid var(--accent-border)', color:'var(--gold2)' }}>
       <Plus size={11} /> Add Subtitle
     </motion.button>
   </div>
@@ -252,13 +251,12 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
       <motion.div key={i}
         initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
         className="mb-3 p-3 rounded-xl"
-        style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.16)' }}>
+        style={{ background:'var(--accent-bg)', border:'1px solid var(--accent-border)' }}>
         <div className="flex gap-2 items-center flex-wrap">
           <select
             value={sub.language}
             onChange={e => setSubtitles(s => s.map((x, idx) => idx === i ? { ...x, language: e.target.value, label: `${e.target.value} Subtitle` } : x))}
             className="input-dark px-2.5 py-1.5 rounded-lg text-xs cursor-pointer"
-            style={{ background:'#0f0f16' }}
           >
             <option value="Kinyarwanda">Kinyarwanda</option>
             <option value="English">English</option>
@@ -270,9 +268,9 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
             onChange={e => setSubtitles(s => s.map((x, idx) => idx === i ? { ...x, url: e.target.value } : x))}
             placeholder="Subtitle URL (.vtt or .srt)" />
           <button type="button" onClick={() => setSubtitles(s => s.filter((_, idx) => idx !== i))}
-            style={{ color:'#e05c3a44' }}
-            onMouseEnter={e => e.currentTarget.style.color='#e05c3a'}
-            onMouseLeave={e => e.currentTarget.style.color='#e05c3a44'}>
+            style={{ color:'var(--dim)' }}
+            onMouseEnter={e => e.currentTarget.style.color='var(--danger)'}
+            onMouseLeave={e => e.currentTarget.style.color='var(--dim)'}>
             <Trash2 size={14} />
           </button>
         </div>
@@ -282,21 +280,21 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
 
   {subtitles.length === 0 && (
     <div className="text-center py-3 rounded-xl text-xs mb-2"
-      style={{ color:'#3a3a2a', border:'1px dashed rgba(201,168,76,0.14)' }}>
+      style={{ color:'var(--muted)', border:'1px dashed var(--accent-border)' }}>
       No subtitles added yet — click Add Subtitle above
     </div>
   )}
 </div>
 
 {/* Mobile Money Number — for admin to credit uploader */}
-<div className="p-4 rounded-xl" style={{ background:'rgba(34,197,94,0.06)', border:'1px solid rgba(34,197,94,0.15)' }}>
-  <label className="block text-[11px] font-semibold mb-1.5 tracking-[2px] uppercase" style={{ color:'#22c55e' }}>
+<div className="p-4 rounded-xl" style={{ background:'var(--green-bg)', border:'1px solid var(--green-border)' }}>
+  <label className="block text-[11px] font-semibold mb-1.5 tracking-[2px] uppercase" style={{ color:'var(--green)' }}>
     Uploader MoMo Number — for crediting ✦
   </label>
   <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
     value={uploader_momo_number} onChange={e => setUploaderMomoNumber(e.target.value)}
     placeholder="e.g. 0788123456" />
-  <p className="text-[10px] mt-1.5" style={{ color:'#4a4a3a' }}>
+  <p className="text-[10px] mt-1.5" style={{ color:'var(--muted)' }}>
     Required if you want credit/rewards when admin approves your upload
   </p>
 </div>
@@ -304,8 +302,8 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
       {/* Download Links */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color: '#6a6a5a' }}>
-            Download Links — <span style={{ color: '#4a4a3a', letterSpacing: 0 }}>optional, add as many as you want</span>
+          <label className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color: 'var(--muted)' }}>
+            Download Links — <span style={{ color: 'var(--dim)', letterSpacing: 0 }}>optional, add as many as you want</span>
           </label>
           <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={addLink}
@@ -319,7 +317,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
             <motion.div key={i}
               initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
               className="mb-3 p-3 rounded-xl space-y-2"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border-subtle)' }}>
 
               {/* Platform presets */}
               <div className="flex flex-wrap gap-1.5">
@@ -327,9 +325,9 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
                   <button key={p.name} onClick={()=>applyPlatform(i,p)}
                     className="text-[10px] px-2 py-0.5 rounded-md transition-all"
                     style={{
-                      background: link.label===p.name ? p.color+'25' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${link.label===p.name ? p.color+'50' : 'rgba(255,255,255,0.07)'}`,
-                      color: link.label===p.name ? p.color : '#6a6a5a',
+                      background: link.label===p.name ? p.color+'25' : 'var(--bg-ghost)',
+                      border: `1px solid ${link.label===p.name ? p.color+'50' : 'var(--border)'}`,
+                      color: link.label===p.name ? p.color : 'var(--muted)',
                     }}>
                     {p.name}
                   </button>
@@ -345,9 +343,9 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
                   value={link.info||''} onChange={e=>setLink(i,'info',e.target.value)} placeholder="e.g. 4K • 2.5GB" />
                 <input type="color" value={link.color||'#c9a84c'} onChange={e=>setLink(i,'color',e.target.value)}
                   className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0" title="Color" />
-                <button onClick={()=>removeLink(i)} className="transition-colors" style={{ color: '#e05c3a40' }}
-                  onMouseEnter={e=>e.currentTarget.style.color='#e05c3a'}
-                  onMouseLeave={e=>e.currentTarget.style.color='#e05c3a40'}>
+                <button onClick={()=>removeLink(i)} className="transition-colors" style={{ color: 'var(--dim)' }}
+                  onMouseEnter={e=>e.currentTarget.style.color='var(--danger)'}
+                  onMouseLeave={e=>e.currentTarget.style.color='var(--dim)'}>
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -356,7 +354,7 @@ export default function AddMovieForm({ initial=null, onSave, onCancel, loading=f
         </AnimatePresence>
 
         {links.length === 0 && (
-          <div className="text-center py-4 rounded-xl text-xs" style={{ color: '#4a4a3a', border: '1px dashed rgba(255,255,255,0.06)' }}>
+          <div className="text-center py-4 rounded-xl text-xs" style={{ color: 'var(--muted)', border: '1px dashed var(--border)' }}>
             No download links yet — click "Add Link" above
           </div>
         )}

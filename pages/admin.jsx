@@ -79,17 +79,17 @@ async function fetchAdminData(token) {
 
 function StatusBadge({ label, tone = 'muted' }) {
   const palette = {
-    green: { bg: 'rgba(34,197,94,0.12)', bd: 'rgba(34,197,94,0.28)', fg: '#22c55e' },
-    amber: { bg: 'rgba(251,191,36,0.12)', bd: 'rgba(251,191,36,0.28)', fg: '#fbbf24' },
-    red: { bg: 'rgba(239,68,68,0.12)', bd: 'rgba(239,68,68,0.28)', fg: '#f87171' },
-    blue: { bg: 'rgba(59,130,246,0.12)', bd: 'rgba(59,130,246,0.28)', fg: '#60a5fa' },
-    gold: { bg: 'rgba(201,168,76,0.14)', bd: 'rgba(201,168,76,0.3)', fg: '#e8c87a' },
-    muted: { bg: 'rgba(255,255,255,0.06)', bd: 'rgba(255,255,255,0.12)', fg: '#8e8a7e' },
+    green: { bg: 'var(--green-bg)', bd: 'var(--green-border)', fg: 'var(--green)' },
+    amber: { bg: 'var(--warn-bg)', bd: 'var(--warn-border)', fg: 'var(--warn)' },
+    red: { bg: 'var(--danger-bg)', bd: 'var(--danger-border)', fg: 'var(--danger)' },
+    blue: { bg: 'var(--blue-bg)', bd: 'var(--blue-border)', fg: 'var(--blue)' },
+    gold: { bg: 'var(--accent-bg)', bd: 'var(--accent-border)', fg: 'var(--gold2)' },
+    muted: { bg: 'var(--bg-ghost)', bd: 'var(--border)', fg: 'var(--muted)' },
   };
   const c = palette[tone] || palette.muted;
   return (
     <span
-      className="text-[11px] font-medium px-2 py-0.5 rounded capitalize whitespace-nowrap"
+      className="text-[11px] font-semibold px-2 py-0.5 rounded capitalize whitespace-nowrap"
       style={{ background: c.bg, border: `1px solid ${c.bd}`, color: c.fg }}
     >
       {label}
@@ -127,13 +127,17 @@ export default function Admin() {
   const [editingCs, setEditingCs] = useState(null);
   const [csLoading, setCsLoading] = useState(false);
 
-  // Games states
+  // Games & private access states
   const [gameSearch, setGameSearch] = useState('');
   const [gameStatusFilter, setGameStatusFilter] = useState('all');
   const [gameTierFilter, setGameTierFilter] = useState('all');
   const [creatingGame, setCreatingGame] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
   const [gameFormLoading, setGameFormLoading] = useState(false);
+  const [grantAccessEmail, setGrantAccessEmail] = useState('');
+  const [grantAccessGameId, setGrantAccessGameId] = useState('');
+  const [grantAccessNote, setGrantAccessNote] = useState('');
+  const [grantAccessLoading, setGrantAccessLoading] = useState(false);
 
   // Requests states
   const [reqSearch, setReqSearch] = useState('');
@@ -606,6 +610,42 @@ export default function Admin() {
     }
   };
 
+  const handleGrantPrivateAccess = async (e) => {
+    e.preventDefault();
+    if (!grantAccessEmail.trim()) return;
+    setGrantAccessLoading(true);
+    try {
+      await doAdminRequest('/api/admin/premium-access', 'POST', {
+        email: grantAccessEmail.trim(),
+        game_id: grantAccessGameId || null,
+        status: 'approved',
+        note: grantAccessNote.trim(),
+      });
+      setGrantAccessEmail('');
+      setGrantAccessGameId('');
+      setGrantAccessNote('');
+      await refresh();
+      notifySuccess('Private content access approved for member');
+    } catch (err) {
+      notifyError(err.message);
+    } finally {
+      setGrantAccessLoading(false);
+    }
+  };
+
+  const handleUpdateAccessStatus = async (id, status) => {
+    setActionLoading(`access_${id}`);
+    try {
+      await doAdminRequest('/api/admin/premium-access', 'PATCH', { id, status });
+      await refresh();
+      notifySuccess(`Member access marked ${status}`);
+    } catch (err) {
+      notifyError(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // --- Requests handlers ---
   const handleSaveRequest = async (payload) => {
     setReqFormLoading(true);
@@ -1032,7 +1072,7 @@ export default function Admin() {
             onClick={() => { setConfirmKey(null); onConfirm(); }}
             disabled={busy}
             className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-            style={{ background: 'rgba(239,68,68,0.25)', border: '1px solid rgba(239,68,68,0.5)', color: '#fecaca' }}
+            style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger)' }}
           >
             {busy ? <Loader2 size={11} className="animate-spin" /> : 'Confirm?'}
           </button>
@@ -1040,7 +1080,7 @@ export default function Admin() {
             type="button"
             onClick={() => setConfirmKey(null)}
             className="px-2 py-1.5 rounded-lg text-xs"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#8e8a7e' }}
+            style={{ background: 'var(--bg-ghost)', color: 'var(--muted)' }}
           >
             No
           </button>
@@ -1054,7 +1094,7 @@ export default function Admin() {
         disabled={busy}
         aria-label={label}
         className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.22)', color: '#f87171' }}
+        style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger)' }}
       >
         <Trash2 size={12} /> Delete
       </button>
@@ -1071,20 +1111,21 @@ export default function Admin() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-28">
         {/* Top Workspace Header */}
         <header
-          className="flex flex-wrap items-center justify-between gap-4 pb-5 mb-6 border-b border-white/[0.08]"
+          className="flex flex-wrap items-center justify-between gap-4 pb-5 mb-6 border-b"
+          style={{ borderColor: 'var(--border)' }}
         >
           <div className="flex items-center gap-3 min-w-0">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)' }}
+              style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
             >
-              <Shield size={19} style={{ color: '#e8c87a' }} />
+              <Shield size={19} style={{ color: 'var(--gold2)' }} />
             </div>
             <div className="min-w-0">
-              <h1 className="font-cinzel text-xl font-semibold truncate" style={{ fontFamily: 'Cinzel,serif', color: '#e8c87a' }}>
+              <h1 className="font-cinzel text-xl font-semibold truncate" style={{ fontFamily: 'Cinzel,serif', color: 'var(--gold2)' }}>
                 Admin Console
               </h1>
-              <p className="text-xs truncate" style={{ color: '#8e8a7e' }}>
+              <p className="text-xs truncate" style={{ color: 'var(--muted)' }}>
                 {user?.email || 'Administrator'} · {activeTabMeta.label}
               </p>
             </div>
@@ -1110,11 +1151,11 @@ export default function Admin() {
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 size={28} style={{ color: '#c9a84c' }} className="animate-spin" />
+            <Loader2 size={28} style={{ color: 'var(--gold)' }} className="animate-spin" />
           </div>
         ) : loadError ? (
-          <div className="text-center py-16 p-6 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(239,68,68,0.25)' }}>
-            <p className="text-sm mb-4" style={{ color: '#f87171' }}>{loadError}</p>
+          <div className="text-center py-16 p-6 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--danger-border)', boxShadow: 'var(--shadow-card)' }}>
+            <p className="text-sm mb-4" style={{ color: 'var(--danger)' }}>{loadError}</p>
             <button type="button" onClick={() => router.reload()} className="btn-primary px-4 py-2 rounded-lg text-xs">
               Retry
             </button>
@@ -1124,11 +1165,11 @@ export default function Admin() {
             {/* Desktop Left Category Sidebar */}
             <aside
               className="hidden lg:block w-64 shrink-0 rounded-xl p-3 space-y-5 sticky top-20"
-              style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
             >
               {TAB_GROUPS.map((grp) => (
                 <div key={grp.group}>
-                  <div className="px-2.5 mb-1.5 text-[11px] font-semibold tracking-wider uppercase" style={{ color: '#6a6a5a' }}>
+                  <div className="px-2.5 mb-1.5 text-[11px] font-semibold tracking-wider uppercase" style={{ color: 'var(--muted)' }}>
                     {grp.group}
                   </div>
                   <nav className="space-y-1">
@@ -1141,10 +1182,10 @@ export default function Admin() {
                           key={item.id}
                           type="button"
                           onClick={() => selectTab(item.id)}
-                          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-medium"
+                          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
                           style={active
-                            ? { backgroundColor: 'rgba(201,168,76,0.14)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(201,168,76,0.32)', color: '#e8c87a' }
-                            : { backgroundColor: 'transparent', borderWidth: '1px', borderStyle: 'solid', borderColor: 'transparent', color: '#b8b4a8' }}
+                            ? { backgroundColor: 'var(--accent-bg)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--accent-border)', color: 'var(--gold2)' }
+                            : { backgroundColor: 'transparent', borderWidth: '1px', borderStyle: 'solid', borderColor: 'transparent', color: 'var(--text2)' }}
                         >
                           <span className="flex items-center gap-2.5 truncate">
                             <Icon size={14} />
@@ -1176,11 +1217,11 @@ export default function Admin() {
                 className="input-dark w-full px-3 py-2.5 rounded-xl text-sm font-medium"
               >
                 {TAB_GROUPS.map((grp) => (
-                  <optgroup key={grp.group} label={grp.group} style={{ background: '#0f0f16' }}>
+                  <optgroup key={grp.group} label={grp.group}>
                     {grp.items.map((item) => {
                       const badge = getTabBadge(item.id);
                       return (
-                        <option key={item.id} value={item.id} style={{ background: '#0f0f16' }}>
+                        <option key={item.id} value={item.id}>
                           {item.label}{badge ? ` (${badge.count})` : ''}
                         </option>
                       );
@@ -1196,10 +1237,10 @@ export default function Admin() {
               {actionError && (
                 <div
                   role="alert"
-                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-xs"
-                  style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.32)', color: '#fecaca' }}
+                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-xs font-medium"
+                  style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger)' }}
                 >
-                  <span className="flex items-center gap-2"><AlertCircle size={15} style={{ color: '#f87171' }} /> {actionError}</span>
+                  <span className="flex items-center gap-2"><AlertCircle size={15} /> {actionError}</span>
                   <button type="button" onClick={() => setActionError('')} aria-label="Dismiss error">
                     <X size={14} />
                   </button>
@@ -1208,10 +1249,10 @@ export default function Admin() {
               {actionSuccess && (
                 <div
                   role="status"
-                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-xs"
-                  style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#bbf7d0' }}
+                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-xs font-medium"
+                  style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border)', color: 'var(--green)' }}
                 >
-                  <span className="flex items-center gap-2"><CheckCircle2 size={15} style={{ color: '#22c55e' }} /> {actionSuccess}</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 size={15} /> {actionSuccess}</span>
                   <button type="button" onClick={() => setActionSuccess('')} aria-label="Dismiss notice">
                     <X size={14} />
                   </button>
@@ -1244,12 +1285,12 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Pending Agasobanuye Uploads</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Approve, reject, edit metadata, or batch-moderate uploaded titles</p>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Pending Agasobanuye Uploads</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Approve, reject, edit metadata, or batch-moderate uploaded titles</p>
                     </div>
                     {data?.pendingMovies?.length > 0 && (
                       <div className="flex flex-wrap items-center gap-2">
-                        <label className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg cursor-pointer" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#b8b4a8' }}>
+                        <label className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg cursor-pointer" style={{ background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: 'var(--text2)' }}>
                           <input
                             type="checkbox"
                             checked={selectedPendingIds.length === data.pendingMovies.length && data.pendingMovies.length > 0}
@@ -1265,7 +1306,7 @@ export default function Admin() {
                               onClick={() => handleBulkMovies('approve')}
                               disabled={Boolean(actionLoading)}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                              style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
+                              style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}
                             >
                               Approve ({selectedPendingIds.length})
                             </button>
@@ -1274,7 +1315,7 @@ export default function Admin() {
                               onClick={() => handleBulkMovies('reject')}
                               disabled={Boolean(actionLoading)}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.28)', color: '#f87171' }}
+                              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.28)', color: 'var(--danger)' }}
                             >
                               Reject ({selectedPendingIds.length})
                             </button>
@@ -1285,8 +1326,8 @@ export default function Admin() {
                   </div>
 
                   {!data?.pendingMovies || data.pendingMovies.length === 0 ? (
-                    <div className="p-8 rounded-xl text-center" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <p className="text-xs mb-3" style={{ color: '#8e8a7e' }}>No pending Agasobanuye submissions awaiting review.</p>
+                    <div className="p-8 rounded-xl text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
+                      <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>No pending Agasobanuye submissions awaiting review.</p>
                       <button type="button" onClick={() => setTab('all-movies')} className="btn-primary px-4 py-2 rounded-lg text-xs">
                         Browse All Agasobanuye
                       </button>
@@ -1294,7 +1335,7 @@ export default function Admin() {
                   ) : (
                     <div className="space-y-2.5">
                       {data.pendingMovies.map((m) => (
-                        <div key={m.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={m.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                           <input
                             type="checkbox"
                             aria-label={`Select ${m.title}`}
@@ -1304,8 +1345,8 @@ export default function Admin() {
                           />
                           {m.poster_url && <img src={m.poster_url} alt={m.title} referrerPolicy="no-referrer" className="w-10 h-14 rounded-lg object-cover shrink-0" />}
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium truncate" style={{ color: '#e8e6f0' }}>{m.title}</div>
-                            <div className="text-xs mt-0.5" style={{ color: '#8e8a7e' }}>
+                            <div className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{m.title}</div>
+                            <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
                               {m.type || 'Movie'} · {m.year || '—'} · {m.language || 'Kinyarwanda'}
                               {m.uploaded_by ? ` · by ${m.uploaded_by}` : ''}
                               {m.uploader_momo_number ? ` · MoMo ${m.uploader_momo_number}` : ''}
@@ -1317,7 +1358,7 @@ export default function Admin() {
                               onClick={() => handleUpdateMovie(m.id, { status: 'approved' }, `Approved "${m.title}"`)}
                               disabled={actionLoading === `movie_${m.id}`}
                               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                              style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
+                              style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}
                             >
                               {actionLoading === `movie_${m.id}` ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />} Approve
                             </button>
@@ -1326,7 +1367,7 @@ export default function Admin() {
                               onClick={() => handleUpdateMovie(m.id, { status: 'rejected' }, `Rejected "${m.title}"`)}
                               disabled={actionLoading === `movie_${m.id}`}
                               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
+                              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger)' }}
                             >
                               <XCircle size={12} /> Reject
                             </button>
@@ -1334,7 +1375,7 @@ export default function Admin() {
                               type="button"
                               onClick={() => { setEditingMovie(m); setTab('all-movies'); }}
                               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}
+                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}
                             >
                               <Edit3 size={12} /> Edit
                             </button>
@@ -1355,7 +1396,7 @@ export default function Admin() {
                         type="button"
                         onClick={() => setEditingMovie(null)}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs mb-4"
-                        style={{ color: '#b8b4a8' }}
+                        style={{ color: 'var(--text2)' }}
                       >
                         <ArrowLeft size={14} /> Back to All Agasobanuye
                       </button>
@@ -1373,7 +1414,7 @@ export default function Admin() {
                         type="button"
                         onClick={() => setCreatingMovie(false)}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs mb-4"
-                        style={{ color: '#b8b4a8' }}
+                        style={{ color: 'var(--text2)' }}
                       >
                         <ArrowLeft size={14} /> Back to All Agasobanuye
                       </button>
@@ -1388,70 +1429,70 @@ export default function Admin() {
                     <>
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>
+                          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                             All Agasobanuye ({filteredMovies.length} / {data?.allMovies?.length || 0})
                           </h2>
-                          <p className="text-xs" style={{ color: '#6a6a5a' }}>Search, filter, feature on homepage hero, edit links, or moderate status</p>
+                          <p className="text-xs" style={{ color: 'var(--muted)' }}>Search, filter, feature on homepage hero, edit links, or moderate status</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setCreatingMovie(true)}
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                          style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                          style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                         >
                           <Plus size={13} /> Add Movie
                         </button>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                          <Search size={14} style={{ color: '#6a6a5a' }} />
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                          <Search size={14} style={{ color: 'var(--muted)' }} />
                           <input
                             type="text"
                             value={movieSearch}
                             onChange={(e) => setMovieSearch(e.target.value)}
                             placeholder="Search title, uploader..."
                             className="bg-transparent text-xs outline-none w-full"
-                            style={{ color: '#e8e6f0' }}
+                            style={{ color: 'var(--text)' }}
                           />
                         </div>
                         <select value={movieStatusFilter} onChange={(e) => setMovieStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                          <option value="all" style={{ background: '#0f0f16' }}>All Statuses</option>
-                          <option value="approved" style={{ background: '#0f0f16' }}>Approved</option>
-                          <option value="pending" style={{ background: '#0f0f16' }}>Pending</option>
-                          <option value="rejected" style={{ background: '#0f0f16' }}>Rejected</option>
+                          <option value="all">All Statuses</option>
+                          <option value="approved">Approved</option>
+                          <option value="pending">Pending</option>
+                          <option value="rejected">Rejected</option>
                         </select>
                         <select value={movieGenreFilter} onChange={(e) => setMovieGenreFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
                           {movieGenres.map((g) => (
-                            <option key={g} value={g} style={{ background: '#0f0f16' }}>
+                            <option key={g} value={g}>
                               {g === 'all' ? 'All Genres' : g}
                             </option>
                           ))}
                         </select>
                         <select value={movieFeaturedFilter} onChange={(e) => setMovieFeaturedFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                          <option value="all" style={{ background: '#0f0f16' }}>All Visibility</option>
-                          <option value="featured" style={{ background: '#0f0f16' }}>Featured Only</option>
-                          <option value="standard" style={{ background: '#0f0f16' }}>Standard Only</option>
+                          <option value="all">All Visibility</option>
+                          <option value="featured">Featured Only</option>
+                          <option value="standard">Standard Only</option>
                         </select>
                       </div>
 
                       {filteredMovies.length === 0 ? (
-                        <p className="text-xs text-center py-10" style={{ color: '#6a6a5a' }}>No movies match the current filters.</p>
+                        <p className="text-xs text-center py-10" style={{ color: 'var(--muted)' }}>No movies match the current filters.</p>
                       ) : (
                         <div className="space-y-2.5">
                           {filteredMovies.map((m) => (
-                            <div key={m.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div key={m.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                               {m.poster_url && <img src={m.poster_url} alt={m.title} referrerPolicy="no-referrer" className="w-10 h-14 rounded-lg object-cover shrink-0" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-medium truncate" style={{ color: '#e8e6f0' }}>{m.title}</span>
+                                  <span className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{m.title}</span>
                                   <StatusBadge
                                     label={m.status || 'approved'}
                                     tone={m.status === 'approved' ? 'green' : m.status === 'pending' ? 'amber' : 'red'}
                                   />
                                   {m.featured && <StatusBadge label="Featured" tone="gold" />}
                                 </div>
-                                <div className="text-xs mt-1 flex flex-wrap items-center gap-2" style={{ color: '#8e8a7e' }}>
+                                <div className="text-xs mt-1 flex flex-wrap items-center gap-2" style={{ color: 'var(--muted)' }}>
                                   <span>{m.type || 'Movie'}</span>
                                   <span>·</span>
                                   <span>{m.year || '—'}</span>
@@ -1470,8 +1511,8 @@ export default function Admin() {
                                   aria-label={m.featured ? `Unfeature ${m.title}` : `Feature ${m.title}`}
                                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
                                   style={m.featured
-                                    ? { background: 'rgba(201,168,76,0.16)', border: '1px solid rgba(201,168,76,0.35)', color: '#e8c87a' }
-                                    : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#8e8a7e' }}
+                                    ? { background: 'rgba(201,168,76,0.16)', border: '1px solid rgba(201,168,76,0.35)', color: 'var(--gold2)' }
+                                    : { background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: 'var(--muted)' }}
                                 >
                                   <Star size={12} fill={m.featured ? '#e8c87a' : 'none'} /> {m.featured ? 'Featured' : 'Feature'}
                                 </button>
@@ -1481,7 +1522,7 @@ export default function Admin() {
                                     onClick={() => handleUpdateMovie(m.id, { status: 'approved' }, `Approved "${m.title}"`)}
                                     disabled={actionLoading === `movie_${m.id}`}
                                     className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                    style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: '#22c55e' }}
+                                    style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: 'var(--green)' }}
                                   >
                                     Approve
                                   </button>
@@ -1491,7 +1532,7 @@ export default function Admin() {
                                     onClick={() => handleUpdateMovie(m.id, { status: 'rejected' }, `Hid "${m.title}"`)}
                                     disabled={actionLoading === `movie_${m.id}`}
                                     className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}
+                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: 'var(--warn)' }}
                                   >
                                     Unpublish
                                   </button>
@@ -1500,7 +1541,7 @@ export default function Admin() {
                                   type="button"
                                   onClick={() => setEditingMovie(m)}
                                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                  style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}
+                                  style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}
                                 >
                                   <Edit3 size={12} /> Edit
                                 </button>
@@ -1520,16 +1561,16 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                         Coming Soon Releases ({filteredComingSoon.length})
                       </h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Manage homepage upcoming releases and promote them live when ready</p>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Manage homepage upcoming releases and promote them live when ready</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setEditingCs(null); setCreatingCs((v) => !v); }}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                     >
                       <Plus size={13} /> Add Upcoming Release
                     </button>
@@ -1545,31 +1586,31 @@ export default function Admin() {
                     />
                   )}
 
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg max-w-sm" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <Search size={14} style={{ color: '#6a6a5a' }} />
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg max-w-sm" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                    <Search size={14} style={{ color: 'var(--muted)' }} />
                     <input
                       type="text"
                       value={csSearch}
                       onChange={(e) => setCsSearch(e.target.value)}
                       placeholder="Search upcoming titles or interpreters..."
                       className="bg-transparent text-xs outline-none w-full"
-                      style={{ color: '#e8e6f0' }}
+                      style={{ color: 'var(--text)' }}
                     />
                   </div>
 
                   {filteredComingSoon.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No upcoming releases found.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No upcoming releases found.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredComingSoon.map((item) => (
-                        <div key={item.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={item.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                           {item.poster_url && <img src={item.poster_url} alt={item.title} referrerPolicy="no-referrer" className="w-10 h-14 rounded-lg object-cover shrink-0" />}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium truncate" style={{ color: '#e8e6f0' }}>{item.title}</span>
+                              <span className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{item.title}</span>
                               <StatusBadge label={item.releaseDate || 'TBA'} tone="gold" />
                             </div>
-                            <div className="text-xs mt-1" style={{ color: '#8e8a7e' }}>
+                            <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                               {item.type || 'Movie'} · {item.genre || 'Action'} · {item.interpreter || 'Agasobanuye.rw'}
                             </div>
                           </div>
@@ -1579,7 +1620,7 @@ export default function Admin() {
                               onClick={() => handlePublishComingSoon(item.id)}
                               disabled={actionLoading === `pubcs_${item.id}`}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                              style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
+                              style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}
                             >
                               {actionLoading === `pubcs_${item.id}` ? <Loader2 size={12} className="animate-spin" /> : <Rocket size={12} />} Release Now
                             </button>
@@ -1587,7 +1628,7 @@ export default function Admin() {
                               type="button"
                               onClick={() => { setCreatingCs(false); setEditingCs(item); }}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}
+                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}
                             >
                               <Edit3 size={12} /> Edit
                             </button>
@@ -1605,11 +1646,11 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                         Games & Premium Catalog ({filteredGames.length})
                       </h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>
-                        Total game earnings: <span className="tabular-nums font-semibold" style={{ color: '#fbbf24' }}>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                        Total game earnings: <span className="tabular-nums font-semibold" style={{ color: 'var(--warn)' }}>
                           {Object.values(data?.gameEarnings || {}).reduce((a, b) => a + b, 0).toLocaleString()} RWF
                         </span>
                       </p>
@@ -1618,7 +1659,7 @@ export default function Admin() {
                       type="button"
                       onClick={() => { setEditingGame(null); setCreatingGame((v) => !v); }}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                     >
                       <Plus size={13} /> Add Game / Item
                     </button>
@@ -1635,44 +1676,45 @@ export default function Admin() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={gameSearch} onChange={(e) => setGameSearch(e.target.value)}
-                        placeholder="Search games, MoMo..." className="bg-transparent text-xs outline-none w-full" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search games, MoMo..." className="bg-transparent text-xs outline-none w-full" style={{ color: 'var(--text)' }} />
                     </div>
                     <select value={gameStatusFilter} onChange={(e) => setGameStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Statuses</option>
-                      <option value="approved" style={{ background: '#0f0f16' }}>Approved</option>
-                      <option value="pending" style={{ background: '#0f0f16' }}>Pending</option>
-                      <option value="rejected" style={{ background: '#0f0f16' }}>Rejected</option>
+                      <option value="all">All Statuses</option>
+                      <option value="approved">Approved</option>
+                      <option value="pending">Pending</option>
+                      <option value="rejected">Rejected</option>
                     </select>
                     <select value={gameTierFilter} onChange={(e) => setGameTierFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Tiers</option>
-                      <option value="premium" style={{ background: '#0f0f16' }}>Premium Paid Only</option>
-                      <option value="free" style={{ background: '#0f0f16' }}>Free Only</option>
+                      <option value="all">All Tiers</option>
+                      <option value="premium">Premium Paid Only</option>
+                      <option value="free">Free Only</option>
                     </select>
                   </div>
 
                   {filteredGames.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No games match the current filters.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No games match the current filters.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredGames.map((g) => {
                         const earned = data?.gameEarnings?.[g.id] || 0;
                         return (
-                          <div key={g.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                          <div key={g.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                             {g.cover_url && <img src={g.cover_url} alt={g.title} referrerPolicy="no-referrer" className="w-10 h-14 rounded-lg object-cover shrink-0" />}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-medium truncate" style={{ color: '#e8e6f0' }}>{g.title}</span>
+                                <span className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{g.title}</span>
                                 <StatusBadge
                                   label={g.status || 'approved'}
                                   tone={g.status === 'pending' ? 'amber' : g.status === 'rejected' ? 'red' : 'green'}
                                 />
-                                {g.premium ? <StatusBadge label={`${(g.price || 500).toLocaleString()} RWF`} tone="gold" /> : <StatusBadge label="Free" tone="blue" />}
+                                {g.video_url && <StatusBadge label="Video Ready" tone="blue" />}
+                                {g.premium ? <StatusBadge label={`${(g.price || 500).toLocaleString()} RWF`} tone="gold" /> : <StatusBadge label="Pro / Free" tone="muted" />}
                               </div>
-                              <div className="text-xs mt-1 flex flex-wrap gap-2" style={{ color: '#8e8a7e' }}>
-                                <span>{g.category || 'Action'}</span>
+                              <div className="text-xs mt-1 flex flex-wrap gap-2" style={{ color: 'var(--muted)' }}>
+                                <span>{g.type || 'Game'} · {g.category || 'Action'}</span>
                                 {g.version && <><span>·</span><span>v{g.version}</span></>}
                                 <span>·</span>
                                 <span className="tabular-nums">Earned: {earned.toLocaleString()} RWF</span>
@@ -1680,31 +1722,39 @@ export default function Admin() {
                               </div>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 shrink-0">
+                              <Link
+                                href={`/games/${g.id}`}
+                                target="_blank"
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
+                                style={{ background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: 'var(--text2)' }}
+                              >
+                                <ExternalLink size={12} /> View
+                              </Link>
                               <button
                                 type="button"
                                 onClick={() => handlePatchGame(g.id, { premium: !g.premium, price: !g.premium ? (g.price || 500) : 0 }, !g.premium ? 'Marked Premium' : 'Marked Free')}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)', color: '#e8c87a' }}
+                                style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)', color: 'var(--gold2)' }}
                               >
                                 {g.premium ? 'Make Free' : 'Make Premium'}
                               </button>
                               {g.status !== 'approved' && (
                                 <button type="button" onClick={() => handlePatchGame(g.id, { status: 'approved' }, 'Approved item')}
                                   className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                  style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: '#22c55e' }}>
+                                  style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: 'var(--green)' }}>
                                   Approve
                                 </button>
                               )}
                               {g.status !== 'rejected' && (
                                 <button type="button" onClick={() => handlePatchGame(g.id, { status: 'rejected' }, 'Rejected item')}
                                   className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                  style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
+                                  style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: 'var(--warn)' }}>
                                   Reject
                                 </button>
                               )}
                               <button type="button" onClick={() => { setCreatingGame(false); setEditingGame(g); }}
                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}>
+                                style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}>
                                 <Edit3 size={12} /> Edit
                               </button>
                               {renderConfirmDelete(`game_${g.id}`, `Delete ${g.title}`, () => handleDeleteGame(g.id), actionLoading === `delgame_${g.id}`)}
@@ -1714,6 +1764,104 @@ export default function Admin() {
                       })}
                     </div>
                   )}
+
+                  {/* Private Paid-Approved Member Access Controls */}
+                  <div className="mt-6 p-5 rounded-xl space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)', boxShadow: 'var(--shadow-card)' }}>
+                    <div>
+                      <h3 className="text-sm font-semibold" style={{ color: 'var(--gold2)' }}>
+                        Private Vault Member Approvals ({(data?.premiumAccessRequests || []).length})
+                      </h3>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
+                        Grant or revoke paid-approved access to private videos &amp; content by registered user email.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleGrantPrivateAccess} className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                      <input
+                        type="email"
+                        required
+                        list="admin-access-users"
+                        value={grantAccessEmail}
+                        onChange={(e) => setGrantAccessEmail(e.target.value)}
+                        placeholder="Member email..."
+                        className="input-dark px-3 py-2 rounded-lg text-xs"
+                      />
+                      <datalist id="admin-access-users">
+                        {(data?.registeredUsers || []).map((u) => <option key={u.id} value={u.email} />)}
+                      </datalist>
+                      <select
+                        value={grantAccessGameId}
+                        onChange={(e) => setGrantAccessGameId(e.target.value)}
+                        className="input-dark px-3 py-2 rounded-lg text-xs"
+                      >
+                        <option value="">All Private Content (Global)</option>
+                        {(data?.allGames || []).map((g) => (
+                          <option key={g.id} value={g.id}>{g.title}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={grantAccessNote}
+                        onChange={(e) => setGrantAccessNote(e.target.value)}
+                        placeholder="MoMo ref / note (optional)"
+                        className="input-dark px-3 py-2 rounded-lg text-xs"
+                      />
+                      <button
+                        type="submit"
+                        disabled={grantAccessLoading}
+                        className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer"
+                      >
+                        {grantAccessLoading ? 'Saving...' : 'Approve Private Access'}
+                      </button>
+                    </form>
+
+                    {(data?.premiumAccessRequests || []).length > 0 && (
+                      <div className="space-y-2">
+                        {data.premiumAccessRequests.map((reqItem) => {
+                          const targetEmail = reqItem.user_email || data?.userMap?.[reqItem.user_id] || reqItem.user_id;
+                          const targetTitle = reqItem.game_id
+                            ? (data?.allGames || []).find((g) => g.id === reqItem.game_id)?.title || reqItem.game_id
+                            : 'All Private Content';
+                          return (
+                            <div key={reqItem.id} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg" style={{ background: 'var(--bg-ghost)', border: '1px solid var(--border)' }}>
+                              <div className="text-xs min-w-0">
+                                <span className="font-medium" style={{ color: 'var(--text)' }}>{targetEmail}</span>
+                                <span className="mx-2" style={{ color: 'var(--muted)' }}>·</span>
+                                <span style={{ color: 'var(--text2)' }}>{targetTitle}</span>
+                                {reqItem.note && <span className="ml-2 text-[11px]" style={{ color: 'var(--muted)' }}>({reqItem.note})</span>}
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <StatusBadge
+                                  label={reqItem.status || 'pending'}
+                                  tone={reqItem.status === 'approved' ? 'green' : reqItem.status === 'revoked' || reqItem.status === 'rejected' ? 'red' : 'amber'}
+                                />
+                                {reqItem.status !== 'approved' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateAccessStatus(reqItem.id, 'approved')}
+                                    className="px-2.5 py-1 rounded text-[11px] font-medium cursor-pointer"
+                                    style={{ background: 'rgba(34,197,94,0.14)', color: 'var(--green)' }}
+                                  >
+                                    Approve
+                                  </button>
+                                )}
+                                {reqItem.status === 'approved' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateAccessStatus(reqItem.id, 'revoked')}
+                                    className="px-2.5 py-1 rounded text-[11px] font-medium cursor-pointer"
+                                    style={{ background: 'rgba(239,68,68,0.14)', color: 'var(--danger)' }}
+                                  >
+                                    Revoke
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1722,16 +1870,16 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                         Movie Requests ({filteredRequests.length})
                       </h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Create, edit goals/votes, mark fulfilled, or clean up user requests</p>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Create, edit goals/votes, mark fulfilled, or clean up user requests</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setEditingReq(null); setCreatingReq((v) => !v); }}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                     >
                       <Plus size={13} /> Add Request
                     </button>
@@ -1748,33 +1896,33 @@ export default function Admin() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={reqSearch} onChange={(e) => setReqSearch(e.target.value)}
-                        placeholder="Search requested titles or requesters..." className="bg-transparent text-xs outline-none w-full" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search requested titles or requesters..." className="bg-transparent text-xs outline-none w-full" style={{ color: 'var(--text)' }} />
                     </div>
                     <select value={reqStatusFilter} onChange={(e) => setReqStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Requests</option>
-                      <option value="pending" style={{ background: '#0f0f16' }}>Open / Pending</option>
-                      <option value="fulfilled" style={{ background: '#0f0f16' }}>Fulfilled</option>
+                      <option value="all">All Requests</option>
+                      <option value="pending">Open / Pending</option>
+                      <option value="fulfilled">Fulfilled</option>
                     </select>
                   </div>
 
                   {filteredRequests.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No requests match filters.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No requests match filters.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredRequests.map((r) => (
-                        <div key={r.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={r.id} className="flex flex-wrap items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium truncate" style={{ color: '#e8e6f0' }}>{r.title}</span>
+                              <span className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{r.title}</span>
                               <StatusBadge label={r.fulfilled ? 'Fulfilled' : 'Open'} tone={r.fulfilled ? 'green' : 'amber'} />
                             </div>
-                            <div className="text-xs mt-1 flex flex-wrap gap-2" style={{ color: '#8e8a7e' }}>
+                            <div className="text-xs mt-1 flex flex-wrap gap-2" style={{ color: 'var(--muted)' }}>
                               <span className="tabular-nums">{r.votes || 0} votes</span>
                               <span>·</span>
-                              <span className="tabular-nums" style={{ color: '#e8c87a' }}>
+                              <span className="tabular-nums" style={{ color: 'var(--gold2)' }}>
                                 {(r.donation_total || 0).toLocaleString()} / {(r.donation_goal || 5000).toLocaleString()} RWF
                               </span>
                               {r.requested_by && <><span>·</span><span>by {r.requested_by}</span></>}
@@ -1784,13 +1932,13 @@ export default function Admin() {
                             <button type="button" onClick={() => handleFulfillRequest(r.id, !r.fulfilled)} disabled={actionLoading === `req_${r.id}`}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
                               style={r.fulfilled
-                                ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }
-                                : { background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                                ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: 'var(--warn)' }
+                                : { background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>
                               {r.fulfilled ? 'Reopen' : 'Fulfill'}
                             </button>
                             <button type="button" onClick={() => { setCreatingReq(false); setEditingReq(r); }}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}>
+                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}>
                               <Edit3 size={12} /> Edit
                             </button>
                             {renderConfirmDelete(`req_${r.id}`, `Delete ${r.title}`, () => handleDeleteRequest(r.id), actionLoading === `delreq_${r.id}`)}
@@ -1807,14 +1955,14 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>News & Amakuru ({filteredNews.length})</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Publish original stories or moderate community articles</p>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>News & Amakuru ({filteredNews.length})</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Publish original stories or moderate community articles</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setEditingNews(null); setCreatingNews((v) => !v); }}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                     >
                       <Plus size={13} /> Publish News
                     </button>
@@ -1831,35 +1979,35 @@ export default function Admin() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={newsSearch} onChange={(e) => setNewsSearch(e.target.value)}
-                        placeholder="Search headlines, authors..." className="bg-transparent text-xs outline-none w-full" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search headlines, authors..." className="bg-transparent text-xs outline-none w-full" style={{ color: 'var(--text)' }} />
                     </div>
                     <select value={newsStatusFilter} onChange={(e) => setNewsStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Statuses</option>
-                      <option value="approved" style={{ background: '#0f0f16' }}>Approved</option>
-                      <option value="pending" style={{ background: '#0f0f16' }}>Pending</option>
-                      <option value="rejected" style={{ background: '#0f0f16' }}>Rejected</option>
+                      <option value="all">All Statuses</option>
+                      <option value="approved">Approved</option>
+                      <option value="pending">Pending</option>
+                      <option value="rejected">Rejected</option>
                     </select>
                   </div>
 
                   {filteredNews.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No news posts found.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No news posts found.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredNews.map((n) => (
-                        <div key={n.id} className="flex flex-wrap items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={n.id} className="flex flex-wrap items-start gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                           {n.image_url && <img src={n.image_url} alt={n.title} referrerPolicy="no-referrer" className="w-14 h-14 rounded-lg object-cover shrink-0" />}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium" style={{ color: '#e8e6f0' }}>{n.title}</span>
+                              <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{n.title}</span>
                               <StatusBadge
                                 label={n.status || 'pending'}
                                 tone={n.status === 'approved' ? 'green' : n.status === 'rejected' ? 'red' : 'amber'}
                               />
                             </div>
-                            <div className="text-xs mt-1" style={{ color: '#8e8a7e' }}>
+                            <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                               {n.author_name || 'News'} · {n.category || 'Amakuru'} · {n.likes || 0} likes
                             </div>
                           </div>
@@ -1867,20 +2015,20 @@ export default function Admin() {
                             {n.status !== 'approved' && (
                               <button type="button" onClick={() => handlePatchNewsStatus(n.id, 'approved')}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                                style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>
                                 Approve
                               </button>
                             )}
                             {n.status !== 'rejected' && (
                               <button type="button" onClick={() => handlePatchNewsStatus(n.id, 'rejected')}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
+                                style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: 'var(--warn)' }}>
                                 Reject
                               </button>
                             )}
                             <button type="button" onClick={() => { setCreatingNews(false); setEditingNews(n); }}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}>
+                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}>
                               <Edit3 size={12} /> Edit
                             </button>
                             {renderConfirmDelete(`news_${n.id}`, `Delete ${n.title}`, () => handleDeleteNews(n.id), actionLoading === `delnews_${n.id}`)}
@@ -1897,14 +2045,14 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Shop Listings ({filteredShop.length})</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Create products, edit prices/WhatsApp contacts, or mark inventory sold</p>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Shop Listings ({filteredShop.length})</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Create products, edit prices/WhatsApp contacts, or mark inventory sold</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setEditingShop(null); setCreatingShop((v) => !v); }}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                     >
                       <Plus size={13} /> Add Listing
                     </button>
@@ -1921,32 +2069,32 @@ export default function Admin() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={shopSearch} onChange={(e) => setShopSearch(e.target.value)}
-                        placeholder="Search products, sellers..." className="bg-transparent text-xs outline-none w-full" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search products, sellers..." className="bg-transparent text-xs outline-none w-full" style={{ color: 'var(--text)' }} />
                     </div>
                     <select value={shopStatusFilter} onChange={(e) => setShopStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Listings</option>
-                      <option value="active" style={{ background: '#0f0f16' }}>Active</option>
-                      <option value="sold" style={{ background: '#0f0f16' }}>Sold</option>
+                      <option value="all">All Listings</option>
+                      <option value="active">Active</option>
+                      <option value="sold">Sold</option>
                     </select>
                   </div>
 
                   {filteredShop.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No shop listings found.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No shop listings found.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredShop.map((s) => (
-                        <div key={s.id} className="flex flex-wrap items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={s.id} className="flex flex-wrap items-start gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                           {s.image_url && <img src={s.image_url} alt={s.title} referrerPolicy="no-referrer" className="w-14 h-14 rounded-lg object-cover shrink-0" />}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium" style={{ color: '#e8e6f0' }}>{s.title}</span>
+                              <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{s.title}</span>
                               <StatusBadge label={s.status || 'active'} tone={s.status === 'active' ? 'green' : 'amber'} />
                             </div>
-                            <div className="text-xs mt-1 flex flex-wrap gap-2" style={{ color: '#8e8a7e' }}>
-                              <span style={{ color: '#e8c87a' }}>{s.price ? `${s.price} ${s.currency || 'RWF'}` : 'Negotiable'}</span>
+                            <div className="text-xs mt-1 flex flex-wrap gap-2" style={{ color: 'var(--muted)' }}>
+                              <span style={{ color: 'var(--gold2)' }}>{s.price ? `${s.price} ${s.currency || 'RWF'}` : 'Negotiable'}</span>
                               <span>·</span>
                               <span>{s.seller_name}</span>
                               <span>·</span>
@@ -1957,19 +2105,19 @@ export default function Admin() {
                             {s.status === 'active' ? (
                               <button type="button" onClick={() => handleShopStatus(s.id, 'sold')}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.28)', color: '#fbbf24' }}>
+                                style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.28)', color: 'var(--warn)' }}>
                                 Mark Sold
                               </button>
                             ) : (
                               <button type="button" onClick={() => handleShopStatus(s.id, 'active')}
                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                                style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>
                                 <RotateCcw size={12} /> Reactivate
                               </button>
                             )}
                             <button type="button" onClick={() => { setCreatingShop(false); setEditingShop(s); }}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}>
+                              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}>
                               <Edit3 size={12} /> Edit
                             </button>
                             {renderConfirmDelete(`shop_${s.id}`, `Delete ${s.title}`, () => handleDeleteShopItem(s.id), actionLoading === `delshop_${s.id}`)}
@@ -1986,8 +2134,8 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Transactions Ledger ({txList.length})</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Search, filter, confirm MoMo payments, refund, create manual entries, or export CSV</p>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Transactions Ledger ({txList.length})</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Search, filter, confirm MoMo payments, refund, create manual entries, or export CSV</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <button type="button" onClick={handleExportTransactionsCsv} disabled={txList.length === 0}
@@ -1996,37 +2144,37 @@ export default function Admin() {
                       </button>
                       <button type="button" onClick={() => setShowManualTx((v) => !v)}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                        style={{ background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa' }}>
+                        style={{ background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.3)', color: 'var(--blue)' }}>
                         <Plus size={13} /> Manual Tx
                       </button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div className="sm:col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="sm:col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={txSearch} onChange={(e) => setTxSearch(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') loadTransactions(); }}
-                        placeholder="Search ref, MoMo TX ID, phone, email..." className="flex-1 bg-transparent text-xs outline-none" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search ref, MoMo TX ID, phone, email..." className="flex-1 bg-transparent text-xs outline-none" style={{ color: 'var(--text)' }} />
                       <button type="button" onClick={loadTransactions} className="px-2.5 py-1 rounded text-xs font-medium"
-                        style={{ background: 'rgba(201,168,76,0.14)', color: '#e8c87a' }}>
+                        style={{ background: 'rgba(201,168,76,0.14)', color: 'var(--gold2)' }}>
                         Search
                       </button>
                     </div>
                     <select value={txFilter} onChange={(e) => setTxFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="" style={{ background: '#0f0f16' }}>All Statuses</option>
-                      <option value="pending" style={{ background: '#0f0f16' }}>Pending</option>
-                      <option value="completed" style={{ background: '#0f0f16' }}>Completed</option>
-                      <option value="cancelled" style={{ background: '#0f0f16' }}>Cancelled</option>
-                      <option value="refunded" style={{ background: '#0f0f16' }}>Refunded</option>
+                      <option value="">All Statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="refunded">Refunded</option>
                     </select>
                   </div>
 
                   {showManualTx && (
-                    <form onSubmit={handleManualTx} className="p-4 rounded-xl space-y-3" style={{ background: 'rgba(14,14,22,0.88)', border: '1px solid rgba(59,130,246,0.28)' }}>
+                    <form onSubmit={handleManualTx} className="p-4 rounded-xl space-y-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--blue-border)', boxShadow: 'var(--shadow-card)' }}>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold" style={{ color: '#60a5fa' }}>Create Manual Confirmed Transaction</span>
-                        <button type="button" onClick={() => setShowManualTx(false)}><X size={14} style={{ color: '#8e8a7e' }} /></button>
+                        <span className="text-xs font-semibold" style={{ color: 'var(--blue)' }}>Create Manual Confirmed Transaction</span>
+                        <button type="button" onClick={() => setShowManualTx(false)}><X size={14} style={{ color: 'var(--muted)' }} /></button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <input type="number" required placeholder="Amount (RWF)" value={manualTxForm.amount}
@@ -2045,15 +2193,15 @@ export default function Admin() {
                   )}
 
                   {txLoading ? (
-                    <div className="flex justify-center py-8"><Loader2 size={20} style={{ color: '#c9a84c' }} className="animate-spin" /></div>
+                    <div className="flex justify-center py-8"><Loader2 size={20} style={{ color: 'var(--gold)' }} className="animate-spin" /></div>
                   ) : txList.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No transactions found.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No transactions found.</p>
                   ) : (
                     <div className="space-y-2">
                       {txList.map((tx) => {
                         const isManualMomo = tx.payment_method === 'momo_manual' || Boolean(tx.manual_tx_id) || Boolean(tx.screenshot_data);
                         return (
-                        <div key={tx.id} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={tx.id} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                           <div className="flex items-start gap-3 min-w-0 flex-1">
                             {tx.screenshot_data && (
                               <button
@@ -2067,13 +2215,13 @@ export default function Admin() {
                             )}
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold tabular-nums" style={{ color: '#e8e6f0' }}>{(tx.amount || 0).toLocaleString()} RWF</span>
+                                <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text)' }}>{(tx.amount || 0).toLocaleString()} RWF</span>
                                 <StatusBadge label={tx.status} tone={tx.status === 'completed' ? 'green' : tx.status === 'pending' ? 'amber' : tx.status === 'refunded' ? 'red' : 'muted'} />
                                 {isManualMomo && (
                                   <StatusBadge label={`MoMo Pay ${tx.merchant_code || '156833'}`} tone="gold" />
                                 )}
                               </div>
-                              <div className="text-xs mt-1 break-words" style={{ color: '#8e8a7e' }}>
+                              <div className="text-xs mt-1 break-words" style={{ color: 'var(--muted)' }}>
                                 Ref {tx.tx_ref}
                                 {tx.manual_tx_id ? ` · TX ID: ${tx.manual_tx_id}` : ''}
                                 {tx.payer_name ? ` · ${tx.payer_name}` : ''}
@@ -2090,7 +2238,7 @@ export default function Admin() {
                                 type="button"
                                 onClick={() => setProofModalTx(tx)}
                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap cursor-pointer"
-                                style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)', color: '#e8c87a' }}
+                                style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)', color: 'var(--gold2)' }}
                               >
                                 <Eye size={12} /> View Proof
                               </button>
@@ -2106,12 +2254,12 @@ export default function Admin() {
                                     notifySuccess('Transaction confirmed');
                                   } catch (err) { notifyError(err.message); } finally { setActionLoading(null); }
                                 }} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer"
-                                  style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                                  style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>
                                   Confirm
                                 </button>
                                 <button type="button" onClick={() => handleCancelTx(tx.tx_ref)}
                                   className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer"
-                                  style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                                  style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger)' }}>
                                   Cancel
                                 </button>
                               </>
@@ -2119,7 +2267,7 @@ export default function Admin() {
                             {tx.status === 'completed' && (
                               <button type="button" onClick={() => handleRefundTx(tx.tx_ref)}
                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer"
-                                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger)' }}>
                                 <RotateCcw size={12} /> Refund
                               </button>
                             )}
@@ -2137,14 +2285,14 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Donations ({filteredDonations.length})</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Record manual support contributions, verify MoMo receipts, or reverse errors</p>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Donations ({filteredDonations.length})</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Record manual support contributions, verify MoMo receipts, or reverse errors</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCreatingDonation((v) => !v)}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                     >
                       <Plus size={13} /> Record Donation
                     </button>
@@ -2160,32 +2308,32 @@ export default function Admin() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={donSearch} onChange={(e) => setDonSearch(e.target.value)}
-                        placeholder="Search donor name, phone..." className="bg-transparent text-xs outline-none w-full" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search donor name, phone..." className="bg-transparent text-xs outline-none w-full" style={{ color: 'var(--text)' }} />
                     </div>
                     <select value={donStatusFilter} onChange={(e) => setDonStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Donations</option>
-                      <option value="confirmed" style={{ background: '#0f0f16' }}>Confirmed Only</option>
-                      <option value="pending" style={{ background: '#0f0f16' }}>Pending Review</option>
+                      <option value="all">All Donations</option>
+                      <option value="confirmed">Confirmed Only</option>
+                      <option value="pending">Pending Review</option>
                     </select>
                   </div>
 
                   {filteredDonations.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No donations match filters.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No donations match filters.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredDonations.map((d) => {
                         const isConfirmed = d.confirmed !== false;
                         return (
-                          <div key={d.id} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                          <div key={d.id} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold tabular-nums" style={{ color: '#e8e6f0' }}>{(d.amount || 0).toLocaleString()} RWF</span>
+                                <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text)' }}>{(d.amount || 0).toLocaleString()} RWF</span>
                                 <StatusBadge label={isConfirmed ? 'Confirmed' : 'Pending'} tone={isConfirmed ? 'green' : 'amber'} />
                               </div>
-                              <div className="text-xs mt-1" style={{ color: '#8e8a7e' }}>
+                              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                                 {d.donor_name || 'Anonymous'}
                                 {d.phone_last4 ? ` · MoMo *${d.phone_last4}` : ''}
                                 {d.created_at ? ` · ${new Date(d.created_at).toLocaleDateString()}` : ''}
@@ -2198,8 +2346,8 @@ export default function Admin() {
                                 disabled={actionLoading === `donation_${d.id}`}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
                                 style={isConfirmed
-                                  ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }
-                                  : { background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
+                                  ? { background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: 'var(--warn)' }
+                                  : { background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}
                               >
                                 {isConfirmed ? 'Mark Pending' : 'Confirm'}
                               </button>
@@ -2218,14 +2366,14 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Pro Subscriptions ({filteredSubscriptions.length})</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Approve Pro upgrades, grant manual Pro access, extend expiry (+30d), or revoke</p>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Pro Subscriptions ({filteredSubscriptions.length})</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Approve Pro upgrades, grant manual Pro access, extend expiry (+30d), or revoke</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCreatingSub((v) => !v)}
                       className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
-                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: '#22c55e' }}
+                      style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.32)', color: 'var(--green)' }}
                     >
                       <Plus size={13} /> Grant Pro Access
                     </button>
@@ -2241,34 +2389,34 @@ export default function Admin() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={subSearch} onChange={(e) => setSubSearch(e.target.value)}
-                        placeholder="Search user email, phone, ref..." className="bg-transparent text-xs outline-none w-full" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search user email, phone, ref..." className="bg-transparent text-xs outline-none w-full" style={{ color: 'var(--text)' }} />
                     </div>
                     <select value={subStatusFilter} onChange={(e) => setSubStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Subscriptions</option>
-                      <option value="active" style={{ background: '#0f0f16' }}>Active</option>
-                      <option value="pending" style={{ background: '#0f0f16' }}>Pending Approval</option>
-                      <option value="expired" style={{ background: '#0f0f16' }}>Expired</option>
-                      <option value="cancelled" style={{ background: '#0f0f16' }}>Cancelled</option>
+                      <option value="all">All Subscriptions</option>
+                      <option value="active">Active</option>
+                      <option value="pending">Pending Approval</option>
+                      <option value="expired">Expired</option>
+                      <option value="cancelled">Cancelled</option>
                     </select>
                   </div>
 
                   {subLoading ? (
-                    <div className="flex justify-center py-8"><Loader2 size={20} style={{ color: '#c9a84c' }} className="animate-spin" /></div>
+                    <div className="flex justify-center py-8"><Loader2 size={20} style={{ color: 'var(--gold)' }} className="animate-spin" /></div>
                   ) : filteredSubscriptions.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No subscriptions found.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No subscriptions found.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredSubscriptions.map((sub) => {
                         const isExpired = sub.status === 'active' && sub.expires_at && new Date(sub.expires_at) <= new Date();
                         const effectiveStatus = isExpired ? 'expired' : (sub.status || 'pending');
                         return (
-                          <div key={sub.id} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                          <div key={sub.id} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-medium" style={{ color: '#e8e6f0' }}>
+                                <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
                                   {mergedUserMap[sub.user_id] || sub.user_id}
                                 </span>
                                 <StatusBadge
@@ -2276,7 +2424,7 @@ export default function Admin() {
                                   tone={effectiveStatus === 'active' ? 'green' : effectiveStatus === 'pending' ? 'amber' : effectiveStatus === 'expired' ? 'red' : 'muted'}
                                 />
                               </div>
-                              <div className="text-xs mt-1" style={{ color: '#8e8a7e' }}>
+                              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                                 {sub.months || 1} mo · {(sub.amount || 1000).toLocaleString()} RWF
                                 {sub.phone ? ` · ${sub.phone}` : ''}
                                 {sub.expires_at ? ` · Expires ${new Date(sub.expires_at).toLocaleDateString()}` : ''}
@@ -2287,31 +2435,31 @@ export default function Admin() {
                                 <>
                                   <button type="button" onClick={() => handleApproveRejectSub(sub.id, 'approve')}
                                     className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                                    style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                                    style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>
                                     Approve
                                   </button>
                                   <button type="button" onClick={() => handleApproveRejectSub(sub.id, 'reject')}
                                     className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}>
+                                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger)' }}>
                                     Reject
                                   </button>
                                 </>
                               )}
                               <button type="button" onClick={() => handlePatchSub(sub.id, { extend_days: 30 }, 'Extended Pro by 30 days')}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(201,168,76,0.14)', border: '1px solid rgba(201,168,76,0.3)', color: '#e8c87a' }}>
+                                style={{ background: 'rgba(201,168,76,0.14)', border: '1px solid rgba(201,168,76,0.3)', color: 'var(--gold2)' }}>
                                 +30d Extend
                               </button>
                               {sub.status === 'active' ? (
                                 <button type="button" onClick={() => handlePatchSub(sub.id, { status: 'cancelled' }, 'Subscription cancelled')}
                                   className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                  style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
+                                  style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', color: 'var(--warn)' }}>
                                   Cancel
                                 </button>
                               ) : (
                                 <button type="button" onClick={() => handlePatchSub(sub.id, { status: 'active' }, 'Subscription activated')}
                                   className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                  style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: '#22c55e' }}>
+                                  style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: 'var(--green)' }}>
                                   Activate
                                 </button>
                               )}
@@ -2330,31 +2478,31 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Creator Payouts Ledger</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>
-                        Total Paid Out: <span className="tabular-nums font-semibold" style={{ color: '#22c55e' }}>{(payouts?.totalPaidOut || 0).toLocaleString()} RWF</span>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Creator Payouts Ledger</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                        Total Paid Out: <span className="tabular-nums font-semibold" style={{ color: 'var(--green)' }}>{(payouts?.totalPaidOut || 0).toLocaleString()} RWF</span>
                       </p>
                     </div>
                   </div>
 
                   {payoutsLoading ? (
-                    <div className="flex justify-center py-8"><Loader2 size={20} style={{ color: '#c9a84c' }} className="animate-spin" /></div>
+                    <div className="flex justify-center py-8"><Loader2 size={20} style={{ color: 'var(--gold)' }} className="animate-spin" /></div>
                   ) : payouts ? (
                     <>
                       {showProcessPayout && (
-                        <div className="p-4 rounded-xl space-y-3" style={{ background: 'rgba(14,14,22,0.88)', border: '1px solid rgba(201,168,76,0.3)' }}>
+                        <div className="p-4 rounded-xl space-y-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border2)', boxShadow: 'var(--shadow-card)' }}>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold" style={{ color: '#e8c87a' }}>Process Payout — {showProcessPayout.momo_number}</span>
-                            <button type="button" onClick={() => setShowProcessPayout(null)}><X size={14} style={{ color: '#8e8a7e' }} /></button>
+                            <span className="text-xs font-semibold" style={{ color: 'var(--gold2)' }}>Process Payout — {showProcessPayout.momo_number}</span>
+                            <button type="button" onClick={() => setShowProcessPayout(null)}><X size={14} style={{ color: 'var(--muted)' }} /></button>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
                             <div>
-                              <label className="block text-xs mb-1" style={{ color: '#8e8a7e' }}>Amount (RWF)</label>
+                              <label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>Amount (RWF)</label>
                               <input type="number" value={payoutForm.amount} onChange={(e) => setPayoutForm((f) => ({ ...f, amount: e.target.value }))}
                                 className="input-dark w-full px-3 py-2 rounded-lg text-xs" />
                             </div>
                             <div>
-                              <label className="block text-xs mb-1" style={{ color: '#8e8a7e' }}>Notes</label>
+                              <label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>Notes</label>
                               <input type="text" value={payoutForm.notes} onChange={(e) => setPayoutForm((f) => ({ ...f, notes: e.target.value }))}
                                 className="input-dark w-full px-3 py-2 rounded-lg text-xs" />
                             </div>
@@ -2368,14 +2516,14 @@ export default function Admin() {
 
                       {payouts.movieUploaders?.length > 0 && (
                         <div className="space-y-2.5">
-                          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#8e8a7e' }}>Movie Uploaders</h3>
+                          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Movie Uploaders</h3>
                           {payouts.movieUploaders.map((u) => (
-                            <div key={u.name} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div key={u.name} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                               <div>
-                                <div className="text-sm font-medium" style={{ color: '#e8e6f0' }}>
+                                <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>
                                   {u.name} {u.momo_number ? `(${u.momo_number})` : ''}
                                 </div>
-                                <div className="text-xs mt-0.5 tabular-nums" style={{ color: '#22c55e' }}>{u.totalEarnings.toLocaleString()} RWF across {u.movies.length} title(s)</div>
+                                <div className="text-xs mt-0.5 tabular-nums" style={{ color: 'var(--green)' }}>{u.totalEarnings.toLocaleString()} RWF across {u.movies.length} title(s)</div>
                               </div>
                               <button type="button"
                                 onClick={() => { setShowProcessPayout({ momo_number: u.momo_number || u.name }); setPayoutForm({ amount: String(u.totalEarnings), notes: `Payout for ${u.name}` }); }}
@@ -2389,12 +2537,12 @@ export default function Admin() {
 
                       {payouts.uploaders?.length > 0 && (
                         <div className="space-y-2.5">
-                          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#8e8a7e' }}>Game Uploaders</h3>
+                          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Game Uploaders</h3>
                           {payouts.uploaders.map((u) => (
-                            <div key={u.momo_number} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div key={u.momo_number} className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                               <div>
-                                <div className="text-sm font-medium" style={{ color: '#e8e6f0' }}>MoMo {u.momo_number}</div>
-                                <div className="text-xs mt-0.5 tabular-nums" style={{ color: '#22c55e' }}>{u.totalEarnings.toLocaleString()} RWF across {u.games.length} game(s)</div>
+                                <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>MoMo {u.momo_number}</div>
+                                <div className="text-xs mt-0.5 tabular-nums" style={{ color: 'var(--green)' }}>{u.totalEarnings.toLocaleString()} RWF across {u.games.length} game(s)</div>
                               </div>
                               {u.totalEarnings > 0 && (
                                 <button type="button"
@@ -2409,17 +2557,17 @@ export default function Admin() {
                       )}
 
                       <div className="space-y-2">
-                        <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#8e8a7e' }}>Payout History ({payouts.payouts?.length || 0})</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Payout History ({payouts.payouts?.length || 0})</h3>
                         {!payouts.payouts || payouts.payouts.length === 0 ? (
-                          <p className="text-xs py-4" style={{ color: '#6a6a5a' }}>No payouts queued yet.</p>
+                          <p className="text-xs py-4" style={{ color: 'var(--muted)' }}>No payouts queued yet.</p>
                         ) : payouts.payouts.map((p) => (
-                          <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                          <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold tabular-nums" style={{ color: '#e8e6f0' }}>{(p.amount || 0).toLocaleString()} RWF</span>
+                                <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text)' }}>{(p.amount || 0).toLocaleString()} RWF</span>
                                 <StatusBadge label={p.status} tone={p.status === 'paid' ? 'green' : 'amber'} />
                               </div>
-                              <div className="text-xs mt-0.5" style={{ color: '#8e8a7e' }}>
+                              <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
                                 {p.uploader_phone} {p.notes ? `· ${p.notes}` : ''} · {new Date(p.created_at).toLocaleDateString()}
                               </div>
                             </div>
@@ -2427,7 +2575,7 @@ export default function Admin() {
                               <div className="flex items-center gap-2 shrink-0">
                                 <button type="button" onClick={() => handleMarkPaid(p.id)}
                                   className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
-                                  style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+                                  style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>
                                   Mark Paid
                                 </button>
                                 {renderConfirmDelete(`pay_${p.id}`, `Cancel payout ${p.id}`, () => handleDeletePayout(p.id), actionLoading === `delpay_${p.id}`)}
@@ -2445,53 +2593,53 @@ export default function Admin() {
               {tab === 'contacts' && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Contact Messages ({filteredContacts.length})</h2>
-                    <p className="text-xs" style={{ color: '#6a6a5a' }}>Reply via email, mark resolved, or remove spam inquiries</p>
+                    <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Contact Messages ({filteredContacts.length})</h2>
+                    <p className="text-xs" style={{ color: 'var(--muted)' }}>Reply via email, mark resolved, or remove spam inquiries</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(14,14,22,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <Search size={14} style={{ color: '#6a6a5a' }} />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted)' }} />
                       <input type="text" value={contactSearch} onChange={(e) => setContactSearch(e.target.value)}
-                        placeholder="Search sender, subject, message..." className="bg-transparent text-xs outline-none w-full" style={{ color: '#e8e6f0' }} />
+                        placeholder="Search sender, subject, message..." className="bg-transparent text-xs outline-none w-full" style={{ color: 'var(--text)' }} />
                     </div>
                     <select value={contactStatusFilter} onChange={(e) => setContactStatusFilter(e.target.value)} className="input-dark px-3 py-2 rounded-lg text-xs">
-                      <option value="all" style={{ background: '#0f0f16' }}>All Messages</option>
-                      <option value="unread" style={{ background: '#0f0f16' }}>Unread / Open</option>
-                      <option value="resolved" style={{ background: '#0f0f16' }}>Resolved</option>
+                      <option value="all">All Messages</option>
+                      <option value="unread">Unread / Open</option>
+                      <option value="resolved">Resolved</option>
                     </select>
                   </div>
 
                   {filteredContacts.length === 0 ? (
-                    <p className="text-xs text-center py-8" style={{ color: '#6a6a5a' }}>No contact messages found.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--muted)' }}>No contact messages found.</p>
                   ) : (
                     <div className="space-y-2.5">
                       {filteredContacts.map((c) => (
-                        <div key={c.id} className="p-4 rounded-xl space-y-2" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div key={c.id} className="p-4 rounded-xl space-y-2" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium" style={{ color: '#e8e6f0' }}>{c.name}</span>
-                              <span className="text-xs" style={{ color: '#8e8a7e' }}>{c.email}</span>
+                              <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{c.name}</span>
+                              <span className="text-xs" style={{ color: 'var(--muted)' }}>{c.email}</span>
                               <StatusBadge label={c.resolved ? 'Resolved' : 'Open'} tone={c.resolved ? 'green' : 'amber'} />
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
                               {c.email && (
                                 <a href={`mailto:${c.email}?subject=Re: ${encodeURIComponent(c.subject || 'Agasobanuye.rw Support')}`}
                                   className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                  style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: '#60a5fa' }}>
+                                  style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--blue)' }}>
                                   Reply
                                 </a>
                               )}
                               <button type="button" onClick={() => handleToggleContactResolved(c.id, !c.resolved)}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: '#22c55e' }}>
+                                style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.28)', color: 'var(--green)' }}>
                                 {c.resolved ? 'Reopen' : 'Mark Resolved'}
                               </button>
                               {renderConfirmDelete(`contact_${c.id}`, `Delete message from ${c.name}`, () => handleDeleteContact(c.id), actionLoading === `delcontact_${c.id}`)}
                             </div>
                           </div>
-                          {c.subject && <div className="text-xs font-medium" style={{ color: '#e8c87a' }}>{c.subject}</div>}
-                          <p className="text-xs leading-relaxed" style={{ color: '#b8b4a8' }}>{c.message}</p>
+                          {c.subject && <div className="text-xs font-medium" style={{ color: 'var(--gold2)' }}>{c.subject}</div>}
+                          <p className="text-xs leading-relaxed" style={{ color: 'var(--text2)' }}>{c.message}</p>
                         </div>
                       ))}
                     </div>
@@ -2504,15 +2652,15 @@ export default function Admin() {
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <div>
-                      <h2 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Admin Access Control ({data?.admins?.length || 0})</h2>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Grant or revoke admin console privileges (your active account is protected)</p>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Admin Access Control ({data?.admins?.length || 0})</h2>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Grant or revoke admin console privileges (your active account is protected)</p>
                     </div>
                     <form
                       onSubmit={(e) => { e.preventDefault(); handleAddAdmin(); }}
                       className="flex flex-wrap items-center gap-3 p-4 rounded-xl"
-                      style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(201,168,76,0.2)' }}
+                      style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)', boxShadow: 'var(--shadow-card)' }}
                     >
-                      <UserPlus size={16} style={{ color: '#c9a84c' }} className="shrink-0" />
+                      <UserPlus size={16} style={{ color: 'var(--gold)' }} className="shrink-0" />
                       <input
                         type="email"
                         required
@@ -2534,14 +2682,14 @@ export default function Admin() {
                       {(data?.admins || []).map((a) => {
                         const isSelf = a.email === user?.email || a.user_id === user?.id;
                         return (
-                          <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                          <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                             <div className="flex items-center gap-3">
-                              <Shield size={15} style={{ color: '#e8c87a' }} />
+                              <Shield size={15} style={{ color: 'var(--gold2)' }} />
                               <div>
-                                <div className="text-sm font-medium" style={{ color: '#e8e6f0' }}>
-                                  {a.email} {isSelf && <span className="text-xs ml-1" style={{ color: '#22c55e' }}>(You)</span>}
+                                <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>
+                                  {a.email} {isSelf && <span className="text-xs ml-1" style={{ color: 'var(--green)' }}>(You)</span>}
                                 </div>
-                                <div className="text-xs" style={{ color: '#6a6a5a' }}>Added {a.created_at ? new Date(a.created_at).toLocaleDateString() : '—'}</div>
+                                <div className="text-xs" style={{ color: 'var(--muted)' }}>Added {a.created_at ? new Date(a.created_at).toLocaleDateString() : '—'}</div>
                               </div>
                             </div>
                             {!isSelf && (data?.admins?.length || 0) > 1 && (
@@ -2556,23 +2704,23 @@ export default function Admin() {
                   {/* Registered Users Directory */}
                   <div className="space-y-3">
                     <div>
-                      <h3 className="text-sm font-semibold" style={{ color: '#e8e6f0' }}>Registered Accounts ({data?.registeredUsers?.length || 0})</h3>
-                      <p className="text-xs" style={{ color: '#6a6a5a' }}>Promote verified members to Admin or activate Pro access</p>
+                      <h3 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Registered Accounts ({data?.registeredUsers?.length || 0})</h3>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>Promote verified members to Admin or activate Pro access</p>
                     </div>
                     {!data?.registeredUsers || data.registeredUsers.length === 0 ? (
-                      <p className="text-xs py-4" style={{ color: '#6a6a5a' }}>No registered users found.</p>
+                      <p className="text-xs py-4" style={{ color: 'var(--muted)' }}>No registered users found.</p>
                     ) : (
                       <div className="space-y-2">
                         {data.registeredUsers.map((u) => {
                           const isAdmin = (data?.admins || []).some((a) => a.email === u.email || a.user_id === u.id);
                           return (
-                            <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl" style={{ background: 'rgba(14,14,22,0.75)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm" style={{ color: '#e8e6f0' }}>{u.email}</span>
+                                  <span className="text-sm" style={{ color: 'var(--text)' }}>{u.email}</span>
                                   {isAdmin && <StatusBadge label="Admin" tone="gold" />}
                                 </div>
-                                <div className="text-xs" style={{ color: '#6a6a5a' }}>
+                                <div className="text-xs" style={{ color: 'var(--muted)' }}>
                                   ID {u.id} · Joined {u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}
                                 </div>
                               </div>
@@ -2580,7 +2728,7 @@ export default function Admin() {
                                 {!isAdmin && (
                                   <button type="button" onClick={() => handleAddAdmin(u.email)} disabled={addAdminLoading}
                                     className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
-                                    style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)', color: '#e8c87a' }}>
+                                    style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)', color: 'var(--gold2)' }}>
                                     Promote to Admin
                                   </button>
                                 )}
@@ -2602,7 +2750,7 @@ export default function Admin() {
       {proofModalTx && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(8px)' }}
           onClick={() => setProofModalTx(null)}
           role="dialog"
           aria-modal="true"
@@ -2610,15 +2758,15 @@ export default function Admin() {
         >
           <div
             className="w-full max-w-lg rounded-2xl overflow-hidden p-5 space-y-4"
-            style={{ background: '#0e0e16', border: '1px solid rgba(201,168,76,0.3)' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border2)', boxShadow: 'var(--shadow-card)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold" style={{ color: '#e8c87a' }}>
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--gold2)' }}>
                   MoMo Pay {proofModalTx.merchant_code || '156833'} Payment Proof
                 </h3>
-                <p className="text-xs mt-0.5 tabular-nums" style={{ color: '#8e8a7e' }}>
+                <p className="text-xs mt-0.5 tabular-nums" style={{ color: 'var(--muted)' }}>
                   {(proofModalTx.amount || 0).toLocaleString()} RWF · Ref {proofModalTx.tx_ref}
                   {proofModalTx.manual_tx_id ? ` · TX ID: ${proofModalTx.manual_tx_id}` : ''}
                 </p>
@@ -2627,14 +2775,14 @@ export default function Admin() {
                 type="button"
                 onClick={() => setProofModalTx(null)}
                 aria-label="Close proof modal"
-                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-stone-400 hover:text-white cursor-pointer"
+                className="btn-ghost p-1.5 rounded-lg cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
             {proofModalTx.screenshot_data && (
-              <div className="rounded-xl overflow-hidden bg-black border border-white/10 max-h-[65vh] flex items-center justify-center">
+              <div className="rounded-xl overflow-hidden bg-black border max-h-[65vh] flex items-center justify-center" style={{ borderColor: 'var(--border)' }}>
                 <img
                   src={proofModalTx.screenshot_data}
                   alt={`Payment screenshot for ${proofModalTx.tx_ref}`}
@@ -2659,7 +2807,7 @@ export default function Admin() {
                     } catch (err) { notifyError(err.message); } finally { setActionLoading(null); }
                   }}
                   className="px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
-                  style={{ background: 'rgba(34,197,94,0.18)', border: '1px solid rgba(34,197,94,0.4)', color: '#22c55e' }}
+                  style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border)', color: 'var(--green)' }}
                 >
                   Approve &amp; Confirm Payment
                 </button>
@@ -2667,7 +2815,7 @@ export default function Admin() {
               <button
                 type="button"
                 onClick={() => setProofModalTx(null)}
-                className="px-4 py-2 rounded-lg text-xs font-medium bg-white/10 text-stone-200 cursor-pointer"
+                className="btn-ghost px-4 py-2 rounded-lg text-xs font-medium cursor-pointer"
               >
                 Close
               </button>

@@ -22,8 +22,8 @@ import {
   extractExternalDomain,
 } from '../lib/editorial';
 
-const GOLD = '#c9a84c';
-const GOLD_LIGHT = '#e8c87a';
+const GOLD = 'var(--gold)';
+const GOLD_LIGHT = 'var(--gold2)';
 
 function withPlaybackParams(source, { mute = true } = {}) {
   if (!source?.embedUrl) return '';
@@ -238,13 +238,13 @@ export default function SmartMediaPlayer({
     return (
       <div
         className="rounded-2xl p-6 text-center"
-        style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
       >
-        <Film size={24} className="mx-auto mb-2" style={{ color: GOLD, opacity: 0.6 }} />
-        <p className="text-xs font-medium" style={{ color: '#e8e4d8' }}>
+        <Film size={24} className="mx-auto mb-2" style={{ color: GOLD, opacity: 0.7 }} />
+        <p className="text-xs font-medium" style={{ color: 'var(--text)' }}>
           No inline preview stream attached for this release yet.
         </p>
-        <p className="text-[11px] mt-1" style={{ color: '#8a8778' }}>
+        <p className="text-[11px] mt-1" style={{ color: 'var(--muted)' }}>
           Use the external watch or download mirrors below, or attach a YouTube, Vimeo, Google Drive, or .MP4 link.
         </p>
       </div>
@@ -257,14 +257,15 @@ export default function SmartMediaPlayer({
       data-autoplay="true"
       className="rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(12,12,20,0.92)',
-        border: '1px solid rgba(201,168,76,0.28)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--accent-border)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Top Source Bar */}
       <div
         className="px-4 py-3 flex flex-wrap items-center justify-between gap-2.5"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(8,8,14,0.8)' }}
+        style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-card-subtle)' }}
       >
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide min-w-0">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold shrink-0 mr-1" style={{ color: GOLD_LIGHT }}>
@@ -283,14 +284,14 @@ export default function SmartMediaPlayer({
                 style={
                   active
                     ? {
-                        background: 'rgba(201,168,76,0.18)',
-                        border: '1px solid rgba(201,168,76,0.45)',
-                        color: '#f5e4a8',
+                        background: 'var(--accent-bg)',
+                        border: '1px solid var(--accent-border)',
+                        color: 'var(--gold2)',
                       }
                     : {
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.09)',
-                        color: '#b8b4a8',
+                        background: 'var(--bg-ghost)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text2)',
                       }
                 }
               >
@@ -307,11 +308,11 @@ export default function SmartMediaPlayer({
             onClick={() => setMutedPreview((v) => !v)}
             data-testid="player-mute-toggle"
             aria-label={mutedPreview ? 'Unmute preview sound' : 'Mute preview sound'}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-colors hover:bg-white/10 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-colors whitespace-nowrap"
             style={{
-              background: mutedPreview ? 'rgba(201,168,76,0.12)' : 'rgba(74,222,128,0.14)',
-              border: mutedPreview ? '1px solid rgba(201,168,76,0.32)' : '1px solid rgba(74,222,128,0.36)',
-              color: mutedPreview ? GOLD_LIGHT : '#86efac',
+              background: mutedPreview ? 'var(--accent-bg)' : 'var(--green-bg)',
+              border: mutedPreview ? '1px solid var(--accent-border)' : '1px solid var(--green-border)',
+              color: mutedPreview ? GOLD_LIGHT : 'var(--green)',
             }}
           >
             {mutedPreview ? <VolumeX size={12} /> : <Volume2 size={12} />}
@@ -323,8 +324,7 @@ export default function SmartMediaPlayer({
               href={activeSource.url}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:bg-white/10 whitespace-nowrap"
-              style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#d4cfc0' }}
+              className="btn-ghost inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium whitespace-nowrap"
             >
               <span>{externalHost ? `Open (${externalHost})` : 'Open Source'}</span>
               <ExternalLink size={11} />
@@ -335,8 +335,8 @@ export default function SmartMediaPlayer({
               type="button"
               onClick={onClose}
               aria-label="Hide preview player"
-              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-white/10"
-              style={{ color: '#9c988b' }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--bg-ghost-hover)]"
+              style={{ color: 'var(--muted)' }}
             >
               <X size={15} />
             </button>
@@ -406,10 +406,10 @@ export default function SmartMediaPlayer({
       {/* Subtitle Selector & Upload Dock */}
       <div
         className="px-4 py-3 flex flex-wrap items-center justify-between gap-3"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(10,10,16,0.9)' }}
+        style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-card-subtle)' }}
       >
         <div className="flex flex-wrap items-center gap-2 min-w-0">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: '#d4cfc0' }}>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: 'var(--text2)' }}>
             <Subtitles size={14} style={{ color: GOLD_LIGHT }} />
             <span>Subtitles:</span>
           </span>
@@ -420,8 +420,8 @@ export default function SmartMediaPlayer({
             className="px-2.5 py-1 rounded-lg text-[11px] font-medium cursor-pointer transition-colors"
             style={
               selectedSubId === 'off'
-                ? { background: 'rgba(255,255,255,0.14)', color: '#f7f4eb' }
-                : { background: 'rgba(255,255,255,0.04)', color: '#8a8778' }
+                ? { background: 'var(--bg-ghost-hover)', border: '1px solid var(--border2)', color: 'var(--text)' }
+                : { background: 'var(--bg-ghost)', border: '1px solid var(--border-subtle)', color: 'var(--muted)' }
             }
           >
             Off
@@ -438,14 +438,14 @@ export default function SmartMediaPlayer({
                 style={
                   active
                     ? {
-                        background: 'rgba(34,197,94,0.15)',
-                        border: '1px solid rgba(74,222,128,0.4)',
-                        color: '#86efac',
+                        background: 'var(--green-bg)',
+                        border: '1px solid var(--green-border)',
+                        color: 'var(--green)',
                       }
                     : {
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: '#c8c3b6',
+                        background: 'var(--bg-ghost)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text2)',
                       }
                 }
               >
@@ -469,10 +469,10 @@ export default function SmartMediaPlayer({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             data-testid="load-subtitle-btn"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-colors hover:bg-white/10"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-colors"
             style={{
-              background: 'rgba(201,168,76,0.12)',
-              border: '1px solid rgba(201,168,76,0.3)',
+              background: 'var(--accent-bg)',
+              border: '1px solid var(--accent-border)',
               color: GOLD_LIGHT,
             }}
           >
@@ -484,8 +484,7 @@ export default function SmartMediaPlayer({
             <a
               href={activeTrack.url}
               download={`${(movie.title || 'subtitle').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${activeTrack.language.toLowerCase()}.vtt`}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:bg-white/10"
-              style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#d4cfc0' }}
+              className="btn-ghost inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium"
             >
               <Download size={11} />
               <span>Save Subtitle</span>
@@ -495,7 +494,7 @@ export default function SmartMediaPlayer({
       </div>
 
       {subError && (
-        <div className="px-4 py-2 text-[11px]" style={{ color: '#f87171', background: 'rgba(239,68,68,0.08)' }}>
+        <div className="px-4 py-2 text-[11px]" style={{ color: 'var(--danger)', background: 'var(--danger-bg)' }}>
           {subError}
         </div>
       )}

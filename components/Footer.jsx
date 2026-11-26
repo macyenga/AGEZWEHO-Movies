@@ -35,8 +35,9 @@ export default function Footer() {
 
   const footerLinks = [
     { href: '/', label: t.footer.links.explore },
+    { href: '/live', label: t.nav.liveTv || 'Live TV' },
     { href: '/finder', label: t.footer.links.finder },
-    { href: '/subtitles', label: 'Subtitles (RW)' },
+    { href: '/subtitles', label: 'Subtitles Studio' },
     { href: '/requests', label: t.footer.links.requests },
     { href: '/collection', label: t.footer.links.watchlist },
     { href: '/earnings', label: t.footer.links.earnings },
@@ -50,8 +51,8 @@ export default function Footer() {
       data-testid="site-footer"
       className="relative z-10 mt-12 border-t"
       style={{
-        background: 'rgba(8, 8, 16, 0.92)',
-        borderColor: 'rgba(201, 168, 76, 0.14)',
+        background: 'var(--bg-nav-scrolled)',
+        borderColor: 'var(--border)',
         backdropFilter: 'blur(18px)',
       }}
     >
@@ -65,37 +66,33 @@ export default function Footer() {
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(201,168,76,0.22), rgba(201,168,76,0.08))',
-                  border: '1px solid rgba(201,168,76,0.4)',
+                  background: 'var(--accent-bg)',
+                  border: '1px solid var(--accent-border)',
                 }}
               >
-                <Film size={17} style={{ color: '#e8c87a' }} />
+                <Film size={17} style={{ color: 'var(--gold2)' }} />
               </div>
               <div className="flex flex-col">
                 <span
                   className="font-cinzel font-bold text-sm tracking-wider leading-none"
-                  style={{
-                    background: 'linear-gradient(135deg, #f5e4a8, #c9a84c)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  style={{ color: 'var(--gold2)' }}
                 >
                   AGASOBANUYE.RW
                 </span>
-                <span className="text-[10px] tracking-widest uppercase mt-1" style={{ color: '#8a8778' }}>
+                <span className="text-[10px] tracking-widest uppercase mt-1" style={{ color: 'var(--muted)' }}>
                   {t.footer.subtitle}
                 </span>
               </div>
             </Link>
-            <p className="text-xs leading-relaxed max-w-sm" style={{ color: '#8a8778' }}>
+            <p className="text-xs leading-relaxed max-w-sm" style={{ color: 'var(--muted)' }}>
               {t.footer.descriptionPrefix}{' '}
-              <span style={{ color: '#e8e4d8' }}>{config.merchantName}</span>.
+              <span style={{ color: 'var(--text)' }}>{config.merchantName}</span>.
             </p>
           </div>
 
           {/* Quick Links */}
           <div className="md:col-span-3">
-            <h3 className="text-[10px] font-semibold uppercase tracking-[3px] mb-3" style={{ color: GOLD }}>
+            <h3 className="text-[10px] font-semibold uppercase tracking-[3px] mb-3" style={{ color: 'var(--gold)' }}>
               {t.footer.browseHeading}
             </h3>
             <nav aria-label="Footer navigation" className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -103,8 +100,8 @@ export default function Footer() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-xs whitespace-nowrap transition-colors hover:text-[#e8c87a]"
-                  style={{ color: '#b8b4a8' }}
+                  className="text-xs whitespace-nowrap transition-colors hover:underline"
+                  style={{ color: 'var(--text2)' }}
                 >
                   {item.label}
                 </Link>
@@ -114,7 +111,7 @@ export default function Footer() {
 
           {/* Social Media Links */}
           <div className="md:col-span-4">
-            <h3 className="text-[10px] font-semibold uppercase tracking-[3px] mb-3" style={{ color: GOLD }}>
+            <h3 className="text-[10px] font-semibold uppercase tracking-[3px] mb-3" style={{ color: 'var(--gold)' }}>
               {t.footer.connectHeading}
             </h3>
             <div
@@ -134,14 +131,14 @@ export default function Footer() {
                     title={social.ariaLabel}
                     className="min-h-[44px] px-3.5 py-2 rounded-xl inline-flex items-center gap-2 text-xs font-medium whitespace-nowrap transition-transform hover:-translate-y-0.5"
                     style={{
-                      background: social.bgColor,
+                      background: 'var(--bg-card)',
                       border: `1px solid ${social.borderColor}`,
-                      color: '#f0eee8',
+                      color: 'var(--text)',
                     }}
                   >
                     <Icon size={16} style={{ color: social.accentColor }} aria-hidden="true" />
                     <span>{social.name}</span>
-                    <ArrowUpRight size={12} style={{ color: '#8a8778' }} aria-hidden="true" />
+                    <ArrowUpRight size={12} style={{ color: 'var(--muted)' }} aria-hidden="true" />
                   </a>
                 );
               })}
@@ -152,23 +149,23 @@ export default function Footer() {
         {/* Bottom Legal & Support Row */}
         <div
           className="mt-8 pt-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-[11px]"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: '#6a6a5a' }}
+          style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--muted)' }}
         >
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <p className="tabular-nums">
               &copy; {currentYear} {config.merchantName} · Agasobanuye.rw. {t.footer.rights}
             </p>
             <nav aria-label="Legal and compliance links" className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <Link href="/about" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+              <Link href="/about" className="hover:underline transition-colors" style={{ color: 'var(--text2)' }}>
                 About
               </Link>
-              <Link href="/privacy-policy" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+              <Link href="/privacy-policy" className="hover:underline transition-colors" style={{ color: 'var(--text2)' }}>
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+              <Link href="/terms" className="hover:underline transition-colors" style={{ color: 'var(--text2)' }}>
                 Terms
               </Link>
-              <Link href="/dmca" className="hover:text-[#e8c87a] transition-colors" style={{ color: '#9c988b' }}>
+              <Link href="/dmca" className="hover:underline transition-colors" style={{ color: 'var(--text2)' }}>
                 DMCA
               </Link>
             </nav>
@@ -178,8 +175,8 @@ export default function Footer() {
             type="button"
             onClick={() => openDonate({ defaultAmount: 1000 })}
             data-testid="footer-donate-btn"
-            className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer transition-colors hover:text-[#f5e4a8] whitespace-nowrap"
-            style={{ color: '#e8c87a' }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer transition-colors hover:underline whitespace-nowrap"
+            style={{ color: 'var(--gold2)' }}
           >
             <HeartHandshake size={14} />
             <span>{tr('footer.supportButton', { merchant: config.merchantName })}</span>

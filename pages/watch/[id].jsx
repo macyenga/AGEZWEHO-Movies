@@ -28,8 +28,8 @@ import { useDonate } from '../../contexts/DonateContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const SITE_URL = 'https://agasobanuye.rw';
-const GOLD = '#c9a84c';
-const GOLD_LIGHT = '#e8c87a';
+const GOLD = 'var(--gold)';
+const GOLD_LIGHT = 'var(--gold2)';
 
 export default function WatchMoviePage({ movie, upNext = [] }) {
   const { toggleWatchlist, isInWatchlist } = useCollection();
@@ -58,8 +58,7 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
           </h1>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#f3efe3' }}
+            className="btn-ghost inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold"
           >
             <ArrowLeft size={13} /> Back to Catalog
           </Link>
@@ -120,16 +119,16 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:text-amber-300"
-              style={{ color: '#9c988b' }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80"
+              style={{ color: 'var(--muted)' }}
             >
               <ArrowLeft size={14} />
               <span>Catalog</span>
             </Link>
-            <span style={{ color: '#4a4a3a' }}>/</span>
+            <span style={{ color: 'var(--dim)' }}>/</span>
             <Link
               href={detailUrl}
-              className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:text-amber-300"
+              className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80"
               style={{ color: GOLD_LIGHT }}
             >
               <Info size={13} />
@@ -144,9 +143,9 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
               aria-pressed={inWatchlist}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
               style={{
-                background: inWatchlist ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.05)',
-                border: inWatchlist ? '1px solid rgba(201,168,76,0.5)' : '1px solid rgba(255,255,255,0.12)',
-                color: inWatchlist ? '#f5e4a8' : '#e8e4d8',
+                background: inWatchlist ? 'var(--accent-bg)' : 'var(--bg-ghost)',
+                border: inWatchlist ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+                color: inWatchlist ? GOLD_LIGHT : 'var(--text)',
               }}
             >
               <Bookmark size={13} fill={inWatchlist ? 'currentColor' : 'none'} />
@@ -156,14 +155,9 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
             <button
               type="button"
               onClick={handleCopyShare}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: '#e8e4d8',
-              }}
+              className="btn-ghost inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer"
             >
-              {copiedShare ? <Check size={13} style={{ color: '#4ade80' }} /> : <Share2 size={13} />}
+              {copiedShare ? <Check size={13} style={{ color: 'var(--green)' }} /> : <Share2 size={13} />}
               <span>{copiedShare ? 'Link Copied' : 'Share'}</span>
             </button>
           </div>
@@ -171,9 +165,9 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
 
         {/* Title Header */}
         <header className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2 text-xs tabular-nums" style={{ color: '#b5b0a2' }}>
+          <div className="flex flex-wrap items-center gap-2 text-xs tabular-nums" style={{ color: 'var(--text2)' }}>
             {movie.type && (
-              <span className="font-semibold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'rgba(201,168,76,0.15)', color: GOLD_LIGHT }}>
+              <span className="font-semibold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: GOLD_LIGHT }}>
                 {movie.type}
               </span>
             )}
@@ -188,7 +182,7 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
           </div>
           <h1
             className="font-cinzel text-2xl sm:text-3xl font-bold leading-tight"
-            style={{ fontFamily: 'Cinzel, serif', color: '#f7f4eb' }}
+            style={{ fontFamily: 'Cinzel, serif', color: 'var(--text)' }}
           >
             {movie.title}
           </h1>
@@ -210,12 +204,12 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
             {movie.overview && (
               <section
                 className="p-5 rounded-2xl"
-                style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
               >
                 <h2 className="text-xs font-semibold uppercase tracking-[0.15em] mb-2" style={{ color: GOLD_LIGHT }}>
                   Synopsis
                 </h2>
-                <p className="text-sm leading-relaxed" style={{ color: '#c8c3b6' }}>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text2)' }}>
                   {movie.overview}
                 </p>
               </section>
@@ -224,12 +218,12 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
             {/* Official Subtitle Finder & Kinyarwanda Translator Toggle */}
             <section
               className="p-5 rounded-2xl space-y-4"
-              style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(201,168,76,0.22)' }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)', boxShadow: 'var(--shadow-card)' }}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Subtitles size={16} style={{ color: GOLD_LIGHT }} />
-                  <h2 className="text-sm font-semibold" style={{ color: '#f3efe3' }}>
+                  <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                     Subtitles &amp; Kinyarwanda Studio
                   </h2>
                 </div>
@@ -237,12 +231,7 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
                   type="button"
                   onClick={() => setShowOfficialSubFinder((v) => !v)}
                   data-testid="watch-toggle-subtitles-btn"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
-                  style={{
-                    background: 'rgba(201,168,76,0.14)',
-                    border: '1px solid rgba(201,168,76,0.35)',
-                    color: GOLD_LIGHT,
-                  }}
+                  className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer"
                 >
                   <Languages size={13} />
                   <span>{showOfficialSubFinder ? 'Hide Subtitle Studio' : 'Find Official & Translate (RW)'}</span>
@@ -267,7 +256,7 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
             {links.length > 0 && (
               <section
                 className="p-5 rounded-2xl space-y-3"
-                style={{ background: 'rgba(14,14,22,0.84)', border: '1px solid rgba(255,255,255,0.08)' }}
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
               >
                 <h2 className="text-xs font-semibold uppercase tracking-[0.15em] flex items-center gap-2" style={{ color: GOLD_LIGHT }}>
                   <Download size={13} />
@@ -280,12 +269,7 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-colors hover:bg-white/10"
-                      style={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: '#e8e4d8',
-                      }}
+                      className="btn-ghost flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-xs font-medium"
                     >
                       <span className="truncate">{link.label || `Download ${idx + 1}`}</span>
                       <span className="inline-flex items-center gap-1 shrink-0 text-[11px]" style={{ color: GOLD_LIGHT }}>
@@ -299,13 +283,13 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
 
             <section
               className="p-5 rounded-2xl space-y-3"
-              style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.22)' }}
+              style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', boxShadow: 'var(--shadow-card)' }}
             >
               <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: GOLD_LIGHT }}>
                 <HeartHandshake size={14} />
                 <span>Support {movie.uploaded_by || 'Agasobanuye.rw'}</span>
               </div>
-              <p className="text-xs leading-relaxed" style={{ color: '#9c988b' }}>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text2)' }}>
                 Enjoyed watching {movie.title}? Support the creator and keep Agasobanuye.rw streaming free.
               </p>
               <button
@@ -314,7 +298,7 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
                 className="w-full py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-opacity hover:opacity-90"
                 style={{
                   background: `linear-gradient(135deg, ${GOLD_LIGHT}, ${GOLD})`,
-                  color: '#09090f',
+                  color: 'var(--accent-ink)',
                 }}
               >
                 Tip via MoMo Pay 156833
@@ -328,11 +312,11 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
         {/* Up Next */}
         {upNext.length > 0 && (
           <section aria-label="Up Next" className="pt-4 space-y-4">
-            <div className="flex items-center justify-between pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <h2 className="font-cinzel text-lg font-bold" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+            <div className="flex items-center justify-between pb-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <h2 className="font-cinzel text-lg font-bold" style={{ fontFamily: 'Cinzel, serif', color: 'var(--text)' }}>
                 Up Next on Agasobanuye.rw
               </h2>
-              <Link href="/#explore" className="text-xs font-medium hover:text-amber-300" style={{ color: GOLD_LIGHT }}>
+              <Link href="/#explore" className="text-xs font-medium hover:opacity-80" style={{ color: GOLD_LIGHT }}>
                 View All Titles
               </Link>
             </div>
@@ -343,11 +327,12 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
                   href={`/watch/${item.id}`}
                   className="group rounded-xl overflow-hidden transition-transform hover:-translate-y-1"
                   style={{
-                    background: 'rgba(15,15,24,0.9)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
-                  <div className="relative aspect-[2/3] bg-[#12121b] overflow-hidden">
+                  <div className="relative aspect-[2/3] bg-[var(--bg4)] overflow-hidden">
                     {item.poster_url ? (
                       <img
                         src={item.poster_url}
@@ -357,19 +342,19 @@ export default function WatchMoviePage({ movie, upNext = [] }) {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Film size={24} style={{ color: '#4a4a3a' }} />
+                        <Film size={24} style={{ color: 'var(--dim)' }} />
                       </div>
                     )}
                     <div className="absolute inset-0 poster-fade" />
-                    <div className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,10,16,0.8)', border: '1px solid rgba(201,168,76,0.5)' }}>
-                      <Play size={11} fill={GOLD_LIGHT} style={{ color: GOLD_LIGHT }} />
+                    <div className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(10,10,16,0.82)', border: '1px solid rgba(245,208,97,0.55)' }}>
+                      <Play size={11} fill="#f5d061" style={{ color: '#f5d061' }} />
                     </div>
                   </div>
                   <div className="p-2.5">
-                    <h3 className="text-xs font-semibold line-clamp-1 text-[#f1ede2] group-hover:text-amber-200">
+                    <h3 className="text-xs font-semibold line-clamp-1" style={{ color: 'var(--text)' }}>
                       {item.title}
                     </h3>
-                    <p className="text-[11px] mt-0.5 tabular-nums" style={{ color: '#8a8778' }}>
+                    <p className="text-[11px] mt-0.5 tabular-nums" style={{ color: 'var(--muted)' }}>
                       {item.year || 'Movie'}{item.genre ? ` · ${item.genre.split(',')[0]}` : ''}
                     </p>
                   </div>

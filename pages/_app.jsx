@@ -6,6 +6,7 @@ import DonationFloat from '../components/DonationFloat';
 import { AuthProvider } from '../contexts/AuthContext';
 import { DonateProvider } from '../contexts/DonateContext';
 import { LanguageProvider } from '../contexts/LanguageContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import { TrailerProvider } from '../contexts/TrailerContext';
 
 const pageVariants = {
@@ -16,28 +17,30 @@ const pageVariants = {
 
 export default function App({ Component, pageProps, router }) {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <DonateProvider>
-          <TrailerProvider>
-            <Navbar />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={router.route}
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="page-wrapper pt-12 md:pt-0"
-              >
-                <Component {...pageProps} />
-              </motion.div>
-            </AnimatePresence>
-            <Footer />
-            <DonationFloat />
-          </TrailerProvider>
-        </DonateProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <DonateProvider>
+            <TrailerProvider>
+              <Navbar />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={router.route}
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="page-wrapper pt-12 md:pt-0"
+                >
+                  <Component {...pageProps} />
+                </motion.div>
+              </AnimatePresence>
+              <Footer />
+              <DonationFloat />
+            </TrailerProvider>
+          </DonateProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

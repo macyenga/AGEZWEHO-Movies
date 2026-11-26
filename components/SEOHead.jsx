@@ -38,6 +38,9 @@ export default function SEOHead({
       <meta property="og:image" content={ogI} />
       <meta property="og:url" content={c} />
       <meta property="og:locale" content="rw_RW" />
+      <meta property="og:locale:alternate" content="en_US" />
+      <meta property="og:locale:alternate" content="fr_FR" />
+      <meta property="og:locale:alternate" content="sw_KE" />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={ogT} />
@@ -47,6 +50,9 @@ export default function SEOHead({
 
       <link rel="alternate" hrefLang="rw" href={c} />
       <link rel="alternate" hrefLang="en" href={c} />
+      <link rel="alternate" hrefLang="fr" href={c} />
+      <link rel="alternate" hrefLang="sw" href={c} />
+      <link rel="alternate" hrefLang="x-default" href={c} />
 
       {jsonLd && (
         <script

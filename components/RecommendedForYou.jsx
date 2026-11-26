@@ -9,10 +9,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { getCategoryLabel } from '../lib/i18n';
 import MovieSkeleton from './MovieSkeleton';
 
-const GOLD = '#c9a84c';
-const GOLD_LIGHT = '#e8c87a';
-const MUTED = '#8a8778';
-const DIM = '#4a4a3a';
+const GOLD = 'var(--gold)';
+const GOLD_LIGHT = 'var(--gold2)';
+const MUTED = 'var(--muted)';
+const DIM = 'var(--dim)';
 
 export default function RecommendedForYou() {
   const { language, t } = useLanguage();
@@ -80,13 +80,13 @@ export default function RecommendedForYou() {
   return (
     <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 mb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 mb-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <div>
           <div className="flex items-baseline gap-3 mb-1">
-            <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+            <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: 'var(--text)' }}>
               {t.recommended.heading}
             </h2>
-            <span className="text-xs" style={{ color: GOLD_LIGHT }}>
+            <span className="text-xs font-semibold" style={{ color: GOLD_LIGHT }}>
               {t.recommended.badge}
             </span>
           </div>
@@ -100,11 +100,11 @@ export default function RecommendedForYou() {
           <button
             type="button"
             onClick={handleRefresh}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors hover:text-amber-200"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors hover:opacity-85"
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#a39f92',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              color: 'var(--text2)',
             }}
             title={t.recommended.refresh}
           >
@@ -116,7 +116,7 @@ export default function RecommendedForYou() {
 
       {/* Genre Segmented Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2.5 mb-4">
-        <span className="text-[11px] font-medium mr-1.5 flex-shrink-0" style={{ color: '#706c5f' }}>
+        <span className="text-[11px] font-medium mr-1.5 flex-shrink-0" style={{ color: MUTED }}>
           {t.recommended.yourGenres}
         </span>
         <button
@@ -125,8 +125,8 @@ export default function RecommendedForYou() {
           className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
           style={
             activeGenre === 'All'
-              ? { background: 'rgba(201,168,76,0.16)', border: '1px solid rgba(201,168,76,0.45)', color: GOLD_LIGHT }
-              : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: MUTED }
+              ? { background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: GOLD_LIGHT }
+              : { background: 'var(--bg-card)', border: '1px solid var(--border)', color: MUTED }
           }
         >
           {t.recommended.allRecentlyViewed}
@@ -139,8 +139,8 @@ export default function RecommendedForYou() {
             className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             style={
               activeGenre === g
-                ? { background: 'rgba(201,168,76,0.16)', border: '1px solid rgba(201,168,76,0.45)', color: GOLD_LIGHT }
-                : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: MUTED }
+                ? { background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: GOLD_LIGHT }
+                : { background: 'var(--bg-card)', border: '1px solid var(--border)', color: MUTED }
             }
           >
             {getCategoryLabel(g, language)}
@@ -157,7 +157,7 @@ export default function RecommendedForYou() {
               onClick={() => scroll(-1)}
               aria-label="Scroll recommendations left"
               className="absolute left-0 top-0 bottom-0 z-20 w-10 flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              style={{ background: 'linear-gradient(90deg, rgba(10,10,15,0.9), transparent)' }}
+              style={{ background: 'linear-gradient(90deg, var(--bg), transparent)' }}
             >
               <ChevronLeft size={20} style={{ color: GOLD }} />
             </button>
@@ -166,7 +166,7 @@ export default function RecommendedForYou() {
               onClick={() => scroll(1)}
               aria-label="Scroll recommendations right"
               className="absolute right-0 top-0 bottom-0 z-20 w-10 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              style={{ background: 'linear-gradient(270deg, rgba(10,10,15,0.9), transparent)' }}
+              style={{ background: 'linear-gradient(270deg, var(--bg), transparent)' }}
             >
               <ChevronRight size={20} style={{ color: GOLD }} />
             </button>
@@ -184,7 +184,7 @@ export default function RecommendedForYou() {
         ) : recommendations.length === 0 ? (
           <div
             className="p-8 rounded-xl text-center"
-            style={{ background: 'rgba(14,14,22,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
           >
             <Film size={28} className="mx-auto mb-2" style={{ color: DIM }} />
             <p className="text-xs" style={{ color: MUTED }}>
@@ -202,12 +202,12 @@ export default function RecommendedForYou() {
                 key={movie.id || movie.imdbID || idx}
                 whileHover={{ scale: 1.03, y: -3 }}
                 onClick={() => setSelectedMovie(movie)}
-                className="flex-shrink-0 cursor-pointer rounded-xl overflow-hidden group/card transition-colors hover:border-amber-400/40"
+                className="flex-shrink-0 cursor-pointer rounded-xl overflow-hidden group/card transition-colors hover:border-[var(--border2)]"
                 style={{
                   width: 'clamp(155px, 17vw, 195px)',
-                  background: 'rgba(15,15,24,0.9)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.45)',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 {/* Poster */}
@@ -233,7 +233,7 @@ export default function RecommendedForYou() {
                     }}
                   >
                     <Film size={24} style={{ color: GOLD, opacity: 0.45 }} />
-                    <span className="text-[11px] font-medium line-clamp-2" style={{ color: '#9e9a8d' }}>
+                    <span className="text-[11px] font-medium line-clamp-2" style={{ color: '#cbd5e1' }}>
                       {movie.title}
                     </span>
                   </div>
@@ -266,13 +266,13 @@ export default function RecommendedForYou() {
 
                 {/* Details */}
                 <div className="p-3">
-                  <h4 className="font-semibold text-xs leading-snug mb-1 line-clamp-1" style={{ color: '#e8e4d8' }}>
+                  <h4 className="font-semibold text-xs leading-snug mb-1 line-clamp-1" style={{ color: 'var(--text)' }}>
                     {movie.title}
                   </h4>
                   <div className="flex items-center justify-between text-[10px]" style={{ color: MUTED }}>
                     <span className="line-clamp-1">{movie.genre || movie.matchedGenre || 'Similar'}</span>
                     {movie.rating && (
-                      <span className="flex items-center gap-0.5 flex-shrink-0" style={{ color: GOLD }}>
+                      <span className="flex items-center gap-0.5 flex-shrink-0 font-semibold" style={{ color: GOLD_LIGHT }}>
                         <Star size={9} fill="currentColor" /> {movie.rating}
                       </span>
                     )}

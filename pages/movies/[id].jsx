@@ -24,6 +24,7 @@ import {
 } from '../../lib/editorial';
 import MovieFaqSection from '../../components/MovieFaqSection';
 import WatchProgressBar from '../../components/WatchProgressBar';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   ArrowLeft, Star, Download, ExternalLink, Film, User, Tv2,
   Share2, Copy, Check, Play, Bookmark, HeartHandshake, Wallet,
@@ -31,14 +32,14 @@ import {
 } from 'lucide-react';
 
 const SITE_URL = 'https://agasobanuye.rw';
-const GOLD = '#c9a84c';
-const GOLD_LIGHT = '#e8c87a';
+const GOLD = 'var(--gold)';
+const GOLD_LIGHT = 'var(--gold2)';
 
 const sharePlatforms = [
-  { name: 'WhatsApp', color: '#25D366', url: (u, t) => `https://wa.me/?text=${encodeURIComponent(`${t} ${u}`)}` },
-  { name: 'Telegram', color: '#229ED9', url: (u, t) => `https://t.me/share/url?url=${encodeURIComponent(u)}&text=${encodeURIComponent(t)}` },
+  { name: 'WhatsApp', color: '#16a34a', url: (u, t) => `https://wa.me/?text=${encodeURIComponent(`${t} ${u}`)}` },
+  { name: 'Telegram', color: '#0284c7', url: (u, t) => `https://t.me/share/url?url=${encodeURIComponent(u)}&text=${encodeURIComponent(t)}` },
   { name: 'Facebook', color: '#1877F2', url: (u) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u)}` },
-  { name: 'X', color: '#f8fafc', url: (u, t) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}&url=${encodeURIComponent(u)}` },
+  { name: 'X', color: null, url: (u, t) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}&url=${encodeURIComponent(u)}` },
 ];
 
 const OFFICIAL_PLATFORMS = [
@@ -73,6 +74,7 @@ export default function MovieDetail({ movie }) {
   const { toggleWatchlist, isInWatchlist } = useCollection();
   const { openTrailer } = useTrailer();
   const { t } = useLanguage();
+  const { isLight } = useTheme();
   const inWatchlist = movie?.id ? isInWatchlist(movie.id) : false;
 
   useEffect(() => {
@@ -122,8 +124,7 @@ export default function MovieDetail({ movie }) {
           </h1>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#e8e4d8' }}
+            className="btn-ghost inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold"
           >
             <ArrowLeft size={13} /> Back to Home
           </Link>
@@ -241,8 +242,9 @@ export default function MovieDetail({ movie }) {
         <div
           className="absolute inset-0"
           style={{
-            background:
-              'linear-gradient(180deg, rgba(8,8,13,0.72) 0%, rgba(10,10,15,0.88) 65%, #0a0a0f 100%)',
+            background: isLight
+              ? 'linear-gradient(180deg, rgba(238,241,246,0.78) 0%, rgba(238,241,246,0.92) 65%, var(--bg) 100%)'
+              : 'linear-gradient(180deg, rgba(7,9,15,0.72) 0%, rgba(7,9,15,0.88) 65%, var(--bg) 100%)',
           }}
         />
       </div>
@@ -252,8 +254,8 @@ export default function MovieDetail({ movie }) {
         <div className="mb-6 flex items-center justify-between gap-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-medium transition-colors hover:text-amber-300"
-            style={{ color: '#9c988b' }}
+            className="inline-flex items-center gap-2 text-xs font-medium transition-colors hover:opacity-80"
+            style={{ color: 'var(--muted)' }}
           >
             <ArrowLeft size={14} />
             <span>Back to Catalog</span>
@@ -261,8 +263,8 @@ export default function MovieDetail({ movie }) {
 
           <Link
             href="/earnings"
-            className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:text-amber-300"
-            style={{ color: '#8a8778' }}
+            className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80"
+            style={{ color: 'var(--muted)' }}
           >
             <Wallet size={12} style={{ color: GOLD }} />
             <span>Creator Revenue Rules</span>
@@ -276,10 +278,11 @@ export default function MovieDetail({ movie }) {
           {/* Left Column: Poster + Fact Sheet + Creator Support */}
           <aside className="space-y-4">
             <div
-              className="rounded-2xl overflow-hidden bg-[#12121b]"
+              className="rounded-2xl overflow-hidden"
               style={{
-                border: '1px solid rgba(232,200,122,0.22)',
-                boxShadow: '0 24px 60px rgba(0,0,0,0.65)',
+                background: 'var(--bg3)',
+                border: '1px solid var(--border2)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               {movie.poster_url ? (
@@ -298,11 +301,11 @@ export default function MovieDetail({ movie }) {
                 className="w-full aspect-[2/3] items-center justify-center flex-col gap-2 px-4 text-center"
                 style={{
                   display: movie.poster_url ? 'none' : 'flex',
-                  background: 'linear-gradient(145deg, #171724 0%, #0d0d14 100%)',
+                  background: 'var(--bg4)',
                 }}
               >
-                <Film size={34} style={{ color: GOLD, opacity: 0.45 }} />
-                <span className="font-cinzel text-xs" style={{ color: '#9c988b' }}>
+                <Film size={34} style={{ color: GOLD, opacity: 0.55 }} />
+                <span className="font-cinzel text-xs" style={{ color: 'var(--muted)' }}>
                   {movie.title}
                 </span>
               </div>
@@ -310,8 +313,8 @@ export default function MovieDetail({ movie }) {
 
             {/* Structured Fact Sheet */}
             <div
-              className="rounded-2xl divide-y divide-white/[0.06]"
-              style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="rounded-2xl divide-y divide-[var(--border-subtle)]"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
             >
               {[
                 ['Format', movie.type || 'Movie'],
@@ -323,8 +326,8 @@ export default function MovieDetail({ movie }) {
                 .filter(([, val]) => Boolean(val))
                 .map(([label, val]) => (
                   <div key={label} className="flex items-center justify-between gap-3 px-4 py-2.5 text-xs">
-                    <span style={{ color: '#787467' }}>{label}</span>
-                    <span className="font-medium text-right tabular-nums" style={{ color: '#e8e4d8' }}>
+                    <span style={{ color: 'var(--muted)' }}>{label}</span>
+                    <span className="font-medium text-right tabular-nums" style={{ color: 'var(--text)' }}>
                       {val}
                     </span>
                   </div>
@@ -335,17 +338,17 @@ export default function MovieDetail({ movie }) {
             {movie.uploaded_by && (
               <div
                 className="p-4 rounded-2xl space-y-3"
-                style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(201,168,76,0.22)' }}
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)', boxShadow: 'var(--shadow-card)' }}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.28)' }}
+                    style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
                   >
                     <User size={15} style={{ color: GOLD_LIGHT }} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[11px]" style={{ color: '#8a8778' }}>Uploaded & Translated By</div>
+                    <div className="text-[11px]" style={{ color: 'var(--muted)' }}>Uploaded & Translated By</div>
                     <div className="text-sm font-semibold truncate" style={{ color: GOLD_LIGHT }}>
                       {movie.uploaded_by}
                     </div>
@@ -353,9 +356,9 @@ export default function MovieDetail({ movie }) {
                 </div>
 
                 {totalCreatorEarnings > 0 && (
-                  <div className="pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-xs tabular-nums">
-                    <span style={{ color: '#8a8778' }}>Creator Earned</span>
-                    <span className="font-semibold" style={{ color: '#4ade80' }}>
+                  <div className="pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs tabular-nums">
+                    <span style={{ color: 'var(--muted)' }}>Creator Earned</span>
+                    <span className="font-semibold" style={{ color: 'var(--green)' }}>
                       {totalCreatorEarnings.toLocaleString()} RWF
                     </span>
                   </div>
@@ -372,12 +375,7 @@ export default function MovieDetail({ movie }) {
                       defaultAmount: 1000,
                     })
                   }
-                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-                  style={{
-                    background: 'rgba(201,168,76,0.14)',
-                    border: '1px solid rgba(201,168,76,0.34)',
-                    color: GOLD_LIGHT,
-                  }}
+                  className="btn-primary w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold cursor-pointer"
                 >
                   <HeartHandshake size={14} />
                   <span>Gurira MB {movie.uploaded_by}</span>
@@ -389,36 +387,36 @@ export default function MovieDetail({ movie }) {
           {/* Right Column: Title, Overview, Primary Actions, Stream & Download Servers */}
           <main className="min-w-0 space-y-7">
             {/* Unboxed Metadata Line + Display Headline */}
-            <header className="pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs tabular-nums mb-3" style={{ color: '#b5b0a2' }}>
+            <header className="pb-6" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs tabular-nums mb-3" style={{ color: 'var(--text2)' }}>
                 {movie.featured && (
                   <>
                     <span className="font-semibold" style={{ color: GOLD_LIGHT }}>Featured Release</span>
-                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
+                    <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
                   </>
                 )}
                 <span>{movie.type || 'Movie'}</span>
                 {movie.year && (
                   <>
-                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
+                    <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
                     <span>{movie.year}</span>
                   </>
                 )}
                 {movie.genre && (
                   <>
-                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
+                    <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
                     <span>{movie.genre}</span>
                   </>
                 )}
                 {watchLinks.length > 0 && (
                   <>
-                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
-                    <span style={{ color: '#4ade80' }}>Stream Ready</span>
+                    <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
+                    <span className="font-semibold" style={{ color: 'var(--green)' }}>Stream Ready</span>
                   </>
                 )}
                 {Number.isFinite(ratingValue) && (
                   <>
-                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
+                    <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
                     <span className="inline-flex items-center gap-1 font-semibold" style={{ color: GOLD_LIGHT }}>
                       <Star size={11} fill={GOLD} stroke={GOLD} />
                       {movie.rating}/10
@@ -427,8 +425,8 @@ export default function MovieDetail({ movie }) {
                 )}
                 {viewCount > 0 && (
                   <>
-                    <span aria-hidden="true" style={{ color: '#504d42' }}>·</span>
-                    <span className="inline-flex items-center gap-1" style={{ color: '#8a8778' }}>
+                    <span aria-hidden="true" style={{ color: 'var(--dim)' }}>·</span>
+                    <span className="inline-flex items-center gap-1" style={{ color: 'var(--muted)' }}>
                       <Eye size={11} />
                       {viewCount.toLocaleString()} views
                     </span>
@@ -441,7 +439,7 @@ export default function MovieDetail({ movie }) {
                 style={{
                   fontFamily: 'Cinzel, serif',
                   fontSize: 'clamp(1.85rem, 3.8vw, 3rem)',
-                  color: '#f7f4eb',
+                  color: 'var(--text)',
                   textWrap: 'balance',
                 }}
               >
@@ -458,8 +456,8 @@ export default function MovieDetail({ movie }) {
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer transition-transform duration-150 hover:-translate-y-0.5"
                     style={{
                       background: `linear-gradient(135deg, ${GOLD_LIGHT} 0%, ${GOLD} 100%)`,
-                      color: '#09080b',
-                      boxShadow: '0 12px 30px rgba(201,168,76,0.26)',
+                      color: 'var(--accent-ink)',
+                      boxShadow: 'var(--shadow-card)',
                     }}
                   >
                     <Play size={14} fill="currentColor" />
@@ -473,8 +471,8 @@ export default function MovieDetail({ movie }) {
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-transform duration-150 hover:-translate-y-0.5"
                     style={{
                       background: `linear-gradient(135deg, ${GOLD_LIGHT} 0%, ${GOLD} 100%)`,
-                      color: '#09080b',
-                      boxShadow: '0 12px 30px rgba(201,168,76,0.26)',
+                      color: 'var(--accent-ink)',
+                      boxShadow: 'var(--shadow-card)',
                     }}
                   >
                     <Play size={14} fill="currentColor" />
@@ -485,12 +483,7 @@ export default function MovieDetail({ movie }) {
                 <button
                   type="button"
                   onClick={() => openTrailer(movie)}
-                  className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors hover:bg-white/10"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.16)',
-                    color: '#f1ede2',
-                  }}
+                  className="btn-ghost inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer"
                 >
                   <Film size={13} />
                   <span>Play Trailer</span>
@@ -501,12 +494,7 @@ export default function MovieDetail({ movie }) {
                     href={primaryDownload.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors hover:bg-white/10"
-                    style={{
-                      background: 'rgba(201,168,76,0.12)',
-                      border: '1px solid rgba(201,168,76,0.34)',
-                      color: GOLD_LIGHT,
-                    }}
+                    className="btn-primary inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap"
                   >
                     <Download size={13} />
                     <span>Fast Download</span>
@@ -523,11 +511,11 @@ export default function MovieDetail({ movie }) {
                       ? `${t.card.inWatchlistTitle}: ${movie.title}`
                       : `${t.card.addToWatchlistTitle}: ${movie.title}`
                   }
-                  className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors hover:bg-white/10"
+                  className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors"
                   style={{
-                    background: inWatchlist ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.04)',
-                    border: inWatchlist ? '1px solid rgba(201,168,76,0.55)' : '1px solid rgba(255,255,255,0.14)',
-                    color: inWatchlist ? '#f5e4a8' : '#e8e4d8',
+                    background: inWatchlist ? 'var(--accent-bg)' : 'var(--bg-ghost)',
+                    border: inWatchlist ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+                    color: inWatchlist ? GOLD_LIGHT : 'var(--text)',
                   }}
                 >
                   <Bookmark size={14} fill={inWatchlist ? 'currentColor' : 'none'} />
@@ -553,8 +541,9 @@ export default function MovieDetail({ movie }) {
                   <div
                     className="p-4 sm:p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4"
                     style={{
-                      background: 'rgba(14,14,22,0.82)',
-                      border: '1px solid rgba(201,168,76,0.24)',
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--accent-border)',
+                      boxShadow: 'var(--shadow-card)',
                     }}
                   >
                     <div className="min-w-0">
@@ -562,7 +551,7 @@ export default function MovieDetail({ movie }) {
                         <Play size={13} fill="currentColor" />
                         <span>{playableSources.length} Playable Preview {playableSources.length === 1 ? 'Link' : 'Links'} Ready</span>
                       </div>
-                      <p className="text-xs mt-1" style={{ color: '#9c988b' }}>
+                      <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                         Watch inline on Agasobanuye.rw with {subtitleTracks.length > 0 ? `${subtitleTracks.length} subtitle tracks` : '.SRT / .VTT subtitle support'}.
                       </p>
                     </div>
@@ -570,12 +559,7 @@ export default function MovieDetail({ movie }) {
                       type="button"
                       onClick={() => launchInlinePreview(playableSources[0].url)}
                       data-testid="expand-inline-player-btn"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-colors whitespace-nowrap"
-                      style={{
-                        background: 'rgba(201,168,76,0.16)',
-                        border: '1px solid rgba(201,168,76,0.4)',
-                        color: '#f5e4a8',
-                      }}
+                      className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap"
                     >
                       <Play size={12} fill="currentColor" />
                       <span>Show Auto-Preview</span>
@@ -590,32 +574,32 @@ export default function MovieDetail({ movie }) {
               aria-label="Story Overview and Editorial Guide"
               data-testid="movie-editorial-guide"
               className="p-6 rounded-2xl space-y-4"
-              style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
             >
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.16em] flex items-center gap-2" style={{ color: GOLD_LIGHT }}>
                   <BookOpen size={14} />
                   <span>Overview & Editorial Viewing Guide</span>
                 </h2>
-                <span className="text-[11px]" style={{ color: '#8a8778' }}>
+                <span className="text-[11px]" style={{ color: 'var(--muted)' }}>
                   {movie.language || 'Kinyarwanda'} Edition
                 </span>
               </div>
 
-              <p className="text-sm sm:text-[15px] leading-[1.72]" style={{ color: '#e6e2d5' }}>
+              <p className="text-sm sm:text-[15px] leading-[1.72]" style={{ color: 'var(--text)' }}>
                 {movie.overview ||
                   `Stream and download ${movie.title} translated in ${movie.language || 'Kinyarwanda'} on Agasobanuye.rw.`}
               </p>
 
-              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: '#a5a193' }}>
+              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text2)' }}>
                 {editorialGuide.narrationNote} {editorialGuide.editorialSummary}
               </p>
 
-              <div className="pt-3 border-t border-white/[0.06] flex items-start gap-2 text-[11px] leading-relaxed" style={{ color: '#8a8778' }}>
+              <div className="pt-3 border-t border-[var(--border-subtle)] flex items-start gap-2 text-[11px] leading-relaxed" style={{ color: 'var(--muted)' }}>
                 <ShieldCheck size={14} className="shrink-0 mt-0.5" style={{ color: GOLD }} />
                 <span>
                   {editorialGuide.externalLinkDisclosure}{' '}
-                  <Link href="/dmca" className="underline hover:text-[#e8c87a]" style={{ color: '#b8b4a8' }}>
+                  <Link href="/dmca" className="underline hover:opacity-80" style={{ color: 'var(--text2)' }}>
                     DMCA & Link Policy
                   </Link>
                 </span>
@@ -625,12 +609,12 @@ export default function MovieDetail({ movie }) {
             {/* Stream Online Links */}
             {watchLinks.length > 0 && (
               <section aria-label="Watch Online Mirrors">
-                <div className="flex items-center justify-between pb-2.5 mb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#f3efe3' }}>
-                    <Tv2 size={15} style={{ color: '#4ade80' }} />
+                <div className="flex items-center justify-between pb-2.5 mb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                    <Tv2 size={15} style={{ color: 'var(--green)' }} />
                     <span>External Watch & Preview Links</span>
                   </h2>
-                  <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
+                  <span className="text-xs tabular-nums" style={{ color: 'var(--muted)' }}>
                     {watchLinks.length} {watchLinks.length === 1 ? 'source' : 'sources'}
                   </span>
                 </div>
@@ -643,16 +627,17 @@ export default function MovieDetail({ movie }) {
                         key={i}
                         className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl"
                         style={{
-                          background: 'rgba(14,14,22,0.82)',
-                          border: '1px solid rgba(74,222,128,0.28)',
+                          background: 'var(--bg-card)',
+                          border: '1px solid var(--green-border)',
+                          boxShadow: 'var(--shadow-card)',
                         }}
                       >
                         <div className="min-w-0">
-                          <div className="inline-flex items-center gap-2 text-sm font-semibold truncate" style={{ color: '#e8f7ed' }}>
-                            <Play size={14} fill="#4ade80" style={{ color: '#4ade80' }} />
+                          <div className="inline-flex items-center gap-2 text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
+                            <Play size={14} fill="currentColor" style={{ color: 'var(--green)' }} />
                             <span className="truncate">{l.label || `Stream Server ${i + 1}`}</span>
                           </div>
-                          <div className="text-[11px] mt-0.5 truncate" style={{ color: previewInfo.playable ? '#86efac' : '#9c988b' }}>
+                          <div className="text-[11px] mt-0.5 truncate" style={{ color: previewInfo.playable ? 'var(--green)' : 'var(--muted)' }}>
                             {linkMeta.domain} · {previewInfo.playable ? 'Auto-playable inline' : linkMeta.category}
                           </div>
                         </div>
@@ -662,7 +647,7 @@ export default function MovieDetail({ movie }) {
                               type="button"
                               onClick={() => launchInlinePreview(l.url)}
                               className="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors"
-                              style={{ background: 'rgba(74,222,128,0.16)', color: '#86efac' }}
+                              style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border)', color: 'var(--green)' }}
                             >
                               Play
                             </button>
@@ -672,8 +657,8 @@ export default function MovieDetail({ movie }) {
                             target="_blank"
                             rel={linkMeta.rel}
                             aria-label={`Open ${l.label || 'stream'} on ${linkMeta.domain}`}
-                            className="p-2 rounded-lg transition-colors hover:bg-white/10"
-                            style={{ color: '#4ade80' }}
+                            className="p-2 rounded-lg transition-colors hover:bg-[var(--bg-ghost-hover)]"
+                            style={{ color: 'var(--green)' }}
                           >
                             <ExternalLink size={13} />
                           </a>
@@ -687,13 +672,13 @@ export default function MovieDetail({ movie }) {
 
             {/* Subtitles & Captions (.VTT / .SRT) */}
             <section id="subtitles" aria-label="Movie Subtitles" className="space-y-3 scroll-mt-24">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                 <div className="flex items-center gap-3">
-                  <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#f3efe3' }}>
+                  <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text)' }}>
                     <Subtitles size={15} style={{ color: GOLD_LIGHT }} />
                     <span>Subtitles (.SRT / .VTT)</span>
                   </h2>
-                  <span className="text-xs tabular-nums" style={{ color: '#8a8778' }}>
+                  <span className="text-xs tabular-nums" style={{ color: 'var(--muted)' }}>
                     {subtitleTracks.length > 0 ? `${subtitleTracks.length} ${subtitleTracks.length === 1 ? 'track' : 'tracks'}` : 'Load local or official subtitles'}
                   </span>
                 </div>
@@ -704,9 +689,9 @@ export default function MovieDetail({ movie }) {
                     data-testid="toggle-official-subtitles-btn"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
                     style={{
-                      background: showOfficialSubFinder ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.1)',
-                      border: '1px solid rgba(201,168,76,0.34)',
-                      color: '#f5e4a8',
+                      background: 'var(--accent-bg)',
+                      border: '1px solid var(--accent-border)',
+                      color: GOLD_LIGHT,
                     }}
                   >
                     <Languages size={12} />
@@ -715,7 +700,7 @@ export default function MovieDetail({ movie }) {
                   <Link
                     href={`/subtitles?q=${encodeURIComponent(movie.title)}`}
                     className="text-xs font-medium hover:underline"
-                    style={{ color: '#8a8778' }}
+                    style={{ color: 'var(--muted)' }}
                   >
                     Full Studio
                   </Link>
@@ -725,34 +710,33 @@ export default function MovieDetail({ movie }) {
               {subtitleTracks.length === 0 ? (
                 <div
                   className="p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3"
-                  style={{ background: 'rgba(14,14,22,0.72)', border: '1px solid rgba(255,255,255,0.07)' }}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
                 >
-                  <span className="text-xs" style={{ color: '#8a8778' }}>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>
                     No pre-attached subtitles yet — search official subtitles above or load a local .SRT / .VTT file in the player.
                   </span>
                   {playableSources.length > 0 && (
                     <button
                       type="button"
                       onClick={() => launchInlinePreview(playableSources[0].url)}
-                      className="px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer"
-                      style={{ background: 'rgba(201,168,76,0.14)', border: '1px solid rgba(201,168,76,0.32)', color: GOLD_LIGHT }}
+                      className="btn-primary px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer"
                     >
                       Load Subtitle in Player
                     </button>
                   )}
                 </div>
               ) : (
-                <div className="divide-y divide-white/[0.06] rounded-2xl overflow-hidden" style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="divide-y divide-[var(--border-subtle)] rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                   {subtitleTracks.map((sub) => (
                     <div
                       key={sub.id}
                       className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5"
                     >
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold" style={{ color: '#f3efe3' }}>
+                        <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                           {sub.label}
                         </div>
-                        <div className="text-xs mt-0.5 uppercase tabular-nums" style={{ color: '#8a8778' }}>
+                        <div className="text-xs mt-0.5 uppercase tabular-nums" style={{ color: 'var(--muted)' }}>
                           {sub.language} · {sub.format}
                         </div>
                       </div>
@@ -762,7 +746,7 @@ export default function MovieDetail({ movie }) {
                             type="button"
                             onClick={() => launchInlinePreview(playableSources[0].url, sub.id)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
-                            style={{ background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(74,222,128,0.32)', color: '#86efac' }}
+                            style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border)', color: 'var(--green)' }}
                           >
                             <Play size={11} fill="currentColor" />
                             <span>Play With Subtitle</span>
@@ -771,8 +755,7 @@ export default function MovieDetail({ movie }) {
                         <a
                           href={sub.url}
                           download={`${movie.id}-${sub.language.toLowerCase()}.${sub.format}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/[0.06]"
-                          style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#d4cfc0' }}
+                          className="btn-ghost inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
                         >
                           <Download size={12} />
                           <span>Download</span>
@@ -807,8 +790,8 @@ export default function MovieDetail({ movie }) {
 
             {/* Download Mirrors */}
             <section aria-label="Download Mirrors">
-              <div className="flex items-center justify-between pb-2.5 mb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#f3efe3' }}>
+              <div className="flex items-center justify-between pb-2.5 mb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text)' }}>
                   <Download size={15} style={{ color: GOLD_LIGHT }} />
                   <span>Download Links</span>
                 </h2>
@@ -816,8 +799,8 @@ export default function MovieDetail({ movie }) {
                   href="https://drive.google.com/drive/folders/1s-llW3hYo3-4pK6U2XR3M5bJEakbHDjI"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:text-amber-300"
-                  style={{ color: '#8a8778' }}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80"
+                  style={{ color: 'var(--muted)' }}
                 >
                   <HelpCircle size={13} />
                   <span>How to Download</span>
@@ -827,41 +810,40 @@ export default function MovieDetail({ movie }) {
               {links.length === 0 ? (
                 <div
                   className="p-5 rounded-2xl flex flex-wrap items-center justify-between gap-3"
-                  style={{ background: 'rgba(14,14,22,0.72)', border: '1px solid rgba(255,255,255,0.07)' }}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
                 >
-                  <span className="text-xs" style={{ color: '#8a8778' }}>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>
                     No direct download mirrors added yet for this title.
                   </span>
                   <Link
                     href={`/requests?title=${encodeURIComponent(movie.title)}`}
-                    className="px-3.5 py-2 rounded-lg text-xs font-semibold"
-                    style={{ background: 'rgba(201,168,76,0.14)', border: '1px solid rgba(201,168,76,0.32)', color: GOLD_LIGHT }}
+                    className="btn-primary px-3.5 py-2 rounded-lg text-xs font-semibold"
                   >
                     Request Download Link
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-white/[0.06] rounded-2xl overflow-hidden" style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="divide-y divide-[var(--border-subtle)] rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
                   {links.map((l, i) => {
                     const previewInfo = classifyPreviewLink(l.url, l.label);
                     const linkMeta = classifyExternalLinkAttribution(l.url, l.label);
                     return (
                       <div
                         key={i}
-                        className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-white/[0.03]"
+                        className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-[var(--bg-ghost)]"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div
                             className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                            style={{ background: `${l.color || GOLD}18`, border: `1px solid ${l.color || GOLD}35` }}
+                            style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
                           >
                             <Download size={14} style={{ color: l.color || GOLD_LIGHT }} />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold truncate" style={{ color: '#f3efe3' }}>
+                            <div className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
                               {l.label || `Download Mirror ${i + 1}`}
                             </div>
-                            <div className="text-xs truncate mt-0.5" style={{ color: '#8a8778' }}>
+                            <div className="text-xs truncate mt-0.5" style={{ color: 'var(--muted)' }}>
                               {linkMeta.domain ? `${linkMeta.domain} · ${linkMeta.category}` : linkMeta.category}
                               {l.info ? ` · ${l.info}` : ''}
                             </div>
@@ -872,8 +854,7 @@ export default function MovieDetail({ movie }) {
                             <button
                               type="button"
                               onClick={() => launchInlinePreview(l.url)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
-                              style={{ background: 'rgba(201,168,76,0.14)', border: '1px solid rgba(201,168,76,0.32)', color: GOLD_LIGHT }}
+                              className="btn-primary inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
                             >
                               <Play size={11} fill="currentColor" />
                               <span>Play Preview</span>
@@ -884,7 +865,7 @@ export default function MovieDetail({ movie }) {
                             target="_blank"
                             rel={linkMeta.rel}
                             aria-label={`Open ${l.label || 'download'} link on ${linkMeta.domain}`}
-                            className="p-2 rounded-lg transition-colors hover:bg-white/10"
+                            className="p-2 rounded-lg transition-colors hover:bg-[var(--bg-ghost-hover)]"
                             style={{ color: l.color || GOLD_LIGHT }}
                           >
                             <ExternalLink size={14} />
@@ -900,9 +881,9 @@ export default function MovieDetail({ movie }) {
             {/* Official Streaming Availability */}
             {officialMatches.length > 0 && (
               <section aria-label="Officially Available On">
-                <div className="flex items-center gap-2 pb-2.5 mb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex items-center gap-2 pb-2.5 mb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <Globe size={14} style={{ color: GOLD_LIGHT }} />
-                  <h2 className="text-sm font-semibold" style={{ color: '#f3efe3' }}>
+                  <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                     Official Streaming Search
                   </h2>
                 </div>
@@ -913,11 +894,11 @@ export default function MovieDetail({ movie }) {
                       href={p.url + encodeURIComponent(movie.title)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors hover:bg-white/10"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors hover:opacity-85"
                       style={{
-                        background: `${p.color}18`,
+                        background: `${p.color}16`,
                         border: `1px solid ${p.color}42`,
-                        color: '#f3efe3',
+                        color: 'var(--text)',
                       }}
                     >
                       <span>{p.name}</span>
@@ -932,9 +913,9 @@ export default function MovieDetail({ movie }) {
             <section
               aria-label="Share This Title"
               className="p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4"
-              style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
             >
-              <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#d4cfc0' }}>
+              <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--text2)' }}>
                 <Share2 size={14} style={{ color: GOLD_LIGHT }} />
                 <span>Share This Title</span>
               </div>
@@ -946,12 +927,20 @@ export default function MovieDetail({ movie }) {
                     href={platform.url(pageUrl, shareText)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/10"
-                    style={{
-                      background: `${platform.color}14`,
-                      border: `1px solid ${platform.color}32`,
-                      color: platform.color,
-                    }}
+                    className="px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:opacity-85"
+                    style={
+                      platform.color
+                        ? {
+                            background: `${platform.color}14`,
+                            border: `1px solid ${platform.color}36`,
+                            color: platform.color,
+                          }
+                        : {
+                            background: 'var(--bg-ghost)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text)',
+                          }
+                    }
                   >
                     {platform.name}
                   </a>
@@ -959,12 +948,7 @@ export default function MovieDetail({ movie }) {
                 <button
                   type="button"
                   onClick={copyShare}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
-                  style={{
-                    background: 'rgba(201,168,76,0.14)',
-                    border: '1px solid rgba(201,168,76,0.34)',
-                    color: GOLD_LIGHT,
-                  }}
+                  className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer"
                 >
                   {copiedShare ? <Check size={13} /> : <Copy size={13} />}
                   <span>{copiedShare ? 'Copied' : 'Copy Link'}</span>

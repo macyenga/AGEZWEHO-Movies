@@ -1,30 +1,66 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { isValidRwandaPhone, normalizeRwandaPhone } from '../lib/paypack-client';
 import { UPLOADER_MONETIZATION_CONFIG } from '../lib/uploader-earnings';
+import { PREMIUM_CONTENT_TYPES, sanitizeHttpUrl } from '../lib/premium-content';
+import { classifyPreviewLink } from '../lib/media-preview';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
+import SmartMediaPlayer from '../components/SmartMediaPlayer';
 import { CATEGORY_GROUPS } from '../lib/categories';
-import { Plus, Trash2, Save, ArrowLeft, CheckCircle2, Package, Lock, Loader2, AlertTriangle, Image as ImageIcon, Globe, DollarSign, Phone, FileText, Hash, Star, ChevronDown, Wallet, ArrowRight } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Save,
+  ArrowLeft,
+  CheckCircle2,
+  Package,
+  Lock,
+  Loader2,
+  AlertTriangle,
+  Image as ImageIcon,
+  Globe,
+  DollarSign,
+  Phone,
+  FileText,
+  Hash,
+  Star,
+  ChevronDown,
+  Wallet,
+  ArrowRight,
+  Video,
+  Eye,
+} from 'lucide-react';
 
 const PLATFORMS = [
+  { name: 'Direct MP4', color: '#22c55e' },
   { name: 'Google Drive', color: '#4285F4' },
-  { name: 'Mega.nz',      color: '#D9272E' },
-  { name: 'MediaFire',    color: '#1B82E4' },
-  { name: 'Dropbox',      color: '#0061FF' },
-  { name: 'OneDrive',     color: '#0078D4' },
-  { name: 'Direct Link',  color: '#22c55e' },
-  { name: 'Torrent',      color: '#a855f7' },
-  { name: 'Custom',       color: '#c9a84c' },
+  { name: 'Mega.nz', color: '#D9272E' },
+  { name: 'MediaFire', color: '#1B82E4' },
+  { name: 'Dropbox', color: '#0061FF' },
+  { name: 'OneDrive', color: '#0078D4' },
+  { name: 'Custom Mirror', color: '#c9a84c' },
 ];
 
-const EMPTY = { title:'', category:'', version:'', rating:'', cover_url:'', overview:'', premium:true, price:50, uploader_momo_number:'' };
+const EMPTY = {
+  title: '',
+  type: 'Video',
+  category: '',
+  version: '',
+  rating: '',
+  cover_url: '',
+  video_url: '',
+  overview: '',
+  premium: true,
+  price: 500,
+  uploader_momo_number: '',
+};
 
-const validateUrl = u => !u || u.startsWith('http://') || u.startsWith('https://');
-const validateMomo = n => !n || isValidRwandaPhone(normalizeRwandaPhone(n));
+const validateUrl = (u) => !u || Boolean(sanitizeHttpUrl(u));
+const validateMomo = (n) => !n || isValidRwandaPhone(normalizeRwandaPhone(n));
 
 export default function SubmitGame() {
   const { user } = useAuth();
@@ -34,27 +70,59 @@ export default function SubmitGame() {
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState({});
   const [catOpen, setCatOpen] = useState(false);
+  const [previewVideoOpen, setPreviewVideoOpen] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
 
-  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
+  const set = (k, v) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    setErrors((e) => ({ ...e, [k]: '', submit: '' }));
+    if (k === 'cover_url') setCoverFailed(false);
+  };
 
-  const addLink = () => setLinks(l => [...l, { label:'', info:'', url:'' }]);
-  const setLink = (i, k, v) => setLinks(l => l.map((x, idx) => idx === i ? { ...x, [k]: v } : x));
-  const removeLink = i => setLinks(l => l.filter((_, idx) => idx !== i));
-  const applyPlatform = (i, p) => setLinks(l => l.map((x, idx) => idx === i ? { ...x, label: p.name, color: p.color } : x));
+  const addLink = () => setLinks((l) => [...l, { label: '', info: '', url: '' }]);
+  const setLink = (i, k, v) => setLinks((l) => l.map((x, idx) => (idx === i ? { ...x, [k]: v } : x)));
+  const removeLink = (i) => setLinks((l) => l.filter((_, idx) => idx !== i));
+  const applyPlatform = (i, p) =>
+    setLinks((l) => l.map((x, idx) => (idx === i ? { ...x, label: p.name, color: p.color } : x)));
+
+  const videoAnalysis = useMemo(() => {
+    const trimmed = form.video_url.trim();
+    if (!trimmed) return null;
+    if (!sanitizeHttpUrl(trimmed)) return { valid: false, label: 'Must start with https:// or http://' };
+    const classified = classifyPreviewLink(trimmed, 'Private Video Preview');
+    return {
+      valid: true,
+      playable: classified.playable,
+      label: classified.playable ? `${classified.label} detected (inline ready)` : 'External video URL verified',
+    };
+  }, [form.video_url]);
 
   const validate = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Title is required';
     if (!form.category) errs.category = 'Category is required';
+    if (form.cover_url.trim() && !validateUrl(form.cover_url)) {
+      errs.cover_url = 'Cover URL must start with http:// or https://';
+    }
+    if (form.video_url.trim() && !validateUrl(form.video_url)) {
+      errs.video_url = 'Video URL must start with http:// or https://';
+    }
     links.forEach((l, i) => {
       if (l.url && !validateUrl(l.url)) errs[`link_${i}`] = 'Must start with http:// or https://';
     });
-    if (form.uploader_momo_number && !validateMomo(form.uploader_momo_number)) errs.uploader_momo_number = 'Invalid MoMo format (e.g. 0788123456)';
+    const validLinksCount = links.filter((l) => l.url?.trim() && validateUrl(l.url)).length;
+    if (!form.video_url.trim() && validLinksCount === 0) {
+      errs.submit = 'Please attach a Private Video URL or at least one valid Download/Resource Link.';
+    }
+    if (form.uploader_momo_number && !validateMomo(form.uploader_momo_number)) {
+      errs.uploader_momo_number = 'Invalid MoMo format (e.g. 0788123456)';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
     if (!validate()) return;
     setLoading(true);
     try {
@@ -71,8 +139,8 @@ export default function SubmitGame() {
           uploader_momo_number: form.uploader_momo_number.trim()
             ? normalizeRwandaPhone(form.uploader_momo_number)
             : '',
-          price: Math.max(50, parseInt(form.price) || 50),
-          links: links.filter(l => l.url?.trim()),
+          price: form.premium ? Math.max(50, parseInt(form.price, 10) || 50) : 0,
+          links: links.filter((l) => l.url?.trim()),
         }),
       });
       const data = await res.json();
@@ -80,6 +148,7 @@ export default function SubmitGame() {
       setSuccess(true);
       setForm(EMPTY);
       setLinks([]);
+      setPreviewVideoOpen(false);
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -87,396 +156,573 @@ export default function SubmitGame() {
     }
   };
 
-  if (success) return (
-    <div className="min-h-screen bg-deep flex items-center justify-center">
-      <CinematicBackground />
-      <motion.div initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }}
-        className="relative z-10 text-center px-6 max-w-md">
-        <motion.div animate={{ scale:[1,1.15,1] }} transition={{ repeat:Infinity, duration:2 }}>
-          <CheckCircle2 size={56} className="mx-auto mb-4" style={{ color:'#c9a84c' }} />
+  if (success) {
+    return (
+      <div className="min-h-screen bg-deep flex items-center justify-center">
+        <CinematicBackground />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.94 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 text-center px-6 max-w-md"
+        >
+          <CheckCircle2 size={56} className="mx-auto mb-4" style={{ color: 'var(--gold2)' }} />
+          <h2 className="font-cinzel text-2xl mb-3" style={{ fontFamily: 'Cinzel,serif', color: 'var(--gold2)' }}>
+            Submitted for Review
+          </h2>
+          <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>
+            Your private video/content submission is pending admin review and will be available to paid-approved members once approved.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link href="/games" className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm">
+              <Package size={14} /> Open Private Vault
+            </Link>
+            <button
+              type="button"
+              onClick={() => setSuccess(false)}
+              className="btn-ghost flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm cursor-pointer"
+            >
+              <Plus size={14} /> Add Another
+            </button>
+          </div>
         </motion.div>
-        <h2 className="font-cinzel text-2xl mb-3" style={{ fontFamily:'Cinzel,serif', color:'#c9a84c' }}>Submitted!</h2>
-        <p className="text-sm mb-6" style={{ color:'#8a8778' }}>Your content is pending admin review and will appear once approved.</p>
-        <div className="flex gap-3 justify-center">
-          <Link href="/games">
-            <motion.div whileHover={{ scale:1.03 }} className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm">
-              <Package size={14} /> Browse Content
-            </motion.div>
-          </Link>
-          <motion.button whileHover={{ scale:1.03 }} onClick={() => setSuccess(false)}
-            className="btn-ghost flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm">
-            <Plus size={14} /> Add Another
-          </motion.button>
-        </div>
-      </motion.div>
-    </div>
-  );
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-deep">
       <SEOHead
-        title="Add Game / Modded App"
-        description="Submit your game or modded app to Agasobanuye.rw premium content library and earn money."
+        title="Add Private Content & Video"
+        description="Submit private videos, courses, games, or exclusive files to the Agasobanuye.rw paid-member vault."
         canonical="https://agasobanuye.rw/submit-game"
       />
       <CinematicBackground />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-20 pb-24">
-
-        {/* Back */}
-        <motion.div initial={{ opacity:0, x:-14 }} animate={{ opacity:1, x:0 }} className="mb-6">
-          <Link href="/games">
-            <motion.div whileHover={{ x:-3 }} className="inline-flex items-center gap-1.5 text-xs transition-colors"
-              style={{ color:'#6a6a5a' }}
-              onMouseEnter={e=>e.currentTarget.style.color='#c9a84c'}
-              onMouseLeave={e=>e.currentTarget.style.color='#6a6a5a'}>
-              <ArrowLeft size={13} /> Back to Content
-            </motion.div>
+        <div className="mb-6">
+          <Link href="/games" className="inline-flex items-center gap-1.5 text-xs hover:opacity-80 transition-opacity" style={{ color: 'var(--muted)' }}>
+            <ArrowLeft size={13} /> Back to Private Vault
           </Link>
-        </motion.div>
+        </div>
 
-        {/* Header */}
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} className="mb-8">
+        <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-              style={{ background:'rgba(201,168,76,0.15)', border:'1px solid rgba(201,168,76,0.3)' }}>
-              <Package size={22} style={{ color:'#c9a84c' }} />
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
+            >
+              <Video size={22} style={{ color: 'var(--gold2)' }} />
             </div>
             <div>
-              <h1 className="font-cinzel font-bold text-xl" style={{
-                fontFamily:'Cinzel,serif',
-                background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
-                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-              }}>Add Content</h1>
-              <p className="text-xs" style={{ color:'#6a6a5a' }}>Share premium content with the community</p>
+              <h1
+                className="font-cinzel font-bold text-xl sm:text-2xl"
+                style={{
+                  fontFamily: 'Cinzel,serif',
+                  color: 'var(--gold2)',
+                }}
+              >
+                Add Private Content &amp; Video
+              </h1>
+              <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                Upload private video streams or files for paid &amp; approved members
+              </p>
             </div>
           </div>
           <div className="divider-gold w-20" />
-        </motion.div>
+        </div>
 
         {/* Creator Revenue Share Banner */}
-        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
-          transition={{ delay:0.06 }}
+        <div
           className="mb-4 p-4 rounded-xl"
-          style={{ background:'rgba(34,197,94,0.06)', border:'1px solid rgba(34,197,94,0.22)' }}>
+          style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border)' }}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)' }}>
-                <Wallet size={16} style={{ color:'#22c55e' }} />
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border)' }}
+              >
+                <Wallet size={16} style={{ color: 'var(--green)' }} />
               </div>
               <div>
-                <p className="text-xs font-semibold" style={{ color:'#e8f7ed' }}>
+                <p className="text-xs font-semibold" style={{ color: 'var(--text)' }}>
                   Keep 70% of Every Paid Unlock
                 </p>
-                <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color:'#9fb3a5' }}>
-                  Every time a player unlocks your game or modded app, <strong className="tabular-nums" style={{ color:'#22c55e' }}>70%</strong> goes straight to your Creator Wallet (withdraw from {UPLOADER_MONETIZATION_CONFIG.minPayoutRwf.toLocaleString()} RWF).
+                <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: 'var(--text2)' }}>
+                  Every time a member unlocks your release,{' '}
+                  <strong className="tabular-nums" style={{ color: 'var(--green)' }}>70%</strong> goes to your Creator Wallet (withdraw from{' '}
+                  {UPLOADER_MONETIZATION_CONFIG.minPayoutRwf.toLocaleString()} RWF).
                   {!user && (
                     <>
                       {' '}
-                      <Link href="/auth/login?redirect=/submit-game" className="underline" style={{ color:'#e8f7ed' }}>
+                      <Link href="/auth/login?redirect=/submit-game" className="underline" style={{ color: 'var(--gold2)' }}>
                         Sign in
                       </Link>{' '}
-                      before submitting to link earnings automatically.
+                      first to link earnings to your account.
                     </>
                   )}
                 </p>
               </div>
             </div>
-            <Link href="/earnings"
+            <Link
+              href="/earnings"
               className="inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap flex-shrink-0 px-3 py-2 rounded-lg"
-              style={{ background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.28)', color:'#86efac' }}>
-              View Creator Wallet & Rules <ArrowRight size={13} />
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--green-border)', color: 'var(--green)' }}
+            >
+              Creator Wallet <ArrowRight size={13} />
             </Link>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Notice Banner */}
-        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
-          transition={{ delay:0.1 }}
-          className="mb-6 p-4 rounded-xl relative overflow-hidden"
-          style={{ background:'rgba(234,179,8,0.06)', border:'1px solid rgba(234,179,8,0.25)' }}>
-          <motion.div className="absolute inset-0 pointer-events-none"
-            style={{ background:'linear-gradient(105deg,transparent 30%,rgba(234,179,8,0.06) 50%,transparent 70%)' }}
-            animate={{ x:['-100%','200%'] }}
-            transition={{ repeat:Infinity, duration:4, ease:'easeInOut', repeatDelay:3 }} />
-          <div className="flex gap-3 items-start relative z-10">
-            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color:'#fbbf24' }} />
-            <div>
-              <p className="text-xs font-semibold mb-1" style={{ color:'#fbbf24' }}>Guidelines</p>
-              <p className="text-[11px] leading-relaxed" style={{ color:'#8a8060' }}>
-                Submit valid working links only. Fake or broken links will be rejected and your uploads may be blocked.
-                All submissions are reviewed by admin before going live.
-              </p>
-            </div>
+        {/* Moderation Guidelines */}
+        <div
+          className="mb-6 p-4 rounded-xl flex gap-3 items-start"
+          style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
+        >
+          <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--warn)' }} />
+          <div>
+            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--gold2)' }}>
+              Moderation &amp; Privacy Guidelines
+            </p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text2)' }}>
+              Attach a working Private Video URL (.mp4, YouTube, Vimeo, Google Drive, Archive.org) or verified file mirror. All submissions stay hidden until reviewed and approved by an admin.
+            </p>
           </div>
-        </motion.div>
+        </div>
 
         {/* Form */}
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
+        <form
+          onSubmit={handleSubmit}
           className="space-y-5 p-6 rounded-2xl"
-          style={{ background:'rgba(14,14,22,0.8)', border:'1px solid rgba(201,168,76,0.15)', backdropFilter:'blur(20px)' }}>
-
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border2)',
+            boxShadow: 'var(--shadow-card)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
           {/* Title */}
           <div>
-            <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-              Title <span style={{ color:'#e05c3a' }}>*</span>
-              <span className="ml-2 text-[9px] normal-case tracking-normal" style={{ color:'#3a3a2a' }}>
+            <label htmlFor="sub-title" className="block text-[11px] font-medium mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+              Title <span style={{ color: 'var(--danger)' }}>*</span>
+              <span className="ml-2 text-[10px] normal-case tracking-normal tabular-nums" style={{ color: 'var(--muted)' }}>
                 {form.title.length}/100
               </span>
             </label>
-            <input className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.title?'border-red-500/40':''}`}
-              value={form.title} onChange={e => { if (e.target.value.length <= 100) set('title', e.target.value); }}
-              placeholder="e.g. GTA 5 Mobile, WhatsApp Gold..." />
-            {errors.title && <p className="text-red-400/80 text-xs mt-1">{errors.title}</p>}
+            <input
+              id="sub-title"
+              className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm ${errors.title ? 'border-red-500/40' : ''}`}
+              value={form.title}
+              onChange={(e) => {
+                if (e.target.value.length <= 100) set('title', e.target.value);
+              }}
+              placeholder="e.g. VIP Backstage Dubbing Session, Exclusive Course..."
+            />
+            {errors.title && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.title}</p>}
           </div>
 
-          {/* Category */}
-          <div className="relative">
-            <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-              Category <span style={{ color:'#e05c3a' }}>*</span>
-            </label>
-            <button type="button" onClick={() => setCatOpen(o => !o)}
-              className={`input-dark w-full px-3 py-2 rounded-lg text-sm text-left flex items-center justify-between ${errors.category?'border-red-500/40':''}`}
-              style={{ background:'rgba(255,255,255,0.03)', color: form.category ? '#e8e4d8' : '#4a4a3a' }}>
-              <span>{form.category || 'Select a category...'}</span>
-              <motion.div animate={{ rotate: catOpen ? 180 : 0 }}>
-                <ChevronDown size={14} style={{ color:'#6a6a5a' }} />
-              </motion.div>
-            </button>
-            {errors.category && <p className="text-red-400/80 text-xs mt-1">{errors.category}</p>}
-            <AnimatePresence>
-              {catOpen && (
-                <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-8 }}
-                  className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl overflow-hidden max-h-64 overflow-y-auto"
-                  style={{ background:'rgba(14,14,22,0.98)', border:'1px solid rgba(201,168,76,0.2)', backdropFilter:'blur(20px)' }}>
-                  {CATEGORY_GROUPS.map(group => (
-                    <div key={group.label}>
-                      <div className="px-3 py-1.5 text-[9px] uppercase tracking-wider font-semibold" style={{ color:'#6a6a5a', background:'rgba(0,0,0,0.2)' }}>
-                        {group.label}
+          {/* Content Type + Category */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="sub-type" className="block text-[11px] font-medium mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+                Content Type
+              </label>
+              <select
+                id="sub-type"
+                className="input-dark w-full px-3 py-2.5 rounded-lg text-sm"
+                value={form.type}
+                onChange={(e) => set('type', e.target.value)}
+              >
+                {PREMIUM_CONTENT_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative">
+              <label className="block text-[11px] font-medium mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+                Category <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setCatOpen((o) => !o)}
+                className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm text-left flex items-center justify-between cursor-pointer ${
+                  errors.category ? 'border-red-500/40' : ''
+                }`}
+                style={{ color: form.category ? 'var(--text)' : 'var(--muted)' }}
+              >
+                <span className="truncate">{form.category || 'Select category...'}</span>
+                <ChevronDown size={14} style={{ color: 'var(--muted)' }} />
+              </button>
+              {errors.category && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.category}</p>}
+              <AnimatePresence>
+                {catOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl overflow-hidden max-h-64 overflow-y-auto"
+                    style={{
+                      background: 'var(--bg-dropdown)',
+                      border: '1px solid var(--border2)',
+                      boxShadow: 'var(--shadow-card)',
+                      backdropFilter: 'blur(20px)',
+                    }}
+                  >
+                    {CATEGORY_GROUPS.map((group) => (
+                      <div key={group.label}>
+                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--muted)', background: 'var(--bg-ghost)' }}>
+                          {group.label}
+                        </div>
+                        {group.items.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => {
+                              set('category', item);
+                              setCatOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-[var(--bg-ghost-hover)] cursor-pointer"
+                            style={{ color: form.category === item ? 'var(--gold2)' : 'var(--text)' }}
+                          >
+                            {item}
+                          </button>
+                        ))}
                       </div>
-                      {group.items.map(item => (
-                        <motion.button key={item} type="button"
-                          whileHover={{ background:'rgba(201,168,76,0.08)' }}
-                          onClick={() => { set('category', item); setCatOpen(false); }}
-                          className="w-full text-left px-3 py-2 text-xs transition-colors"
-                          style={{ color: form.category === item ? '#c9a84c' : '#e8e4d8' }}>
-                          {item}
-                        </motion.button>
-                      ))}
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Version + Rating */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-                <Hash size={10} className="inline mr-1" />Version <span style={{ color:'#3a3a2a' }}>optional</span>
+              <label htmlFor="sub-version" className="block text-[11px] font-medium mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+                <Hash size={10} className="inline mr-1" />Quality / Version
               </label>
-              <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
-                value={form.version} onChange={e => set('version', e.target.value)}
-                placeholder="1.1.1" />
+              <input
+                id="sub-version"
+                className="input-dark w-full px-3 py-2 rounded-lg text-sm"
+                value={form.version}
+                onChange={(e) => set('version', e.target.value)}
+                placeholder="4K HD or 1.2.0"
+              />
             </div>
             <div>
-              <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-                <Star size={10} className="inline mr-1" />Rating <span style={{ color:'#3a3a2a' }}>optional</span>
+              <label htmlFor="sub-rating" className="block text-[11px] font-medium mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+                <Star size={10} className="inline mr-1" />Rating
               </label>
-              <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
-                value={form.rating} onChange={e => set('rating', e.target.value)}
-                placeholder="9.5" />
+              <input
+                id="sub-rating"
+                className="input-dark w-full px-3 py-2 rounded-lg text-sm"
+                value={form.rating}
+                onChange={(e) => set('rating', e.target.value)}
+                placeholder="4.9"
+              />
             </div>
+          </div>
+
+          {/* Private Video Stream URL + Live Preview */}
+          <div className="p-4 rounded-xl space-y-2.5" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <label htmlFor="sub-video-url" className="text-[11px] font-semibold tracking-[1.5px] uppercase" style={{ color: 'var(--gold2)' }}>
+                <Video size={12} className="inline mr-1.5" />Private Video URL
+              </label>
+              {videoAnalysis?.valid && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewVideoOpen((v) => !v)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold cursor-pointer"
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--accent-border)',
+                    color: 'var(--gold2)',
+                  }}
+                >
+                  <Eye size={11} />
+                  <span>{previewVideoOpen ? 'Hide Preview' : 'Test Video'}</span>
+                </button>
+              )}
+            </div>
+
+            <input
+              id="sub-video-url"
+              className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.video_url ? 'border-red-500/40' : ''}`}
+              value={form.video_url}
+              onChange={(e) => set('video_url', e.target.value)}
+              placeholder="https://... (.mp4, YouTube, Vimeo, Google Drive, Archive.org)"
+            />
+
+            {errors.video_url ? (
+              <p className="text-xs" style={{ color: 'var(--danger)' }}>{errors.video_url}</p>
+            ) : videoAnalysis ? (
+              <p className="text-[11px]" style={{ color: videoAnalysis.valid ? 'var(--green)' : 'var(--danger)' }}>
+                {videoAnalysis.label}
+              </p>
+            ) : (
+              <p className="text-[11px]" style={{ color: 'var(--text2)' }}>
+                Only visible inside the Private Vault after payment and admin approval.
+              </p>
+            )}
+
+            {previewVideoOpen && videoAnalysis?.valid && (
+              <div className="pt-2">
+                <SmartMediaPlayer
+                  compact
+                  autoPlayMuted={false}
+                  movie={{
+                    title: form.title || 'Private Video Preview',
+                    watch_links: [{ label: 'Preview Stream', url: form.video_url.trim() }],
+                  }}
+                  onClose={() => setPreviewVideoOpen(false)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Cover Image */}
           <div>
-            <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-              <ImageIcon size={10} className="inline mr-1" />Cover Image URL <span style={{ color:'#3a3a2a' }}>optional</span>
+            <label htmlFor="sub-cover-url" className="block text-[11px] font-medium mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+              <ImageIcon size={10} className="inline mr-1" />Cover Image URL
             </label>
-            <input className="input-dark w-full px-3 py-2 rounded-lg text-sm"
-              value={form.cover_url} onChange={e => set('cover_url', e.target.value)}
-              placeholder="https://i.postimg.cc/..." />
-            <AnimatePresence>
-              {form.cover_url && (
-                <motion.div key="preview" initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }}
-                  className="mt-2 flex items-center gap-3 p-2 rounded-lg"
-                  style={{ background:'rgba(0,0,0,0.2)' }}>
-                  <img src={form.cover_url} alt="preview"
+            <input
+              id="sub-cover-url"
+              className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.cover_url ? 'border-red-500/40' : ''}`}
+              value={form.cover_url}
+              onChange={(e) => set('cover_url', e.target.value)}
+              placeholder="https://images.unsplash.com/..."
+            />
+            {errors.cover_url && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.cover_url}</p>}
+            {form.cover_url.trim() && validateUrl(form.cover_url) && (
+              <div className="mt-2 flex items-center gap-3 p-2 rounded-lg" style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border)' }}>
+                {!coverFailed ? (
+                  <img
+                    src={form.cover_url}
+                    alt="Cover preview"
                     className="w-12 h-16 object-cover rounded-md"
-                    onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                    style={{ border:'1px solid rgba(139,92,246,0.2)' }} />
-                  <div className="hidden items-center gap-2 text-xs" style={{ color:'#6a6a5a' }}>
-                    <AlertTriangle size={12} /> Invalid image URL
+                    onError={() => setCoverFailed(true)}
+                    style={{ border: '1px solid var(--accent-border)' }}
+                  />
+                ) : (
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--danger)' }}>
+                    <AlertTriangle size={12} /> Could not load preview image
                   </div>
-                  <div className="text-[10px]" style={{ color:'#8a8778' }}>
-                    {form.category || 'No category'} &middot; {form.rating ? `${form.rating}/10` : 'No rating'}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                )}
+                <div className="text-[11px]" style={{ color: 'var(--text2)' }}>
+                  {form.type} · {form.category || 'No category'}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-              <FileText size={10} className="inline mr-1" />Description <span style={{ color:'#3a3a2a' }}>optional</span>
-              <span className="ml-2 text-[9px] normal-case tracking-normal" style={{ color:'#3a3a2a' }}>
+            <label htmlFor="sub-overview" className="block text-[11px] font-medium mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+              <FileText size={10} className="inline mr-1" />Description
+              <span className="ml-2 text-[10px] normal-case tracking-normal tabular-nums" style={{ color: 'var(--muted)' }}>
                 {form.overview.length}/500
               </span>
             </label>
-            <textarea className="input-dark w-full px-3 py-2 rounded-lg text-sm resize-none" rows={3}
-              value={form.overview} onChange={e => { if (e.target.value.length <= 500) set('overview', e.target.value); }}
-              placeholder="What makes this content special?" />
+            <textarea
+              id="sub-overview"
+              className="input-dark w-full px-3 py-2 rounded-lg text-sm resize-none"
+              rows={3}
+              value={form.overview}
+              onChange={(e) => {
+                if (e.target.value.length <= 500) set('overview', e.target.value);
+              }}
+              placeholder="Describe what paid members receive in this private release..."
+            />
           </div>
 
-          {/* Premium Toggle */}
-          <div className="flex items-center gap-3 p-3 rounded-xl"
-            style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.15)' }}>
-            <Lock size={16} style={{ color: '#fbbf24' }} />
-            <div className="flex-1">
-              <label className="text-xs font-semibold" style={{ color: '#fbbf24' }}>Premium Content</label>
-              <p className="text-[10px]" style={{ color: '#8a8060' }}>Users donate to unlock download links</p>
+          {/* Access Tier & Price */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 p-3.5 rounded-xl" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
+              <Lock size={16} style={{ color: 'var(--gold2)' }} />
+              <div className="flex-1">
+                <div className="text-xs font-semibold" style={{ color: 'var(--text)' }}>
+                  Paid Item Unlock
+                </div>
+                <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
+                  Require per-item or Pro pass
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.premium}
+                  onChange={(e) => set('premium', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div
+                  className="w-9 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"
+                  style={{ background: form.premium ? 'var(--gold)' : 'var(--bg4)' }}
+                />
+              </label>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked={form.premium} onChange={e => set('premium', e.target.checked)}
-                className="sr-only peer" />
-              <div className="w-9 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"
-                style={{ background: form.premium ? '#fbbf24' : 'rgba(255,255,255,0.1)' }} />
-            </label>
+
+            <div className="p-3.5 rounded-xl" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
+              <label htmlFor="sub-price" className="block text-[11px] font-semibold mb-1 tracking-[1px] uppercase" style={{ color: 'var(--gold2)' }}>
+                <DollarSign size={11} className="inline mr-0.5" />Unlock Price (RWF · min 50)
+              </label>
+              <input
+                id="sub-price"
+                type="number"
+                min="50"
+                step="50"
+                disabled={!form.premium}
+                className="input-dark w-full px-3 py-1.5 rounded-lg text-sm tabular-nums disabled:opacity-40"
+                value={form.premium ? form.price : 0}
+                onChange={(e) => set('price', parseInt(e.target.value, 10) || 50)}
+                placeholder="500"
+              />
+            </div>
           </div>
 
-          {/* Unlock Price */}
-          <div className="p-4 rounded-xl" style={{ background:'rgba(251,191,36,0.05)', border:'1px solid rgba(251,191,36,0.15)' }}>
-            <label className="block text-[11px] font-semibold mb-1.5 tracking-[2px] uppercase" style={{ color:'#fbbf24' }}>
-              <DollarSign size={12} className="inline mr-1" />Unlock Price (RWF) — min 50
+          {/* MoMo Payout Number */}
+          <div className="p-4 rounded-xl" style={{ background: 'var(--green-bg)', border: '1px solid var(--green-border)' }}>
+            <label htmlFor="sub-momo" className="block text-[11px] font-semibold mb-1.5 tracking-[1.5px] uppercase" style={{ color: 'var(--green)' }}>
+              <Phone size={11} className="inline mr-1" />Your MoMo Number (Creator Payouts)
             </label>
-            <input type="number" min="100" step="50" className="input-dark w-full px-3 py-2 rounded-lg text-sm"
-              value={form.price} onChange={e => set('price', parseInt(e.target.value) || 50)}
-              placeholder="50" />
-            <p className="text-[10px] mt-1.5" style={{ color:'#4a4a3a' }}>
-              Users must donate this amount via MoMo to unlock download links
-            </p>
+            <input
+              id="sub-momo"
+              className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.uploader_momo_number ? 'border-red-500/40' : ''}`}
+              value={form.uploader_momo_number}
+              onChange={(e) => set('uploader_momo_number', e.target.value)}
+              placeholder="e.g. 0788123456"
+            />
+            {errors.uploader_momo_number ? (
+              <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.uploader_momo_number}</p>
+            ) : (
+              <p className="text-[11px] mt-1.5" style={{ color: 'var(--text2)' }}>
+                Used to pay your 70% share when members unlock your content.
+              </p>
+            )}
           </div>
 
-          {/* MoMo Number */}
-          <div className="p-4 rounded-xl" style={{ background:'rgba(34,197,94,0.06)', border:'1px solid rgba(34,197,94,0.15)' }}>
-            <label className="block text-[11px] font-semibold mb-1.5 tracking-[2px] uppercase" style={{ color:'#22c55e' }}>
-              <Phone size={12} className="inline mr-1" />Your MoMo Number — for crediting
-            </label>
-            <input className={`input-dark w-full px-3 py-2 rounded-lg text-sm ${errors.uploader_momo_number?'border-red-500/40':''}`}
-              value={form.uploader_momo_number} onChange={e => set('uploader_momo_number', e.target.value)}
-              placeholder="e.g. 0788123456" />
-            {errors.uploader_momo_number
-              ? <p className="text-red-400/80 text-xs mt-1">{errors.uploader_momo_number}</p>
-              : <p className="text-[10px] mt-1.5" style={{ color:'#4a4a3a' }}>
-                  Admin uses this to send your earnings when users unlock your content
-                </p>}
-          </div>
-
-          {/* Download Links */}
+          {/* Download / Resource Links */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div>
-                <span className="text-[10px] font-medium tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-                  <Globe size={10} className="inline mr-1" />Download Links
-                </span>
-                <span className="text-[10px] ml-1" style={{ color:'#3a3a2a' }}>optional</span>
-              </div>
-              <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }} onClick={addLink}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
-                style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.3)', color:'#c9a84c' }}>
-                <Plus size={11} /> Add Link
-              </motion.button>
+              <span className="text-[11px] font-medium tracking-[1.5px] uppercase" style={{ color: 'var(--text2)' }}>
+                <Globe size={11} className="inline mr-1" />Download &amp; Mirror Links
+              </span>
+              <button
+                type="button"
+                onClick={addLink}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
+                style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: 'var(--gold2)' }}
+              >
+                <Plus size={12} /> Add Link
+              </button>
             </div>
 
-            <AnimatePresence>
-              {links.map((link, i) => (
-                <motion.div key={i}
-                  initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-                  className="mb-3 p-3 rounded-xl space-y-2.5"
-                  style={{ background:'rgba(201,168,76,0.04)', border:'1px solid rgba(201,168,76,0.15)' }}>
-
-                  {/* Platform presets */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {PLATFORMS.map(p => (
-                      <button key={p.name} onClick={() => applyPlatform(i, p)}
-                        className="text-[10px] px-2 py-0.5 rounded-md transition-all"
-                        style={{
-                          background: link.label === p.name ? p.color+'22' : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${link.label === p.name ? p.color+'55' : 'rgba(255,255,255,0.07)'}`,
-                          color: link.label === p.name ? p.color : '#6a6a5a',
-                        }}>
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Link info */}
-                  <div>
-                    <input className="input-dark w-full px-2.5 py-1.5 rounded-lg text-xs"
-                      value={link.info || ''} onChange={e => setLink(i, 'info', e.target.value)}
-                      placeholder="Link info — e.g. Latest Version, Mod Menu, OBB File..." />
-                  </div>
-
-                  <div className="flex gap-2 items-center flex-wrap">
-                    <input className="input-dark flex-1 min-w-[90px] px-2.5 py-1.5 rounded-lg text-xs"
-                      value={link.label} onChange={e => setLink(i, 'label', e.target.value)}
-                      placeholder="Label" />
-                    <input className={`input-dark flex-[2] min-w-[130px] px-2.5 py-1.5 rounded-lg text-xs ${errors[`link_${i}`]?'border-red-500/40':''}`}
-                      value={link.url} onChange={e => { setLink(i, 'url', e.target.value); setErrors(e => ({ ...e, [`link_${i}`]: '' })); }}
-                      placeholder="Download URL" />
-                    <button onClick={() => removeLink(i)} style={{ color:'#e05c3a44' }}
-                      onMouseEnter={e => e.currentTarget.style.color='#e05c3a'}
-                      onMouseLeave={e => e.currentTarget.style.color='#e05c3a44'}>
-                      <Trash2 size={14} />
+            {links.map((link, i) => (
+              <div
+                key={i}
+                className="mb-3 p-3 rounded-xl space-y-2.5"
+                style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border)' }}
+              >
+                <div className="flex flex-wrap gap-1.5">
+                  {PLATFORMS.map((p) => (
+                    <button
+                      key={p.name}
+                      type="button"
+                      onClick={() => applyPlatform(i, p)}
+                      className="text-[11px] px-2 py-0.5 rounded-md cursor-pointer"
+                      style={{
+                        background: link.label === p.name ? 'var(--accent-bg)' : 'var(--bg-ghost)',
+                        border: `1px solid ${link.label === p.name ? 'var(--accent-border)' : 'var(--border)'}`,
+                        color: link.label === p.name ? 'var(--gold2)' : 'var(--text2)',
+                      }}
+                    >
+                      {p.name}
                     </button>
-                  </div>
-                  {errors[`link_${i}`] && <p className="text-red-400/80 text-[10px]">{errors[`link_${i}`]}</p>}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                  ))}
+                </div>
+
+                <input
+                  className="input-dark w-full px-2.5 py-1.5 rounded-lg text-xs"
+                  value={link.info || ''}
+                  onChange={(e) => setLink(i, 'info', e.target.value)}
+                  placeholder="File details (e.g. 1080p MP4 · 1.2 GB)"
+                />
+
+                <div className="flex gap-2 items-center flex-wrap">
+                  <input
+                    className="input-dark flex-1 min-w-[90px] px-2.5 py-1.5 rounded-lg text-xs"
+                    value={link.label}
+                    onChange={(e) => setLink(i, 'label', e.target.value)}
+                    placeholder="Label"
+                  />
+                  <input
+                    className={`input-dark flex-[2] min-w-[130px] px-2.5 py-1.5 rounded-lg text-xs ${errors[`link_${i}`] ? 'border-red-500/40' : ''}`}
+                    value={link.url}
+                    onChange={(e) => {
+                      setLink(i, 'url', e.target.value);
+                      setErrors((er) => ({ ...er, [`link_${i}`]: '', submit: '' }));
+                    }}
+                    placeholder="https://..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeLink(i)}
+                    aria-label={`Remove link ${i + 1}`}
+                    className="p-1.5 rounded-lg hover:bg-red-500/10 cursor-pointer"
+                    style={{ color: 'var(--danger)' }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                {errors[`link_${i}`] && <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors[`link_${i}`]}</p>}
+              </div>
+            ))}
 
             {links.length === 0 && (
-              <div className="text-center py-3 rounded-xl text-xs"
-                style={{ color:'#3a3a2a', border:'1px dashed rgba(201,168,76,0.15)' }}>
-                No links yet — click Add Link above
+              <div
+                className="text-center py-3 rounded-xl text-xs"
+                style={{ color: 'var(--muted)', border: '1px dashed var(--border2)' }}
+              >
+                Optional if you attached a Private Video URL above
               </div>
             )}
           </div>
 
-          {/* Submit Error */}
           {errors.submit && (
-            <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }}
+            <div
               className="flex items-center gap-2 p-3 rounded-lg text-xs"
-              style={{ background:'rgba(224,92,58,0.1)', border:'1px solid rgba(224,92,58,0.2)', color:'#e05c3a' }}>
-              <AlertTriangle size={14} /> {errors.submit}
-            </motion.div>
+              style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger)' }}
+            >
+              <AlertTriangle size={14} className="shrink-0" />
+              <span>{errors.submit}</span>
+            </div>
           )}
 
-          {/* Submit Button */}
-          <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-            onClick={handleSubmit} disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold relative overflow-hidden"
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold cursor-pointer transition-opacity disabled:opacity-60"
             style={{
-              background: loading
-                ? 'rgba(139,92,246,0.15)'
-                : 'linear-gradient(135deg,rgba(139,92,246,0.2),rgba(34,197,94,0.1))',
-              border:'1px solid rgba(139,92,246,0.35)', color: loading ? '#6a6a5a' : '#a78bfa' }}>
+              background: 'var(--gold2)',
+              color: 'var(--accent-ink)',
+            }}
+          >
             {loading ? (
               <>
-                <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:1, ease:'linear' }}>
-                  <Loader2 size={16} />
-                </motion.div>
-                Submitting...
+                <Loader2 size={16} className="animate-spin" />
+                <span>Submitting for Review...</span>
               </>
             ) : (
-              <><Save size={16} /> Add Content</>
+              <>
+                <Save size={16} />
+                <span>Submit Private Content</span>
+              </>
             )}
-          </motion.button>
-        </motion.div>
+          </button>
+        </form>
       </div>
     </div>
   );

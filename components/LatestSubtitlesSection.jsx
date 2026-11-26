@@ -17,8 +17,8 @@ import {
   resolveMovieSubtitleAction,
 } from '../lib/subtitles';
 
-const GOLD_LIGHT = '#e8c87a';
-const MUTED = '#8a8778';
+const GOLD_LIGHT = 'var(--gold2)';
+const MUTED = 'var(--muted)';
 
 function saveBlob(content, filename) {
   const blob = new Blob([content], { type: 'application/x-subrip;charset=utf-8' });
@@ -101,14 +101,14 @@ export default function LatestSubtitlesSection({ movies = [] }) {
       {/* Header */}
       <div
         className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-3.5 mb-5"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+        style={{ borderBottom: '1px solid var(--border)' }}
       >
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
             <Subtitles size={17} style={{ color: GOLD_LIGHT }} />
             <h2
               className="font-cinzel text-lg sm:text-xl font-bold tracking-wide"
-              style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}
+              style={{ fontFamily: 'Cinzel, serif', color: 'var(--text)' }}
             >
               Subtitles & Kinyarwanda (.SRT / .VTT)
             </h2>
@@ -122,7 +122,7 @@ export default function LatestSubtitlesSection({ movies = [] }) {
           {/* Interactive Tab Switcher */}
           <div
             className="inline-flex items-center gap-1 p-1 rounded-xl"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
           >
             <button
               type="button"
@@ -131,7 +131,7 @@ export default function LatestSubtitlesSection({ movies = [] }) {
               className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap"
               style={
                 tab === 'latest'
-                  ? { background: 'rgba(201,168,76,0.18)', color: GOLD_LIGHT }
+                  ? { background: 'var(--accent-bg)', color: GOLD_LIGHT }
                   : { color: MUTED }
               }
             >
@@ -144,7 +144,7 @@ export default function LatestSubtitlesSection({ movies = [] }) {
               className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap"
               style={
                 tab === 'catalog'
-                  ? { background: 'rgba(201,168,76,0.18)', color: GOLD_LIGHT }
+                  ? { background: 'var(--accent-bg)', color: GOLD_LIGHT }
                   : { color: MUTED }
               }
             >
@@ -157,8 +157,8 @@ export default function LatestSubtitlesSection({ movies = [] }) {
             data-testid="home-subtitles-studio-cta"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-transform hover:-translate-y-0.5"
             style={{
-              background: 'linear-gradient(135deg,#e8c87a,#c9a84c)',
-              color: '#09090f',
+              background: 'var(--gold2)',
+              color: 'var(--accent-ink)',
             }}
           >
             <span>Open Subtitle Studio</span>
@@ -196,8 +196,8 @@ export default function LatestSubtitlesSection({ movies = [] }) {
             disabled={loading}
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap"
             style={{
-              background: 'rgba(201,168,76,0.14)',
-              border: '1px solid rgba(201,168,76,0.34)',
+              background: 'var(--accent-bg)',
+              border: '1px solid var(--accent-border)',
               color: GOLD_LIGHT,
             }}
           >
@@ -213,9 +213,9 @@ export default function LatestSubtitlesSection({ movies = [] }) {
             disabled={loading}
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-medium cursor-pointer whitespace-nowrap"
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              color: '#c8c3b6',
+              background: 'var(--bg-ghost)',
+              border: '1px solid var(--border)',
+              color: 'var(--text2)',
             }}
           >
             <RefreshCw size={12} />
@@ -232,7 +232,7 @@ export default function LatestSubtitlesSection({ movies = [] }) {
               <div
                 key={idx}
                 className="p-4 rounded-2xl space-y-3"
-                style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.07)' }}
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 <div className="shimmer h-4 w-3/4 rounded" />
                 <div className="shimmer h-3 w-1/2 rounded" />
@@ -246,7 +246,7 @@ export default function LatestSubtitlesSection({ movies = [] }) {
         ) : error ? (
           <div
             className="p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-            style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)', color: '#c8c3b6' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text2)' }}
           >
             <span>{error}</span>
             <Link href="/subtitles" className="font-semibold underline" style={{ color: GOLD_LIGHT }}>
@@ -256,7 +256,7 @@ export default function LatestSubtitlesSection({ movies = [] }) {
         ) : items.length === 0 ? (
           <div
             className="p-6 rounded-2xl text-center space-y-2 text-xs"
-            style={{ background: 'rgba(14,14,22,0.82)', border: '1px solid rgba(255,255,255,0.08)', color: MUTED }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: MUTED }}
           >
             <p>No official subtitle releases matched that title.</p>
             <Link href={`/subtitles?q=${encodeURIComponent(query)}`} className="inline-block font-semibold underline" style={{ color: GOLD_LIGHT }}>
@@ -276,18 +276,19 @@ export default function LatestSubtitlesSection({ movies = [] }) {
                   key={item.id}
                   whileHover={{ y: -2 }}
                   data-testid={`home-subtitle-card-${item.id}`}
-                  className="p-4 rounded-2xl flex flex-col justify-between gap-3 transition-colors hover:border-amber-400/35"
+                  className="p-4 rounded-2xl flex flex-col justify-between gap-3 transition-colors hover:border-[var(--border2)]"
                   style={{
-                    background: 'rgba(14,14,22,0.84)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   <div className="space-y-1 min-w-0">
-                    <div className="text-sm font-semibold truncate" style={{ color: '#f3efe3' }}>
+                    <div className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
                       {item.movieName}
                       {item.year ? ` (${item.year})` : ''}
                     </div>
-                    <div className="text-[11px] truncate" style={{ color: '#b8b4a8' }}>
+                    <div className="text-[11px] truncate" style={{ color: 'var(--text2)' }}>
                       {item.fileName}
                     </div>
                     <div className="text-[11px] tabular-nums" style={{ color: MUTED }}>
@@ -299,11 +300,11 @@ export default function LatestSubtitlesSection({ movies = [] }) {
                     <a
                       href={downloadHref}
                       data-testid={`home-subtitle-download-${item.id}`}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors hover:bg-emerald-500/20"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-opacity hover:opacity-85"
                       style={{
-                        background: 'rgba(34,197,94,0.14)',
-                        border: '1px solid rgba(74,222,128,0.34)',
-                        color: '#86efac',
+                        background: 'var(--green-bg)',
+                        border: '1px solid var(--green-border)',
+                        color: 'var(--green)',
                       }}
                     >
                       <Download size={12} />
@@ -311,10 +312,10 @@ export default function LatestSubtitlesSection({ movies = [] }) {
                     </a>
                     <Link
                       href={studioHref}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors hover:bg-amber-400/20"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-opacity hover:opacity-85"
                       style={{
-                        background: 'rgba(201,168,76,0.14)',
-                        border: '1px solid rgba(201,168,76,0.34)',
+                        background: 'var(--accent-bg)',
+                        border: '1px solid var(--accent-border)',
                         color: GOLD_LIGHT,
                       }}
                     >
@@ -339,12 +340,13 @@ export default function LatestSubtitlesSection({ movies = [] }) {
                 key={movie.id}
                 className="p-4 rounded-2xl flex flex-col justify-between gap-3"
                 style={{
-                  background: 'rgba(14,14,22,0.84)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  boxShadow: 'var(--shadow-card)',
                 }}
               >
                 <div className="space-y-1 min-w-0">
-                  <div className="text-sm font-semibold truncate" style={{ color: '#f3efe3' }}>
+                  <div className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
                     {movie.title}
                   </div>
                   <div className="text-[11px] tabular-nums" style={{ color: MUTED }}>
@@ -358,9 +360,9 @@ export default function LatestSubtitlesSection({ movies = [] }) {
                     disabled={isBusy}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap"
                     style={{
-                      background: isSaved ? 'rgba(34,197,94,0.22)' : 'rgba(34,197,94,0.14)',
-                      border: '1px solid rgba(74,222,128,0.34)',
-                      color: '#86efac',
+                      background: 'var(--green-bg)',
+                      border: '1px solid var(--green-border)',
+                      color: 'var(--green)',
                     }}
                   >
                     {isBusy ? <Loader2 size={12} className="animate-spin" /> : isSaved ? <Check size={12} /> : <Download size={12} />}
@@ -370,8 +372,8 @@ export default function LatestSubtitlesSection({ movies = [] }) {
                     href={info.detailSubtitlesHref}
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap"
                     style={{
-                      background: 'rgba(201,168,76,0.14)',
-                      border: '1px solid rgba(201,168,76,0.34)',
+                      background: 'var(--accent-bg)',
+                      border: '1px solid var(--accent-border)',
                       color: GOLD_LIGHT,
                     }}
                   >

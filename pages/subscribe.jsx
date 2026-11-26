@@ -32,7 +32,7 @@ export default function Subscribe() {
       />
       <CinematicBackground />
 
-      <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 pt-20 pb-24">
+      <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 pt-28 md:pt-24 pb-24">
         <motion.div initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} className="mb-6">
           <Link href="/">
             <motion.div

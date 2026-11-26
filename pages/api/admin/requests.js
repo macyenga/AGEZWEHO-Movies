@@ -3,10 +3,13 @@ import { requireAdmin } from '../../../lib/server/admin-auth';
 
 const ALLOWED_FIELDS = [
   'title',
+  'type',
   'requested_by',
   'note',
   'year',
   'language',
+  'poster_url',
+  'imdb_id',
   'donation_goal',
   'votes',
   'fulfilled',

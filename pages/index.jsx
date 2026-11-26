@@ -36,13 +36,13 @@ const HERO_SOCIAL_ICONS = {
   x: AtSign,
 };
 
-const GOLD = '#c9a84c';
-const GOLD_LIGHT = '#e8c87a';
-const MUTED = '#8a8679';
-const TEXT = '#f1ede2';
-const DIM = '#565347';
-const BLUE = '#38bdf8';
-const AMBER = '#fbbf24';
+const GOLD = 'var(--gold)';
+const GOLD_LIGHT = 'var(--gold2)';
+const MUTED = 'var(--muted)';
+const TEXT = 'var(--text)';
+const DIM = 'var(--dim)';
+const BLUE = 'var(--blue)';
+const AMBER = 'var(--warn)';
 
 const CATEGORIES = [
   { key: 'Series', label: 'Series', icon: Tv },
@@ -77,16 +77,16 @@ function NoticeBoard() {
   return (
     <div
       style={{
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(14,14,22,0.52)',
+        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg-card-subtle)',
       }}
     >
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
         <Bell size={13} className="shrink-0" style={{ color: GOLD }} />
-        <p className="text-xs leading-relaxed flex-1 min-w-0" style={{ color: '#a9a596' }}>
+        <p className="text-xs leading-relaxed flex-1 min-w-0" style={{ color: 'var(--text2)' }}>
           {t.notice.prefix}{' '}
-          <Link href="/requests" className="underline hover:text-amber-300 transition-colors" style={{ color: GOLD_LIGHT }}>
+          <Link href="/requests" className="underline hover:opacity-85 transition-opacity" style={{ color: GOLD_LIGHT }}>
             {t.notice.link}
           </Link>{' '}
           {t.notice.suffix}
@@ -95,8 +95,8 @@ function NoticeBoard() {
           type="button"
           onClick={() => setVisible(false)}
           aria-label={t.notice.dismissAria}
-          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-white/10"
-          style={{ color: '#8a8778' }}
+          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--bg-ghost)]"
+          style={{ color: 'var(--muted)' }}
         >
           <X size={13} />
         </button>
@@ -151,7 +151,7 @@ function PremiereHeroStage({ movies = [] }) {
         />
         <div
           className="absolute inset-x-0 bottom-0 h-32"
-          style={{ background: 'linear-gradient(to top, #0a0a0f 0%, transparent 100%)' }}
+          style={{ background: 'linear-gradient(to top, var(--bg) 0%, transparent 100%)' }}
         />
       </div>
 
@@ -164,24 +164,24 @@ function PremiereHeroStage({ movies = [] }) {
                 {/* Quiet single-line stage eyebrow */}
                 <div className="flex items-center justify-between gap-3 pb-3 mb-3.5 sm:pb-4 sm:mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs tabular-nums" style={{ color: '#b8b3a6' }}>
-                    <span className="font-semibold" style={{ color: GOLD_LIGHT }}>
+                    <span className="font-semibold" style={{ color: '#e8c87a' }}>
                       {getMediaTypeLabel(activeMovie.type || 'Movie', language)}
                     </span>
                     {activeMovie.year && (
                       <>
-                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
+                        <span aria-hidden="true" style={{ color: '#64748b' }}>·</span>
                         <span>{activeMovie.year}</span>
                       </>
                     )}
                     {activeMovie.language && (
                       <>
-                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
+                        <span aria-hidden="true" style={{ color: '#64748b' }}>·</span>
                         <span>{activeMovie.language}</span>
                       </>
                     )}
                     {activeMovie.genre && (
                       <>
-                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
+                        <span aria-hidden="true" style={{ color: '#64748b' }}>·</span>
                         <span>
                           {activeMovie.genre
                             .split(',')
@@ -192,9 +192,9 @@ function PremiereHeroStage({ movies = [] }) {
                     )}
                     {activeMovie.rating && (
                       <>
-                        <span aria-hidden="true" style={{ color: DIM }}>·</span>
-                        <span className="inline-flex items-center gap-1 font-semibold" style={{ color: GOLD_LIGHT }}>
-                          <Star size={11} fill={GOLD} stroke={GOLD} />
+                        <span aria-hidden="true" style={{ color: '#64748b' }}>·</span>
+                        <span className="inline-flex items-center gap-1 font-semibold" style={{ color: '#e8c87a' }}>
+                          <Star size={11} fill="#c9a84c" stroke="#c9a84c" />
                           {activeMovie.rating}
                         </span>
                       </>
@@ -265,7 +265,7 @@ function PremiereHeroStage({ movies = [] }) {
                       color: saved ? '#f5e4a8' : '#c8c3b6',
                     }}
                   >
-                    <Bookmark size={12} fill={saved ? GOLD : 'none'} />
+                    <Bookmark size={12} fill={saved ? '#e8c87a' : 'none'} />
                     <span>{saved ? t.card.inWatchlist : t.card.saveToWatchlist}</span>
                   </button>
 
@@ -339,7 +339,7 @@ function PremiereHeroStage({ movies = [] }) {
                       background: 'linear-gradient(145deg, #171724 0%, #0d0d14 100%)',
                     }}
                   >
-                    <Film size={32} style={{ color: GOLD, opacity: 0.45 }} />
+                    <Film size={32} style={{ color: '#c9a84c', opacity: 0.45 }} />
                     <span className="font-cinzel text-sm" style={{ color: '#b8b4a8' }}>
                       {activeMovie.title}
                     </span>
@@ -372,7 +372,7 @@ function PremiereHeroStage({ movies = [] }) {
                       style={{
                         background: 'rgba(10,10,16,0.82)',
                         border: '1px solid rgba(232,200,122,0.55)',
-                        color: GOLD_LIGHT,
+                        color: '#e8c87a',
                       }}
                     >
                       <Play size={14} fill="currentColor" />
@@ -398,10 +398,10 @@ function PremiereHeroStage({ movies = [] }) {
                       data-testid={`hero-reel-tab-${idx}`}
                       className="group relative flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors cursor-pointer min-w-[220px] sm:min-w-0 shrink-0 sm:shrink"
                       style={{
-                        background: isActive ? 'rgba(201,168,76,0.11)' : 'rgba(14,14,22,0.55)',
+                        background: isActive ? 'rgba(201,168,76,0.16)' : 'rgba(14,14,22,0.68)',
                         border: isActive
-                          ? '1px solid rgba(232,200,122,0.42)'
-                          : '1px solid rgba(255,255,255,0.07)',
+                          ? '1px solid rgba(232,200,122,0.45)'
+                          : '1px solid rgba(255,255,255,0.10)',
                       }}
                     >
                       <div className="w-10 h-14 rounded-lg overflow-hidden shrink-0 bg-[#12121b]">
@@ -414,25 +414,25 @@ function PremiereHeroStage({ movies = [] }) {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Film size={14} style={{ color: GOLD, opacity: 0.45 }} />
+                            <Film size={14} style={{ color: '#c9a84c', opacity: 0.45 }} />
                           </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 text-[11px] tabular-nums mb-0.5">
-                          <span style={{ color: isActive ? GOLD_LIGHT : '#7e7a6d', fontWeight: 700 }}>
+                          <span style={{ color: isActive ? '#e8c87a' : '#8e8a7e', fontWeight: 700 }}>
                             {String(idx + 1).padStart(2, '0')}
                           </span>
-                          {item.year && <span style={{ color: '#7e7a6d' }}>{item.year}</span>}
+                          {item.year && <span style={{ color: '#8e8a7e' }}>{item.year}</span>}
                           {item.genre && (
-                            <span className="truncate" style={{ color: '#8a8778' }}>
+                            <span className="truncate" style={{ color: '#a19d90' }}>
                               · {getCategoryLabel(item.genre.split(',')[0].trim(), language)}
                             </span>
                           )}
                         </div>
                         <div
                           className="text-xs sm:text-[13px] font-semibold truncate transition-colors group-hover:text-amber-200"
-                          style={{ color: isActive ? '#f7f4eb' : '#c4bfb2' }}
+                          style={{ color: isActive ? '#f7f4eb' : '#d4cfc0' }}
                         >
                           {item.title}
                         </div>
@@ -445,7 +445,7 @@ function PremiereHeroStage({ movies = [] }) {
           </>
         ) : (
           <div className="py-12 text-center">
-            <h1 className="font-cinzel text-3xl font-bold" style={{ color: GOLD_LIGHT }}>
+            <h1 className="font-cinzel text-3xl font-bold" style={{ color: '#e8c87a' }}>
               AGASOBANUYE.RW
             </h1>
           </div>
@@ -464,15 +464,15 @@ function ScrollRow({ title, icon: Icon, color, movies, link, onViewAll, id }) {
 
   return (
     <section id={id} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14 scroll-mt-32">
-      <div className="flex items-baseline justify-between gap-4 pb-3 mb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="flex items-baseline justify-between gap-4 pb-3 mb-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2.5">
           <Icon size={15} style={{ color }} />
-          <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+          <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: TEXT }}>
             {title}
           </h2>
         </div>
         {link && (
-          <Link href={link} className="text-xs font-medium hover:text-amber-300 transition-colors" style={{ color: MUTED }}>
+          <Link href={link} className="text-xs font-medium hover:opacity-80 transition-opacity" style={{ color: MUTED }}>
             {t.homeSections.viewAll}
           </Link>
         )}
@@ -480,7 +480,7 @@ function ScrollRow({ title, icon: Icon, color, movies, link, onViewAll, id }) {
           <button
             type="button"
             onClick={onViewAll}
-            className="text-xs font-medium cursor-pointer hover:text-amber-300 transition-colors"
+            className="text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity"
             style={{ color: MUTED }}
           >
             {t.homeSections.viewAll}
@@ -495,7 +495,7 @@ function ScrollRow({ title, icon: Icon, color, movies, link, onViewAll, id }) {
               onClick={() => scroll(-1)}
               aria-label="Scroll left"
               className="absolute left-0 top-0 bottom-0 z-20 w-10 flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              style={{ background: 'linear-gradient(90deg,rgba(10,10,15,0.85),transparent)' }}
+              style={{ background: 'linear-gradient(90deg,var(--bg),transparent)' }}
             >
               <ChevronLeft size={18} style={{ color: GOLD }} />
             </button>
@@ -504,7 +504,7 @@ function ScrollRow({ title, icon: Icon, color, movies, link, onViewAll, id }) {
               onClick={() => scroll(1)}
               aria-label="Scroll right"
               className="absolute right-0 top-0 bottom-0 z-20 w-10 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              style={{ background: 'linear-gradient(270deg,rgba(10,10,15,0.85),transparent)' }}
+              style={{ background: 'linear-gradient(270deg,var(--bg),transparent)' }}
             >
               <ChevronRight size={18} style={{ color: GOLD }} />
             </button>
@@ -532,10 +532,10 @@ function GenreNav({ active, onSelect }) {
     <div
       className="sticky top-[110px] md:top-[64px] z-40"
       style={{
-        background: 'rgba(10,10,16,0.94)',
+        background: 'var(--bg-nav)',
         backdropFilter: 'blur(16px)',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
       }}
     >
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -560,9 +560,9 @@ function GenreNav({ active, onSelect }) {
               key={g}
               type="button"
               onClick={() => onSelect(g)}
-              className="flex-shrink-0 py-3 text-xs font-medium transition-colors cursor-pointer whitespace-nowrap hover:text-stone-200"
+              className="flex-shrink-0 py-3 text-xs font-medium transition-colors cursor-pointer whitespace-nowrap hover:opacity-90"
               style={{
-                color: active === g ? GOLD_LIGHT : '#948f82',
+                color: active === g ? GOLD_LIGHT : MUTED,
                 borderBottom: active === g ? `2px solid ${GOLD}` : '2px solid transparent',
               }}
             >
@@ -582,11 +582,11 @@ function NewsRowCard({ item }) {
   return (
     <Link href={`/news/${item.id}`}>
       <div
-        className="rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-400/35"
-        style={{ background: 'rgba(15,15,24,0.82)', border: '1px solid rgba(255,255,255,0.07)' }}
+        className="rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-500/40"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
       >
         {item.image_url && (
-          <div className="w-full aspect-[16/9] overflow-hidden bg-[#12121b]">
+          <div className="w-full aspect-[16/9] overflow-hidden" style={{ background: 'var(--bg3)' }}>
             <img
               src={item.image_url}
               alt={item.title}
@@ -596,7 +596,7 @@ function NewsRowCard({ item }) {
           </div>
         )}
         <div className="p-4">
-          <div className="flex items-center gap-1.5 mb-1.5 text-[11px]" style={{ color: '#8a8778' }}>
+          <div className="flex items-center gap-1.5 mb-1.5 text-[11px]" style={{ color: MUTED }}>
             {item.category && <span style={{ color: BLUE, fontWeight: 600 }}>{item.category}</span>}
             {item.category && date && <span aria-hidden="true">·</span>}
             {date && <span>{date}</span>}
@@ -622,10 +622,10 @@ function ShopRowCard({ item }) {
   return (
     <Link href={`/shop/${item.id}`}>
       <div
-        className="rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400/35"
-        style={{ background: 'rgba(15,15,24,0.82)', border: '1px solid rgba(255,255,255,0.07)' }}
+        className="rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-500/40"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
       >
-        <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#12121b]">
+        <div className="relative w-full aspect-[4/3] overflow-hidden" style={{ background: 'var(--bg3)' }}>
           {item.image_url ? (
             <img
               src={item.image_url}
@@ -635,7 +635,7 @@ function ShopRowCard({ item }) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ShoppingBag size={28} style={{ color: '#3a3a2a' }} />
+              <ShoppingBag size={28} style={{ color: 'var(--dim)' }} />
             </div>
           )}
           <div
@@ -644,14 +644,14 @@ function ShopRowCard({ item }) {
           />
           <div
             className="absolute bottom-2.5 right-3 text-xs font-bold tabular-nums"
-            style={{ color: AMBER }}
+            style={{ color: '#fbbf24' }}
           >
             {item.currency || 'RWF'} {item.price}
           </div>
         </div>
         <div className="p-4">
           {item.category && (
-            <div className="text-[11px] mb-1 font-medium" style={{ color: '#c9a84c' }}>
+            <div className="text-[11px] mb-1 font-medium" style={{ color: GOLD }}>
               {item.category}
             </div>
           )}
@@ -660,7 +660,7 @@ function ShopRowCard({ item }) {
           </p>
           <div className="flex items-center justify-between gap-2 text-[11px]" style={{ color: MUTED }}>
             {item.seller_name ? <span className="truncate">{item.seller_name}</span> : <span />}
-            <span className="inline-flex items-center gap-1 shrink-0" style={{ color: '#25d366' }}>
+            <span className="inline-flex items-center gap-1 shrink-0 font-medium" style={{ color: 'var(--green)' }}>
               <MessageSquare size={10} /> WhatsApp
             </span>
           </div>
@@ -837,9 +837,9 @@ export default function Home({ movies: initial, comingSoon }) {
 
         {/* 5. Main Film Catalog */}
         <section id="explore" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-14 scroll-mt-44 md:scroll-mt-32">
-          <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="flex items-baseline gap-3 flex-wrap">
-              <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+              <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: TEXT }}>
                 {t.homeSections.allTitles}
               </h2>
               {(genreFilter || yearFilter !== 'All' || ratingFilter !== 'All') && (
@@ -859,8 +859,8 @@ export default function Home({ movies: initial, comingSoon }) {
                   onClick={resetAllFilters}
                   className="text-xs font-medium px-2.5 py-1 rounded-md cursor-pointer transition-colors"
                   style={{
-                    background: 'rgba(201,168,76,0.12)',
-                    border: '1px solid rgba(201,168,76,0.3)',
+                    background: 'var(--accent-bg)',
+                    border: '1px solid var(--accent-border)',
                     color: GOLD_LIGHT,
                   }}
                 >
@@ -918,11 +918,11 @@ export default function Home({ movies: initial, comingSoon }) {
             <div className="text-center py-16">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.12)' }}
+                style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
               >
-                <Film size={28} style={{ color: '#4a4a3a' }} />
+                <Film size={28} style={{ color: GOLD }} />
               </div>
-              <h3 className="font-cinzel text-base mb-2" style={{ fontFamily: 'Cinzel,serif', color: GOLD }}>
+              <h3 className="font-cinzel text-base mb-2" style={{ fontFamily: 'Cinzel,serif', color: GOLD_LIGHT }}>
                 {query
                   ? t.homeSections.notInLibrary
                   : tr('homeSections.noCategoryTitles', {
@@ -938,7 +938,7 @@ export default function Home({ movies: initial, comingSoon }) {
               <p className="text-xs mb-5" style={{ color: MUTED }}>
                 {query ? (
                   <>
-                    <span>&ldquo;<span style={{ color: '#b8b4a8' }}>{query}</span>&rdquo; — </span>
+                    <span>&ldquo;<span style={{ color: TEXT }}>{query}</span>&rdquo; — </span>
                     {t.homeSections.requestIt}
                   </>
                 ) : (
@@ -950,14 +950,14 @@ export default function Home({ movies: initial, comingSoon }) {
                   type="button"
                   onClick={resetAllFilters}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer"
-                  style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: GOLD }}
+                  style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: GOLD_LIGHT }}
                 >
                   {t.homeSections.showAllTitles}
                 </button>
                 <Link href="/requests">
                   <div
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#b8b4a8' }}
+                    style={{ background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: 'var(--text2)' }}
                   >
                     <Inbox size={13} /> {t.homeSections.requestIt}
                   </div>
@@ -965,7 +965,7 @@ export default function Home({ movies: initial, comingSoon }) {
                 <Link href="/submit">
                   <div
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8a8778' }}
+                    style={{ background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: MUTED }}
                   >
                     <Upload size={13} /> {t.homeSections.addIt}
                   </div>
@@ -989,8 +989,8 @@ export default function Home({ movies: initial, comingSoon }) {
                     className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium"
                     style={
                       page === 1
-                        ? { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#3a3a2a', cursor: 'not-allowed' }
-                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#b8b4a8', cursor: 'pointer' }
+                        ? { background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: DIM, cursor: 'not-allowed', opacity: 0.5 }
+                        : { background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: 'var(--text2)', cursor: 'pointer' }
                     }
                   >
                     <ChevronLeft size={14} /> {t.homeSections.prev}
@@ -1003,10 +1003,10 @@ export default function Home({ movies: initial, comingSoon }) {
                       className="w-9 h-9 rounded-xl text-xs font-medium flex items-center justify-center tabular-nums"
                       style={
                         p === page
-                          ? { background: 'rgba(201,168,76,0.2)', border: '1px solid rgba(201,168,76,0.45)', color: GOLD_LIGHT, cursor: 'default' }
+                          ? { background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: GOLD_LIGHT, cursor: 'default' }
                           : p === '...'
-                          ? { background: 'transparent', border: 'none', color: '#4a4a3a', cursor: 'default' }
-                          : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#8a8778', cursor: 'pointer' }
+                          ? { background: 'transparent', border: 'none', color: DIM, cursor: 'default' }
+                          : { background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: MUTED, cursor: 'pointer' }
                       }
                     >
                       {p}
@@ -1019,8 +1019,8 @@ export default function Home({ movies: initial, comingSoon }) {
                     className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium"
                     style={
                       page === totalPages
-                        ? { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#3a3a2a', cursor: 'not-allowed' }
-                        : { background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: GOLD, cursor: 'pointer' }
+                        ? { background: 'var(--bg-ghost)', border: '1px solid var(--border)', color: DIM, cursor: 'not-allowed', opacity: 0.5 }
+                        : { background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: GOLD_LIGHT, cursor: 'pointer' }
                     }
                   >
                     {t.homeSections.next} <ChevronRight size={14} />
@@ -1036,7 +1036,7 @@ export default function Home({ movies: initial, comingSoon }) {
               <Link href="/submit">
                 <div
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)', color: GOLD }}
+                  style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: GOLD_LIGHT }}
                 >
                   <Upload size={14} /> {t.homeSections.addFirstMovie}
                 </div>
@@ -1081,8 +1081,9 @@ export default function Home({ movies: initial, comingSoon }) {
           <div
             className="p-5 sm:p-6 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5"
             style={{
-              background: 'rgba(14,14,22,0.84)',
-              border: '1px solid rgba(201,168,76,0.24)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--accent-border)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <div className="space-y-1.5 max-w-2xl">
@@ -1090,10 +1091,10 @@ export default function Home({ movies: initial, comingSoon }) {
                 <Subtitles size={14} />
                 <span>Official Subtitles & Kinyarwanda Studio</span>
               </div>
-              <h2 className="font-cinzel text-lg sm:text-xl font-bold" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+              <h2 className="font-cinzel text-lg sm:text-xl font-bold" style={{ fontFamily: 'Cinzel, serif', color: TEXT }}>
                 Download Latest Official Subtitles & Translate to Kinyarwanda
               </h2>
-              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: '#9c988b' }}>
+              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text2)' }}>
                 Fetch the latest official .SRT tracks, translate cue lines into Kinyarwanda, and download ready-to-play .SRT or .VTT subtitles.
               </p>
               {movies.length > 0 && (
@@ -1102,11 +1103,11 @@ export default function Home({ movies: initial, comingSoon }) {
                     <Link
                       key={m.id}
                       href={`/subtitles?q=${encodeURIComponent(m.title)}`}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:text-[#f5e4a8]"
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-85"
                       style={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.09)',
-                        color: '#d4cfc0',
+                        background: 'var(--bg-ghost)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text2)',
                       }}
                     >
                       {m.title}
@@ -1121,8 +1122,8 @@ export default function Home({ movies: initial, comingSoon }) {
               data-testid="home-subtitles-studio-cta"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold whitespace-nowrap shrink-0"
               style={{
-                background: 'linear-gradient(135deg,#e8c87a,#c9a84c)',
-                color: '#09090f',
+                background: 'linear-gradient(135deg, var(--gold2), var(--gold))',
+                color: 'var(--accent-ink)',
               }}
             >
               <Subtitles size={14} />
@@ -1137,14 +1138,14 @@ export default function Home({ movies: initial, comingSoon }) {
         {/* 8. Latest Amakuru News */}
         {newsItems.length > 0 && (
           <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14">
-            <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2.5">
                 <Newspaper size={15} style={{ color: BLUE }} />
-                <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+                <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: TEXT }}>
                   {t.homeSections.latestNews}
                 </h2>
               </div>
-              <Link href="/news" className="text-xs font-medium hover:text-sky-300 transition-colors" style={{ color: MUTED }}>
+              <Link href="/news" className="text-xs font-medium hover:opacity-80 transition-opacity" style={{ color: MUTED }}>
                 {t.homeSections.viewAll}
               </Link>
             </div>
@@ -1159,14 +1160,14 @@ export default function Home({ movies: initial, comingSoon }) {
         {/* 9. Community Shop */}
         {shopItems.length > 0 && (
           <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14">
-            <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="flex items-baseline justify-between gap-4 pb-3 mb-5" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2.5">
                 <ShoppingBag size={15} style={{ color: AMBER }} />
-                <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: '#f3efe3' }}>
+                <h2 className="font-cinzel text-lg sm:text-xl font-bold tracking-wide" style={{ fontFamily: 'Cinzel, serif', color: TEXT }}>
                   {t.homeSections.shopDeals}
                 </h2>
               </div>
-              <Link href="/shop" className="text-xs font-medium hover:text-amber-300 transition-colors" style={{ color: MUTED }}>
+              <Link href="/shop" className="text-xs font-medium hover:opacity-80 transition-opacity" style={{ color: MUTED }}>
                 {t.homeSections.viewAll}
               </Link>
             </div>

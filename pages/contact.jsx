@@ -4,10 +4,46 @@ import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
 import CinematicBackground from '../components/CinematicBackground';
 import { submitContact } from '../lib/supabase';
-import { ArrowLeft, Send, CheckCircle2, Mail, MessageSquare, User, MessageCircle, Sparkles } from 'lucide-react';
+import {
+  ArrowLeft,
+  Send,
+  CheckCircle2,
+  Mail,
+  MessageSquare,
+  User,
+  MessageCircle,
+  Copy,
+  Check,
+  ExternalLink,
+  Globe,
+} from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getDirectContactChannels, getSocialConfig } from '../lib/social-config';
 
-const EMPTY = { name:'', email:'', subject:'', message:'' };
+const EMPTY = { name: '', email: '', subject: '', message: '' };
+
+const CONTACT_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Contact Agasobanuye.rw',
+  url: 'https://agasobanuye.rw/contact',
+  description:
+    'Contact Agasobanuye.rw directly on Telegram (+250789690247), WhatsApp (+250789690247), email, or via message form — open for Rwanda viewers and abroad supporters.',
+  mainEntity: {
+    '@type': 'Organization',
+    name: 'Agasobanuye.rw',
+    url: 'https://agasobanuye.rw',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+250789690247',
+      contactType: 'customer support',
+      url: 'https://t.me/+250789690247',
+      email: 'macyenga@gmail.com',
+      areaServed: 'Worldwide',
+      availableLanguage: ['Kinyarwanda', 'English', 'French', 'Swahili'],
+    },
+  },
+};
 
 export default function Contact() {
   const { t } = useLanguage();
@@ -15,8 +51,15 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [copiedId, setCopiedId] = useState('');
 
-  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
+  const socialCfg = getSocialConfig();
+  const channels = getDirectContactChannels();
+
+  const set = (k, v) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    setErrors((e) => ({ ...e, [k]: '' }));
+  };
 
   const validate = () => {
     const e = {};
@@ -26,7 +69,8 @@ export default function Contact() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!validate()) return;
     setLoading(true);
     try {
@@ -40,125 +84,279 @@ export default function Contact() {
     }
   };
 
+  const handleCopy = (val, id) => {
+    navigator.clipboard?.writeText(val);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(''), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-deep">
       <SEOHead
-        title="Contact Us"
-        description="Get in touch with Agasobanuye.rw — send us a message, ask questions, or report issues"
+        title="Contact Us — Telegram (+250789690247), WhatsApp & Abroad Support"
+        description="Talk directly with Agasobanuye.rw on Telegram (+250789690247), WhatsApp, or email. Support for Rwanda viewers and abroad diaspora fans."
+        keywords="contact Agasobanuye.rw, Telegram +250789690247, WhatsApp Agasobanuye, diaspora Rwanda cinema support"
         canonical="https://agasobanuye.rw/contact"
+        jsonLd={CONTACT_JSON_LD}
       />
       <CinematicBackground />
 
-      <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 pt-20 pb-24">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 pt-28 md:pt-24 pb-24 space-y-6">
         {/* Header */}
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} className="mb-4">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline mb-3"
+            style={{ color: 'var(--text2)' }}
+          >
+            <ArrowLeft size={13} /> Back to Home
+          </Link>
+
           <div className="flex items-center gap-3 mb-3">
-            <Link href="/">
-              <motion.div whileHover={{ x:-3 }} className="text-xs" style={{ color:'#6a6a5a' }}>
-                <ArrowLeft size={13} />
-              </motion.div>
-            </Link>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.25)' }}>
-              <Mail size={20} style={{ color:'#c9a84c' }} />
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
+            >
+              <Mail size={20} style={{ color: 'var(--gold2)' }} />
             </div>
             <div>
-              <h1 className="font-cinzel font-bold text-lg" style={{
-                fontFamily:'Cinzel,serif',
-                background:'linear-gradient(135deg,#f5e4a8,#c9a84c)',
-                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-              }}>
+              <h1
+                className="font-cinzel font-bold text-xl sm:text-2xl"
+                style={{ fontFamily: 'Cinzel,serif', color: 'var(--gold2)' }}
+              >
                 {t.pages.contact.heading}
               </h1>
-              <p className="text-[10px]" style={{ color:'#6a6a5a' }}>{t.pages.contact.subheading}</p>
+              <p className="text-xs" style={{ color: 'var(--text2)' }}>
+                {t.pages.contact.subheading} · Direct chat for Rwanda &amp; abroad viewers
+              </p>
             </div>
           </div>
-          <div className="divider-gold w-16" />
+          <div className="divider-gold w-20" />
         </motion.div>
+
+        {/* Direct Communication Channels (Telegram +250789690247, WhatsApp, Email) */}
+        <section
+          aria-label="Direct communication channels"
+          data-testid="direct-talk-channels"
+          className="p-5 rounded-2xl space-y-4"
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--accent-border)',
+            boxShadow: 'var(--shadow-card)',
+          }}
+        >
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] flex items-center gap-1.5" style={{ color: 'var(--gold2)' }}>
+                <Globe size={12} />
+                <span>Talk Directly With Us (Rwanda &amp; Abroad)</span>
+              </div>
+              <p className="text-xs mt-1" style={{ color: 'var(--text2)' }}>
+                Need help supporting from abroad, requesting a subtitle/movie, or activating your Private Vault pass? Message us directly on Telegram{' '}
+                <strong className="tabular-nums" style={{ color: 'var(--text)' }}>
+                  {socialCfg.telegramPhone}
+                </strong>
+                .
+              </p>
+            </div>
+            <Link
+              href="/support"
+              className="text-xs font-semibold hover:underline whitespace-nowrap"
+              style={{ color: 'var(--gold2)' }}
+            >
+              Support Options →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {channels.map((ch) => (
+              <div
+                key={ch.id}
+                className="p-3.5 rounded-xl flex flex-col justify-between gap-2.5"
+                style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border)' }}
+              >
+                <div>
+                  <div className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
+                    {ch.id.includes('telegram') ? (
+                      <Send size={13} style={{ color: 'var(--blue)' }} />
+                    ) : ch.id.includes('whatsapp') ? (
+                      <MessageCircle size={13} style={{ color: 'var(--green)' }} />
+                    ) : (
+                      <Mail size={13} style={{ color: 'var(--gold2)' }} />
+                    )}
+                    <span>{ch.name}</span>
+                  </div>
+                  <div className="text-xs font-mono font-bold mt-1 tabular-nums" style={{ color: 'var(--gold2)' }}>
+                    {ch.handle}
+                  </div>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--muted)' }}>
+                    {ch.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href={ch.href}
+                    target={ch.href.startsWith('mailto:') ? undefined : '_blank'}
+                    rel={ch.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+                    data-testid={`contact-channel-${ch.id}`}
+                    className="btn-primary flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold"
+                  >
+                    <span>Open Chat</span>
+                    <ExternalLink size={11} />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(ch.copyValue, ch.id)}
+                    className="btn-ghost px-2.5 py-2 rounded-lg text-xs inline-flex items-center gap-1 cursor-pointer"
+                    aria-label={`Copy ${ch.name}`}
+                  >
+                    {copiedId === ch.id ? <Check size={12} style={{ color: 'var(--green)' }} /> : <Copy size={12} />}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Success */}
         <AnimatePresence>
           {success && (
-            <motion.div initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0 }}
-              className="text-center py-16">
-              <motion.div animate={{ scale:[1,1.15,1] }} transition={{ repeat:Infinity, duration:2 }}>
-                <CheckCircle2 size={52} className="mx-auto mb-4" style={{ color:'#22c55e' }} />
-              </motion.div>
-              <h3 className="font-cinzel text-xl mb-2" style={{ fontFamily:'Cinzel,serif', color:'#22c55e' }}>Message Sent!</h3>
-              <p className="text-sm mb-6" style={{ color:'#6a6a5a' }}>We'll get back to you soon.</p>
-              <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }} onClick={() => setSuccess(false)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background:'rgba(201,168,76,0.12)', border:'1px solid rgba(201,168,76,0.3)', color:'#c9a84c' }}>
-                <Send size={14} /> Send Another
-              </motion.button>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-12 p-6 rounded-2xl"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--green-border)' }}
+            >
+              <CheckCircle2 size={46} className="mx-auto mb-3" style={{ color: 'var(--green)' }} />
+              <h3 className="font-cinzel text-xl mb-1.5" style={{ fontFamily: 'Cinzel,serif', color: 'var(--green)' }}>
+                Message Sent!
+              </h3>
+              <p className="text-xs mb-5" style={{ color: 'var(--text2)' }}>
+                We&apos;ll get back to you soon. For faster replies, reach us on Telegram {socialCfg.telegramPhone}.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSuccess(false)}
+                className="btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                <Send size={13} /> Send Another Message
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Form */}
         {!success && (
-          <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.08 }}
+          <form
+            onSubmit={handleSubmit}
             className="space-y-4 p-5 rounded-2xl"
-            style={{ background:'rgba(14,14,22,0.8)', border:'1px solid rgba(201,168,76,0.12)', backdropFilter:'blur(20px)' }}>
-
-            {/* Name */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-                <User size={10} /> Name <span style={{ color:'#e05c3a' }}>*</span>
-              </label>
-              <input className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm ${errors.name?'border-red-500/40':''}`}
-                value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Your name" />
-              {errors.name && <p className="text-red-400/80 text-[10px] mt-1">{errors.name}</p>}
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-card)',
+            }}
+          >
+            <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--gold2)' }}>
+              Send a Web Message
             </div>
 
-            {/* Email */}
             <div>
-              <label className="flex items-center gap-1.5 text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-                <Mail size={10} /> Email <span style={{ color:'#3a3a2a', letterSpacing:0 }}>(optional)</span>
+              <label
+                htmlFor="contact-name"
+                className="flex items-center gap-1.5 text-[11px] font-semibold mb-1.5 uppercase tracking-wider"
+                style={{ color: 'var(--muted)' }}
+              >
+                <User size={11} /> Name <span style={{ color: 'var(--danger)' }}>*</span>
               </label>
-              <input className="input-dark w-full px-3 py-2.5 rounded-lg text-sm"
-                value={form.email} onChange={e=>set('email',e.target.value)}
-                placeholder="your@email.com" type="email" />
+              <input
+                id="contact-name"
+                className="input-dark w-full px-3 py-2.5 rounded-xl text-sm"
+                value={form.name}
+                onChange={(e) => set('name', e.target.value)}
+                placeholder="Your name"
+              />
+              {errors.name && (
+                <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>
+                  {errors.name}
+                </p>
+              )}
             </div>
 
-            {/* Subject */}
             <div>
-              <label className="text-[10px] font-medium mb-1.5 tracking-[2px] uppercase flex items-center gap-1.5" style={{ color:'#6a6a5a' }}>
-                <MessageCircle size={10} /> Subject <span style={{ color:'#3a3a2a', letterSpacing:0 }}>(optional)</span>
+              <label
+                htmlFor="contact-email"
+                className="flex items-center gap-1.5 text-[11px] font-semibold mb-1.5 uppercase tracking-wider"
+                style={{ color: 'var(--muted)' }}
+              >
+                <Mail size={11} /> Email <span className="opacity-60">(optional)</span>
               </label>
-              <input className="input-dark w-full px-3 py-2.5 rounded-lg text-sm"
-                value={form.subject} onChange={e=>set('subject',e.target.value)}
-                placeholder="What is this about?" />
+              <input
+                id="contact-email"
+                className="input-dark w-full px-3 py-2.5 rounded-xl text-sm"
+                value={form.email}
+                onChange={(e) => set('email', e.target.value)}
+                placeholder="your@email.com"
+                type="email"
+              />
             </div>
 
-            {/* Message */}
             <div>
-              <label className="flex items-center gap-1.5 text-[10px] font-medium mb-1.5 tracking-[2px] uppercase" style={{ color:'#6a6a5a' }}>
-                <MessageSquare size={10} /> Message <span style={{ color:'#e05c3a' }}>*</span>
+              <label
+                htmlFor="contact-subject"
+                className="text-[11px] font-semibold mb-1.5 uppercase tracking-wider flex items-center gap-1.5"
+                style={{ color: 'var(--muted)' }}
+              >
+                <MessageCircle size={11} /> Subject <span className="opacity-60">(optional)</span>
               </label>
-              <textarea className={`input-dark w-full px-3 py-2.5 rounded-lg text-sm resize-none ${errors.message?'border-red-500/40':''}`}
-                rows={5} value={form.message} onChange={e=>set('message',e.target.value)}
-                placeholder="Write your message here..." />
-              {errors.message && <p className="text-red-400/80 text-[10px] mt-1">{errors.message}</p>}
+              <input
+                id="contact-subject"
+                className="input-dark w-full px-3 py-2.5 rounded-xl text-sm"
+                value={form.subject}
+                onChange={(e) => set('subject', e.target.value)}
+                placeholder="Abroad support, movie inquiry, subtitle request..."
+              />
             </div>
 
-            {errors.submit && <p className="text-red-400/80 text-[10px]">{errors.submit}</p>}
+            <div>
+              <label
+                htmlFor="contact-message"
+                className="flex items-center gap-1.5 text-[11px] font-semibold mb-1.5 uppercase tracking-wider"
+                style={{ color: 'var(--muted)' }}
+              >
+                <MessageSquare size={11} /> Message <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <textarea
+                id="contact-message"
+                className="input-dark w-full px-3 py-2.5 rounded-xl text-sm resize-none"
+                rows={4}
+                value={form.message}
+                onChange={(e) => set('message', e.target.value)}
+                placeholder="Write your message here..."
+              />
+              {errors.message && (
+                <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>
+                  {errors.message}
+                </p>
+              )}
+            </div>
 
-            <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-              onClick={handleSubmit} disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold"
-              style={{
-                background: 'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(180,140,60,0.08))',
-                border: '1px solid rgba(201,168,76,0.3)',
-                color: '#c9a84c',
-                boxShadow: '0 0 16px rgba(201,168,76,0.06)',
-              }}>
-              {loading
-                ? <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor:'#c9a84c', borderTopColor:'transparent' }} />
-                : <Send size={15} />}
-              {loading ? 'Sending...' : 'Send Message'}
-            </motion.button>
-          </motion.div>
+            {errors.submit && (
+              <p className="text-xs" style={{ color: 'var(--danger)' }}>
+                {errors.submit}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-60"
+            >
+              <Send size={14} />
+              <span>{loading ? 'Sending...' : 'Send Message'}</span>
+            </button>
+          </form>
         )}
       </div>
     </div>

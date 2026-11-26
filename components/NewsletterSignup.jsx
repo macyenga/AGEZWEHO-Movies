@@ -79,20 +79,20 @@ export default function NewsletterSignup({ source = 'homepage' }) {
       <div
         className="relative overflow-hidden rounded-2xl p-6 sm:p-8 lg:p-10"
         style={{
-          background: 'linear-gradient(135deg, rgba(16,16,24,0.94) 0%, rgba(11,11,17,0.96) 100%)',
-          border: '1px solid rgba(201,168,76,0.2)',
-          boxShadow: '0 18px 48px rgba(0,0,0,0.42)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border2)',
+          boxShadow: 'var(--shadow-card)',
         }}
       >
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(201,168,76,0.45), transparent)' }}
+          style={{ background: 'linear-gradient(90deg, transparent, var(--border2), transparent)' }}
         />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)] gap-6 lg:gap-10 items-center">
           <div className="min-w-0">
             <div className="section-tag mb-2.5 flex items-center gap-2">
-              <Mail size={12} style={{ color: GOLD }} />
+              <Mail size={12} style={{ color: 'var(--gold)' }} />
               <span>{copy.tag}</span>
             </div>
 
@@ -102,13 +102,13 @@ export default function NewsletterSignup({ source = 'homepage' }) {
               style={{
                 fontFamily: 'Cinzel, serif',
                 fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)',
-                color: '#f5f2e8',
+                color: 'var(--text)',
               }}
             >
               {copy.heading}
             </h2>
 
-            <p className="text-xs sm:text-sm leading-relaxed max-w-xl" style={{ color: '#a5a193' }}>
+            <p className="text-xs sm:text-sm leading-relaxed max-w-xl" style={{ color: 'var(--text2)' }}>
               {copy.description}
             </p>
           </div>
@@ -121,17 +121,17 @@ export default function NewsletterSignup({ source = 'homepage' }) {
                 aria-live="polite"
                 className="rounded-xl p-4 sm:p-5"
                 style={{
-                  background: 'rgba(34,197,94,0.08)',
-                  border: '1px solid rgba(74,222,128,0.28)',
+                  background: 'var(--green-bg)',
+                  border: '1px solid var(--green-border)',
                 }}
               >
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 size={18} className="shrink-0 mt-0.5" style={{ color: '#4ade80' }} />
+                  <CheckCircle2 size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--green)' }} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold mb-1" style={{ color: '#dcfce7' }}>
+                    <div className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>
                       {status === 'already' ? copy.alreadyTitle : copy.successTitle}
                     </div>
-                    <p className="text-xs leading-relaxed break-words" style={{ color: '#bbf7d0' }}>
+                    <p className="text-xs leading-relaxed break-words" style={{ color: 'var(--text2)' }}>
                       {status === 'already'
                         ? tr('newsletter.alreadyMessage', { email: confirmedEmail })
                         : tr('newsletter.successMessage', { email: confirmedEmail })}
@@ -139,8 +139,8 @@ export default function NewsletterSignup({ source = 'homepage' }) {
                     <button
                       type="button"
                       onClick={resetForm}
-                      className="mt-3 text-[11px] font-medium underline cursor-pointer transition-colors hover:text-white"
-                      style={{ color: '#86efac' }}
+                      className="mt-3 text-[11px] font-medium underline cursor-pointer transition-opacity hover:opacity-80"
+                      style={{ color: 'var(--green)' }}
                     >
                       {copy.addAnother}
                     </button>
@@ -159,7 +159,7 @@ export default function NewsletterSignup({ source = 'homepage' }) {
                       size={15}
                       aria-hidden="true"
                       className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2"
-                      style={{ color: status === 'error' ? '#f87171' : '#8a8679' }}
+                      style={{ color: status === 'error' ? 'var(--danger)' : 'var(--muted)' }}
                     />
                     <input
                       id="newsletter-email-input"
@@ -179,14 +179,8 @@ export default function NewsletterSignup({ source = 'homepage' }) {
                       aria-invalid={status === 'error'}
                       aria-describedby={status === 'error' ? 'newsletter-email-error' : 'newsletter-privacy-note'}
                       data-testid="newsletter-email-input"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-[#f5f2e8] placeholder-[#6b685c] transition-colors focus:outline-none"
-                      style={{
-                        background: 'rgba(6,6,11,0.85)',
-                        border:
-                          status === 'error'
-                            ? '1px solid rgba(248,113,113,0.65)'
-                            : '1px solid rgba(255,255,255,0.14)',
-                      }}
+                      className="input-dark w-full pl-10 pr-4 py-3 rounded-xl text-sm"
+                      style={status === 'error' ? { borderColor: 'var(--danger-border)' } : undefined}
                     />
                   </div>
 
@@ -196,9 +190,9 @@ export default function NewsletterSignup({ source = 'homepage' }) {
                     data-testid="newsletter-submit-btn"
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer transition-transform duration-150 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
                     style={{
-                      background: `linear-gradient(135deg, ${GOLD_LIGHT} 0%, ${GOLD} 100%)`,
-                      color: '#09080b',
-                      boxShadow: '0 10px 26px rgba(201,168,76,0.2)',
+                      background: 'var(--gold2)',
+                      color: 'var(--accent-ink)',
+                      boxShadow: '0 8px 20px rgba(180, 134, 11, 0.2)',
                     }}
                   >
                     <span>{status === 'submitting' ? copy.submitting : copy.submit}</span>
@@ -213,13 +207,13 @@ export default function NewsletterSignup({ source = 'homepage' }) {
                     role="alert"
                     aria-live="polite"
                     className="mt-2.5 flex items-center gap-1.5 text-xs"
-                    style={{ color: '#fca5a5' }}
+                    style={{ color: 'var(--danger)' }}
                   >
                     <AlertCircle size={13} className="shrink-0" />
                     <span>{errorMessage}</span>
                   </p>
                 ) : (
-                  <p id="newsletter-privacy-note" className="mt-2.5 text-[11px]" style={{ color: '#787467' }}>
+                  <p id="newsletter-privacy-note" className="mt-2.5 text-[11px]" style={{ color: 'var(--muted)' }}>
                     {copy.privacyNote}
                   </p>
                 )}

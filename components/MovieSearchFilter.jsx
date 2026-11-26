@@ -29,8 +29,9 @@ export default function MovieSearchFilter({
       data-testid="movie-search-filter"
       className="mb-4 p-3.5 sm:p-4 rounded-xl"
       style={{
-        background: 'rgba(14,14,22,0.72)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        boxShadow: 'var(--shadow-card)',
         backdropFilter: 'blur(14px)',
       }}
     >
@@ -46,9 +47,9 @@ export default function MovieSearchFilter({
           <label
             htmlFor="movie-filter-search"
             className="flex items-center gap-1.5 text-[11px] font-medium mb-1.5"
-            style={{ color: '#9b9889' }}
+            style={{ color: 'var(--text2)' }}
           >
-            <Search size={12} style={{ color: '#c9a84c' }} />
+            <Search size={12} style={{ color: 'var(--gold)' }} />
             <span>{mf.searchLabel}</span>
           </label>
           <div className="relative">
@@ -66,8 +67,8 @@ export default function MovieSearchFilter({
                 type="button"
                 onClick={() => onQueryChange('')}
                 aria-label={t.search.clearAria}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center cursor-pointer transition-colors hover:bg-white/10"
-                style={{ color: '#8a8778' }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center cursor-pointer transition-colors"
+                style={{ color: 'var(--muted)' }}
               >
                 <X size={13} />
               </button>
@@ -80,9 +81,9 @@ export default function MovieSearchFilter({
           <label
             htmlFor="movie-filter-genre"
             className="flex items-center gap-1.5 text-[11px] font-medium mb-1.5"
-            style={{ color: '#9b9889' }}
+            style={{ color: 'var(--text2)' }}
           >
-            <SlidersHorizontal size={12} style={{ color: '#c9a84c' }} />
+            <SlidersHorizontal size={12} style={{ color: 'var(--gold)' }} />
             <span>{mf.genreLabel}</span>
           </label>
           <select
@@ -91,13 +92,10 @@ export default function MovieSearchFilter({
             value={activeGenreValue}
             onChange={(e) => onGenreChange(e.target.value)}
             className="input-dark w-full h-10 px-3 rounded-lg text-xs cursor-pointer"
-            style={{ backgroundColor: 'rgba(18,18,30,0.95)', color: '#e8e4d8' }}
           >
-            <option value="All" style={{ backgroundColor: '#0e0e18', color: '#e8e4d8' }}>
-              {mf.allGenres}
-            </option>
+            <option value="All">{mf.allGenres}</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat} style={{ backgroundColor: '#0e0e18', color: '#e8e4d8' }}>
+              <option key={cat} value={cat}>
                 {getCategoryLabel(cat, language)}
               </option>
             ))}
@@ -109,9 +107,9 @@ export default function MovieSearchFilter({
           <label
             htmlFor="movie-filter-year"
             className="flex items-center gap-1.5 text-[11px] font-medium mb-1.5"
-            style={{ color: '#9b9889' }}
+            style={{ color: 'var(--text2)' }}
           >
-            <Calendar size={12} style={{ color: '#c9a84c' }} />
+            <Calendar size={12} style={{ color: 'var(--gold)' }} />
             <span>{mf.yearLabel}</span>
           </label>
           <select
@@ -120,13 +118,10 @@ export default function MovieSearchFilter({
             value={activeYearValue}
             onChange={(e) => onYearChange(e.target.value)}
             className="input-dark w-full h-10 px-3 rounded-lg text-xs cursor-pointer tabular-nums"
-            style={{ backgroundColor: 'rgba(18,18,30,0.95)', color: '#e8e4d8' }}
           >
-            <option value="All" style={{ backgroundColor: '#0e0e18', color: '#e8e4d8' }}>
-              {mf.allYears}
-            </option>
+            <option value="All">{mf.allYears}</option>
             {availableYears.map((yr) => (
-              <option key={yr} value={yr} style={{ backgroundColor: '#0e0e18', color: '#e8e4d8' }}>
+              <option key={yr} value={yr}>
                 {yr}
               </option>
             ))}
@@ -138,9 +133,9 @@ export default function MovieSearchFilter({
           <label
             htmlFor="movie-filter-rating"
             className="flex items-center gap-1.5 text-[11px] font-medium mb-1.5"
-            style={{ color: '#9b9889' }}
+            style={{ color: 'var(--text2)' }}
           >
-            <Star size={12} style={{ color: '#c9a84c' }} />
+            <Star size={12} style={{ color: 'var(--gold)' }} />
             <span>{mf.ratingLabel}</span>
           </label>
           <select
@@ -149,13 +144,10 @@ export default function MovieSearchFilter({
             value={activeRatingValue}
             onChange={(e) => onMinRatingChange(e.target.value)}
             className="input-dark w-full h-10 px-3 rounded-lg text-xs cursor-pointer tabular-nums"
-            style={{ backgroundColor: 'rgba(18,18,30,0.95)', color: '#e8e4d8' }}
           >
-            <option value="All" style={{ backgroundColor: '#0e0e18', color: '#e8e4d8' }}>
-              {mf.anyRating}
-            </option>
+            <option value="All">{mf.anyRating}</option>
             {RATING_FILTER_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value} style={{ backgroundColor: '#0e0e18', color: '#e8e4d8' }}>
+              <option key={opt.value} value={opt.value}>
                 {tr('homeSections.movieFilter.starsAndUp', { stars: opt.value })}
               </option>
             ))}
@@ -170,9 +162,9 @@ export default function MovieSearchFilter({
             data-testid="filter-reset-btn"
             className="h-10 px-3.5 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
             style={{
-              background: 'rgba(201,168,76,0.12)',
-              border: '1px solid rgba(201,168,76,0.34)',
-              color: '#e8c87a',
+              background: 'var(--accent-bg)',
+              border: '1px solid var(--accent-border)',
+              color: 'var(--gold2)',
             }}
           >
             <RotateCcw size={12} />
